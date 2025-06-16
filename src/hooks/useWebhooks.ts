@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -31,12 +30,8 @@ export const useWebhooks = () => {
           throw error;
         }
         
-        // Only cast to WebhookConfig[] if we have valid data
-        if (data && Array.isArray(data)) {
-          return data as WebhookConfig[];
-        }
-        
-        return [];
+        // Safely return data if it exists and is an array, otherwise empty array
+        return Array.isArray(data) ? (data as unknown as WebhookConfig[]) : [];
       } catch (error) {
         console.error('Error fetching webhooks:', error);
         return [];
