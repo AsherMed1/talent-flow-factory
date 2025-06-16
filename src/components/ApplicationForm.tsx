@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -215,6 +214,23 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           </p>
         </CardHeader>
         <CardContent>
+          {/* Video Section */}
+          <div className="mb-8">
+            <div className="aspect-video w-full max-w-2xl mx-auto">
+              <iframe 
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                title="About This Position" 
+                className="w-full h-full rounded-lg"
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              />
+            </div>
+            <p className="text-center text-sm text-gray-600 mt-2">
+              Watch this video to learn more about the appointment setter position
+            </p>
+          </div>
+
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-4">
