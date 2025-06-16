@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -221,8 +220,6 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
               <iframe 
                 src="https://www.loom.com/embed/646c1476756c4fc3a96255e0a3a1c6ee?sid=f5ccf346-0d0a-4992-8ae6-59f7d12ce4af" 
                 frameBorder="0" 
-                webkitAllowFullScreen 
-                mozAllowFullScreen 
                 allowFullScreen 
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                 title="About This Position"
