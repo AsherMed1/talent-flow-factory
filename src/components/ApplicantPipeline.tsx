@@ -135,6 +135,17 @@ export const ApplicantPipeline = () => {
                         )}
                       </div>
                       
+                      {/* Display candidate tags */}
+                      {application.candidates.candidate_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {application.candidates.candidate_tags.map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs bg-blue-50">
+                              {tag.tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      
                       {application.interview_date && (
                         <div className="text-xs text-blue-600 mb-2">
                           <Calendar className="w-3 h-3 inline mr-1" />

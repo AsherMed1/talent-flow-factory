@@ -19,13 +19,13 @@ export interface Application {
     name: string;
     email: string;
     phone: string | null;
+    candidate_tags: {
+      tag: string;
+    }[];
   };
   job_roles: {
     name: string;
   };
-  candidate_tags: {
-    tag: string;
-  }[];
 }
 
 export const useApplications = () => {
@@ -36,9 +36,13 @@ export const useApplications = () => {
         .from('applications')
         .select(`
           *,
-          candidates (name, email, phone),
-          job_roles (name),
-          candidate_tags (tag)
+          candidates (
+            name, 
+            email, 
+            phone,
+            candidate_tags (tag)
+          ),
+          job_roles (name)
         `)
         .order('applied_date', { ascending: false });
       
