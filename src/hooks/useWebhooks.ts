@@ -30,7 +30,13 @@ export const useWebhooks = () => {
           }
           throw error;
         }
-        return (data || []) as WebhookConfig[];
+        
+        // Only cast to WebhookConfig[] if we have valid data
+        if (data && Array.isArray(data)) {
+          return data as WebhookConfig[];
+        }
+        
+        return [];
       } catch (error) {
         console.error('Error fetching webhooks:', error);
         return [];
