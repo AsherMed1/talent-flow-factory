@@ -184,6 +184,36 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           });
       }
 
+      // Trigger webhook for application submitted
+      try {
+        const webhookData = {
+          candidate: {
+            name: fullName,
+            email: data.email,
+            phone: data.phone,
+          },
+          application: {
+            jobRole: roleId,
+            formData: formData,
+            hasVoiceRecording: !!data.voiceRecordingUrl,
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        // Call the webhook function
+        await supabase.functions.invoke('trigger-webhook', {
+          body: {
+            eventType: 'application_submitted',
+            data: webhookData
+          }
+        });
+
+        console.log('Webhook triggered successfully for application submission');
+      } catch (webhookError) {
+        console.error('Error triggering webhook:', webhookError);
+        // Don't fail the application submission if webhook fails
+      }
+
       toast({
         title: "Application Submitted Successfully!",
         description: "Thank you for your interest. We'll review your application and get back to you soon.",

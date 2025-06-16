@@ -1,10 +1,10 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Star, Calendar, FileText, Play } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
+import { supabase } from '@/lib/supabase';
 
 export const ApplicantPipeline = () => {
   const { data: applications, isLoading } = useApplications();
@@ -30,6 +30,54 @@ export const ApplicantPipeline = () => {
         className={`w-4 h-4 ${index < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
       />
     ));
+  };
+
+  const handleStatusChange = async (applicationId: string, newStatus: string, candidateData: any) => {
+    console.log('Updating application status:', applicationId, newStatus);
+    
+    try {
+      // Update the application status
+      const { error } = await supabase
+        .from('applications')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      // Trigger webhook for status change
+      try {
+        const webhookData = {
+          application: {
+            id: applicationId,
+            previousStatus: candidateData.status,
+            newStatus: newStatus,
+          },
+          candidate: candidateData.candidates,
+          jobRole: candidateData.job_roles,
+          timestamp: new Date().toISOString(),
+        };
+
+        await supabase.functions.invoke('trigger-webhook', {
+          body: {
+            eventType: 'status_changed',
+            data: webhookData
+          }
+        });
+
+        console.log('Webhook triggered for status change');
+      } catch (webhookError) {
+        console.error('Error triggering webhook:', webhookError);
+      }
+
+      // Refresh the data
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   if (isLoading) {
@@ -160,10 +208,26 @@ export const ApplicantPipeline = () => {
                       )}
                       
                       <div className="flex gap-1">
-                        <Button size="sm" className="text-xs h-7 bg-green-500 hover:bg-green-600">
+                        <Button 
+                          size="sm" 
+                          className="text-xs h-7 bg-green-500 hover:bg-green-600"
+                          onClick={() => {
+                            const nextStageIndex = stageIndex + 1;
+                            if (nextStageIndex < stages.length) {
+                              handleStatusChange(application.id, stages[nextStageIndex].name, application);
+                            } else {
+                              handleStatusChange(application.id, 'hired', application);
+                            }
+                          }}
+                        >
                           ✓
                         </Button>
-                        <Button size="sm" variant="destructive" className="text-xs h-7">
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          className="text-xs h-7"
+                          onClick={() => handleStatusChange(application.id, 'rejected', application)}
+                        >
                           ✕
                         </Button>
                         <Button size="sm" variant="outline" className="text-xs h-7">
