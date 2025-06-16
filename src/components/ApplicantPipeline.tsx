@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Star, Calendar, FileText, Play } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ApplicantPipeline = () => {
   const { data: applications, isLoading } = useApplications();

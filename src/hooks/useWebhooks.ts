@@ -16,13 +16,25 @@ export const useWebhooks = () => {
   return useQuery({
     queryKey: ['webhooks'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('webhook_configs')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as WebhookConfig[];
+      try {
+        const { data, error } = await supabase
+          .from('webhook_configs' as any)
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          // If table doesn't exist, return empty array
+          if (error.message.includes('relation "public.webhook_configs" does not exist')) {
+            console.log('webhook_configs table does not exist yet');
+            return [];
+          }
+          throw error;
+        }
+        return data as WebhookConfig[];
+      } catch (error) {
+        console.error('Error fetching webhooks:', error);
+        return [];
+      }
     }
   });
 };
@@ -33,14 +45,21 @@ export const useCreateWebhook = () => {
   
   return useMutation({
     mutationFn: async (webhook: Omit<WebhookConfig, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('webhook_configs')
-        .insert(webhook)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('webhook_configs' as any)
+          .insert(webhook)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        if (error.message?.includes('relation "public.webhook_configs" does not exist')) {
+          throw new Error('Please run the database migration first to create the webhook_configs table.');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
@@ -49,10 +68,10 @@ export const useCreateWebhook = () => {
         description: "Your Make.com webhook has been configured successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to create webhook configuration.",
+        description: error.message || "Failed to create webhook configuration.",
         variant: "destructive",
       });
     }
