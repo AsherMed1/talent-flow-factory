@@ -27,14 +27,18 @@ export const ApplicationFormHeader = ({ onClearSavedData }: ApplicationFormHeade
               <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">J</span>
               Onboarding Process Overview
             </h4>
-            <div className="aspect-video w-full max-w-2xl mx-auto">
-              <iframe
-                src="https://www.loom.com/embed/your-loom-video-id"
-                frameBorder="0"
-                allowFullScreen
-                className="w-full h-full rounded-lg"
-                title="Onboarding Process Overview"
-              />
+            <div className="w-full max-w-2xl mx-auto">
+              <div style={{ position: 'relative', paddingBottom: '51.354166666666664%', height: 0 }}>
+                <iframe
+                  src="https://www.loom.com/embed/646c1476756c4fc3a96255e0a3a1c6ee?sid=7ea3293d-3735-4500-aadc-e1a790f42062"
+                  frameBorder="0"
+                  webkitAllowFullScreen
+                  mozAllowFullScreen
+                  allowFullScreen
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                  title="Onboarding Process Overview"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
               <div className="flex items-center gap-1">
