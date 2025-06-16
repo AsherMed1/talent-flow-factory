@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { VoiceRecorder } from './VoiceRecorder';
 
 const applicationSchema = z.object({
   // Basic Information
@@ -58,6 +59,11 @@ interface ApplicationFormProps {
 
 export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
+  const [voiceRecording, setVoiceRecording] = useState<{
+    blob: Blob;
+    url: string;
+  } | null>(null);
   const { toast } = useToast();
   
   const form = useForm<ApplicationFormData>({
@@ -66,6 +72,56 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
       agreeToTerms: false,
     },
   });
+
+  const handleVoiceRecording = (audioBlob: Blob, audioUrl: string) => {
+    setVoiceRecording({ blob: audioBlob, url: audioUrl });
+    toast({
+      title: "Voice Recording Captured",
+      description: "Your voice recording has been captured and will be analyzed after submission.",
+    });
+  };
+
+  const analyzeVoiceRecording = async (applicationId: string, audioBlob: Blob) => {
+    try {
+      setIsAnalyzingVoice(true);
+      
+      // Convert blob to base64
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64Audio = btoa(String.fromCharCode(...uint8Array));
+
+      console.log('Starting voice analysis for application:', applicationId);
+
+      const { data, error } = await supabase.functions.invoke('analyze-voice', {
+        body: {
+          applicationId,
+          audioData: base64Audio,
+        },
+      });
+
+      if (error) {
+        console.error('Voice analysis error:', error);
+        throw error;
+      }
+
+      console.log('Voice analysis completed:', data);
+      
+      toast({
+        title: "Voice Analysis Complete",
+        description: "Your voice recording has been analyzed and scored by our AI system.",
+      });
+
+    } catch (error) {
+      console.error('Error analyzing voice:', error);
+      toast({
+        title: "Voice Analysis Warning",
+        description: "Your application was submitted successfully, but voice analysis failed. We'll review your recording manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzingVoice(false);
+    }
+  };
 
   const onSubmit = async (data: ApplicationFormData) => {
     setIsSubmitting(true);
@@ -151,20 +207,23 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         voiceRecording: {
           url: data.voiceRecordingUrl,
           notes: data.voiceRecordingNotes,
+          hasRecording: !!voiceRecording,
         },
       };
 
       // Create application
-      const { error: applicationError } = await supabase
+      const { data: newApplication, error: applicationError } = await supabase
         .from('applications')
         .insert({
           candidate_id: candidateId,
           job_role_id: roleId,
           status: 'applied',
           form_data: formData,
-          has_voice_recording: !!data.voiceRecordingUrl,
-          notes: `Application submitted for Appointment Setter position. Time zone: ${data.timeZone}, Available hours: ${data.hoursPerWeek}/week`,
-        });
+          has_voice_recording: !!voiceRecording,
+          notes: `Application submitted for Appointment Setter position. Time zone: ${data.timeZone}, Available hours: ${data.hoursPerWeek}/week${voiceRecording ? '. Voice recording submitted for AI analysis.' : ''}`,
+        })
+        .select('id')
+        .single();
 
       if (applicationError) throw applicationError;
 
@@ -172,7 +231,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
       const tags = [];
       if (data.appointmentSettingExperience === 'yes') tags.push('Experienced');
       if (data.currentlyWorking === 'no') tags.push('Available Immediately');
-      if (data.voiceRecordingUrl) tags.push('Voice Submitted');
+      if (voiceRecording) tags.push('Voice Submitted');
       
       // Add tags to candidate
       for (const tag of tags) {
@@ -182,6 +241,12 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
             candidate_id: candidateId,
             tag: tag,
           });
+      }
+
+      // Analyze voice recording if provided
+      if (voiceRecording) {
+        // Start voice analysis in background
+        analyzeVoiceRecording(newApplication.id, voiceRecording.blob);
       }
 
       // Trigger webhook for application submitted
@@ -195,7 +260,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           application: {
             jobRole: roleId,
             formData: formData,
-            hasVoiceRecording: !!data.voiceRecordingUrl,
+            hasVoiceRecording: !!voiceRecording,
           },
           timestamp: new Date().toISOString(),
         };
@@ -216,10 +281,13 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
 
       toast({
         title: "Application Submitted Successfully!",
-        description: "Thank you for your interest. We'll review your application and get back to you soon.",
+        description: voiceRecording 
+          ? "Thank you for your interest. We'll review your application and voice recording analysis soon."
+          : "Thank you for your interest. We'll review your application and get back to you soon.",
       });
 
       form.reset();
+      setVoiceRecording(null);
       onSuccess?.();
       
     } catch (error) {
@@ -518,25 +586,27 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
               </div>
             </div>
 
-            {/* Voice Recording */}
+            {/* Voice Recording Section - Updated */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Voice Recording</h3>
+              <h3 className="text-lg font-semibold">Voice Recording (Required)</h3>
               <p className="text-sm text-gray-600">
-                Please record a 2-3 minute voice message introducing yourself and explaining why you'd be great for this role.
+                Please record a 2-3 minute voice message introducing yourself and explaining why you'd be great for this appointment setting role. 
+                <span className="font-medium text-blue-600"> This recording will be automatically analyzed by our AI system to evaluate communication skills.</span>
               </p>
               
-              <div>
-                <Label htmlFor="voiceRecordingUrl">Voice Recording URL (upload to Google Drive, Dropbox, etc.)</Label>
-                <Input
-                  id="voiceRecordingUrl"
-                  {...form.register('voiceRecordingUrl')}
-                  placeholder="https://drive.google.com/file/..."
-                  className="mt-2"
-                />
-              </div>
+              <VoiceRecorder 
+                onRecordingComplete={handleVoiceRecording}
+                disabled={isSubmitting}
+              />
+              
+              {voiceRecording && (
+                <div className="text-sm text-green-600 font-medium">
+                  ✓ Voice recording captured and ready for AI analysis
+                </div>
+              )}
 
               <div>
-                <Label htmlFor="voiceRecordingNotes">Additional notes about your recording:</Label>
+                <Label htmlFor="voiceRecordingNotes">Additional notes about your recording (optional):</Label>
                 <Textarea
                   id="voiceRecordingNotes"
                   {...form.register('voiceRecordingNotes')}
@@ -578,15 +648,25 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Updated */}
             <div className="pt-6">
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isAnalyzingVoice}
                 className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
               >
-                {isSubmitting ? 'Submitting Application...' : 'Submit Application'}
+                {isSubmitting 
+                  ? 'Submitting Application...' 
+                  : isAnalyzingVoice 
+                  ? 'Analyzing Voice Recording...'
+                  : 'Submit Application'}
               </Button>
+              
+              {isAnalyzingVoice && (
+                <p className="text-center text-sm text-gray-600 mt-2">
+                  Your application has been submitted. Voice analysis is running in the background...
+                </p>
+              )}
             </div>
           </form>
         </CardContent>

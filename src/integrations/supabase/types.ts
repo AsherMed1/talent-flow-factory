@@ -26,6 +26,10 @@ export type Database = {
           rating: number | null
           status: Database["public"]["Enums"]["application_status"] | null
           updated_at: string | null
+          voice_analysis_completed_at: string | null
+          voice_analysis_feedback: string | null
+          voice_analysis_score: number | null
+          voice_transcription: string | null
         }
         Insert: {
           applied_date?: string | null
@@ -43,6 +47,10 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          voice_analysis_completed_at?: string | null
+          voice_analysis_feedback?: string | null
+          voice_analysis_score?: number | null
+          voice_transcription?: string | null
         }
         Update: {
           applied_date?: string | null
@@ -60,6 +68,10 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          voice_analysis_completed_at?: string | null
+          voice_analysis_feedback?: string | null
+          voice_analysis_score?: number | null
+          voice_transcription?: string | null
         }
         Relationships: [
           {

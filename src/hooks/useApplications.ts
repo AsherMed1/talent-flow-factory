@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +14,10 @@ export interface Application {
   interview_date: string | null;
   offer_sent_date: string | null;
   applied_date: string;
+  voice_analysis_score: number | null;
+  voice_analysis_feedback: string | null;
+  voice_transcription: string | null;
+  voice_analysis_completed_at: string | null;
   candidates: {
     name: string;
     email: string;
