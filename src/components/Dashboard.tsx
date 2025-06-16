@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, Calendar, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, Calendar, TrendingUp, GitBranch } from 'lucide-react';
 
 export const Dashboard = () => {
   const stats = [
