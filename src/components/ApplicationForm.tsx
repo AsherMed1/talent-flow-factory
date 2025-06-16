@@ -13,41 +13,36 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { VoiceRecorder } from './VoiceRecorder';
+import { Upload } from 'lucide-react';
 
 const applicationSchema = z.object({
   // Basic Information
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Valid email is required'),
-  phone: z.string().min(10, 'Valid phone number is required'),
-  
-  // Experience Questions
-  appointmentSettingExperience: z.enum(['yes', 'no']),
-  experienceDetails: z.string().optional(),
-  currentlyWorking: z.enum(['yes', 'no']),
-  currentWorkDetails: z.string().optional(),
+  location: z.string().min(1, 'Location is required'),
   
   // Availability
-  hoursPerWeek: z.string().min(1, 'Hours per week is required'),
-  startDate: z.string().min(1, 'Start date is required'),
-  timeZone: z.string().min(1, 'Time zone is required'),
+  weekendAvailability: z.string().min(1, 'Weekend availability is required'),
   
-  // Work Setup
-  quietWorkspace: z.enum(['yes', 'no']),
-  reliableInternet: z.enum(['yes', 'no']),
-  computerAccess: z.enum(['yes', 'no']),
+  // Voice Recordings
+  introductionRecording: z.string().optional(),
+  scriptRecording: z.string().optional(),
   
-  // Motivation & Fit
-  whyThisRole: z.string().min(10, 'Please provide a detailed answer'),
-  strengths: z.string().min(10, 'Please describe your strengths'),
-  challengingScenario: z.string().min(10, 'Please describe how you handle challenges'),
+  // File Uploads
+  downloadSpeedScreenshot: z.any().optional(),
+  uploadSpeedScreenshot: z.any().optional(),
+  workstationPhoto: z.any().optional(),
   
-  // Voice Recording
-  voiceRecordingUrl: z.string().optional(),
-  voiceRecordingNotes: z.string().optional(),
+  // Listening Comprehension
+  husbandName: z.enum(['Mark', 'Steve', 'Joesph', 'Bob'], {
+    required_error: 'Please select an answer',
+  }),
+  treatmentNotDone: z.enum(['Shots', 'Knee Replacement Surgery', 'Physical Therapy'], {
+    required_error: 'Please select an answer',
+  }),
   
-  // Additional
-  additionalInfo: z.string().optional(),
+  // Agreement
   agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms'),
 });
 
@@ -63,11 +58,16 @@ const VOICE_STORAGE_KEY = 'application-voice-recording';
 
 export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
-  const [voiceRecording, setVoiceRecording] = useState<{
+  const [introductionRecording, setIntroductionRecording] = useState<{
     blob: Blob;
     url: string;
   } | null>(null);
+  const [scriptRecording, setScriptRecording] = useState<{
+    blob: Blob;
+    url: string;
+  } | null>(null);
+  const [currentRecordingType, setCurrentRecordingType] = useState<'introduction' | 'script' | null>(null);
+  
   const { toast } = useToast();
   
   const form = useForm<ApplicationFormData>({
@@ -77,7 +77,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     },
   });
 
-  // Load saved form data on component mount
+  // Auto-save functionality
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(STORAGE_KEY);
@@ -88,31 +88,15 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
             form.setValue(key as keyof ApplicationFormData, parsedData[key]);
           }
         });
-        console.log('Restored form data from localStorage');
-      }
-
-      // Try to restore voice recording info (but not the actual blob)
-      const savedVoiceInfo = localStorage.getItem(VOICE_STORAGE_KEY);
-      if (savedVoiceInfo) {
-        const voiceInfo = JSON.parse(savedVoiceInfo);
-        if (voiceInfo.hasRecording) {
-          toast({
-            title: "Voice Recording Found",
-            description: "Your previous voice recording was found but needs to be re-recorded due to browser security restrictions.",
-            variant: "destructive"
-          });
-        }
       }
     } catch (error) {
       console.error('Error loading saved form data:', error);
     }
-  }, [form, toast]);
+  }, [form]);
 
-  // Watch form values and save to localStorage
   const watchedValues = form.watch();
   useEffect(() => {
     try {
-      // Only save non-empty values
       const dataToSave = Object.fromEntries(
         Object.entries(watchedValues).filter(([_, value]) => 
           value !== undefined && value !== '' && value !== false
@@ -128,69 +112,28 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
   }, [watchedValues]);
 
   const handleVoiceRecording = (audioBlob: Blob, audioUrl: string) => {
-    try {
-      setVoiceRecording({ blob: audioBlob, url: audioUrl });
-      
-      // Save voice recording info to localStorage
-      localStorage.setItem(VOICE_STORAGE_KEY, JSON.stringify({
-        hasRecording: true,
-        timestamp: new Date().toISOString()
-      }));
-
+    if (currentRecordingType === 'introduction') {
+      setIntroductionRecording({ blob: audioBlob, url: audioUrl });
       toast({
-        title: "Voice Recording Captured",
-        description: "Your voice recording has been captured and will be analyzed after submission.",
+        title: "Introduction Recording Captured",
+        description: "Your introduction recording has been captured successfully.",
       });
-    } catch (error) {
-      console.error('Error handling voice recording:', error);
+    } else if (currentRecordingType === 'script') {
+      setScriptRecording({ blob: audioBlob, url: audioUrl });
       toast({
-        title: "Voice Recording Error",
-        description: "There was an issue saving your voice recording. Please try again.",
-        variant: "destructive",
+        title: "Script Recording Captured",
+        description: "Your script recording has been captured successfully.",
       });
     }
+    setCurrentRecordingType(null);
   };
 
-  const analyzeVoiceRecording = async (applicationId: string, audioBlob: Blob) => {
-    try {
-      setIsAnalyzingVoice(true);
-      
-      // Convert blob to base64
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const base64Audio = btoa(String.fromCharCode(...uint8Array));
-
-      console.log('Starting voice analysis for application:', applicationId);
-
-      const { data, error } = await supabase.functions.invoke('analyze-voice', {
-        body: {
-          applicationId,
-          audioData: base64Audio,
-        },
-      });
-
-      if (error) {
-        console.error('Voice analysis error:', error);
-        throw error;
-      }
-
-      console.log('Voice analysis completed:', data);
-      
-      toast({
-        title: "Voice Analysis Complete",
-        description: "Your voice recording has been analyzed and scored by our AI system.",
-      });
-
-    } catch (error) {
-      console.error('Error analyzing voice:', error);
-      toast({
-        title: "Voice Analysis Warning",
-        description: "Your application was submitted successfully, but voice analysis failed. We'll review your recording manually.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzingVoice(false);
-    }
+  const handleFileUpload = (file: File, fieldName: string) => {
+    form.setValue(fieldName as keyof ApplicationFormData, file);
+    toast({
+      title: "File Uploaded",
+      description: `${file.name} has been uploaded successfully.`,
+    });
   };
 
   const onSubmit = async (data: ApplicationFormData) => {
@@ -198,12 +141,11 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     console.log('Submitting application:', data);
 
     try {
-      // First, create or find the candidate
+      // Create or find the candidate
       const fullName = `${data.firstName} ${data.lastName}`;
       
       let candidateId: string;
       
-      // Check if candidate already exists
       const { data: existingCandidate } = await supabase
         .from('candidates')
         .select('id')
@@ -213,23 +155,19 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
       if (existingCandidate) {
         candidateId = existingCandidate.id;
         
-        // Update candidate info
         await supabase
           .from('candidates')
           .update({
             name: fullName,
-            phone: data.phone,
             updated_at: new Date().toISOString(),
           })
           .eq('id', candidateId);
       } else {
-        // Create new candidate
         const { data: newCandidate, error: candidateError } = await supabase
           .from('candidates')
           .insert({
             name: fullName,
             email: data.email,
-            phone: data.phone,
           })
           .select('id')
           .single();
@@ -238,7 +176,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         candidateId = newCandidate.id;
       }
 
-      // Get the job role ID (default to appointment setter if not provided)
+      // Get job role ID
       let roleId = jobRoleId;
       if (!roleId) {
         const { data: appointmentSetterRole } = await supabase
@@ -250,34 +188,29 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         roleId = appointmentSetterRole?.id;
       }
 
-      // Prepare form data for storage
+      // Prepare form data
       const formData = {
-        experience: {
-          appointmentSetting: data.appointmentSettingExperience,
-          details: data.experienceDetails,
-          currentlyWorking: data.currentlyWorking,
-          currentWorkDetails: data.currentWorkDetails,
+        basicInfo: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          location: data.location,
         },
         availability: {
-          hoursPerWeek: data.hoursPerWeek,
-          startDate: data.startDate,
-          timeZone: data.timeZone,
+          weekendAvailability: data.weekendAvailability,
         },
-        workSetup: {
-          quietWorkspace: data.quietWorkspace,
-          reliableInternet: data.reliableInternet,
-          computerAccess: data.computerAccess,
+        voiceRecordings: {
+          hasIntroduction: !!introductionRecording,
+          hasScript: !!scriptRecording,
         },
-        responses: {
-          whyThisRole: data.whyThisRole,
-          strengths: data.strengths,
-          challengingScenario: data.challengingScenario,
-          additionalInfo: data.additionalInfo,
+        listeningComprehension: {
+          husbandName: data.husbandName,
+          treatmentNotDone: data.treatmentNotDone,
         },
-        voiceRecording: {
-          url: data.voiceRecordingUrl,
-          notes: data.voiceRecordingNotes,
-          hasRecording: !!voiceRecording,
+        uploads: {
+          hasDownloadSpeed: !!data.downloadSpeedScreenshot,
+          hasUploadSpeed: !!data.uploadSpeedScreenshot,
+          hasWorkstation: !!data.workstationPhoto,
         },
       };
 
@@ -289,21 +222,18 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           job_role_id: roleId,
           status: 'applied',
           form_data: formData,
-          has_voice_recording: !!voiceRecording,
-          notes: `Application submitted for Appointment Setter position. Time zone: ${data.timeZone}, Available hours: ${data.hoursPerWeek}/week${voiceRecording ? '. Voice recording submitted for AI analysis.' : ''}`,
+          has_voice_recording: !!(introductionRecording || scriptRecording),
+          notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
         })
         .select('id')
         .single();
 
       if (applicationError) throw applicationError;
 
-      // Add relevant tags based on responses
-      const tags = [];
-      if (data.appointmentSettingExperience === 'yes') tags.push('Experienced');
-      if (data.currentlyWorking === 'no') tags.push('Available Immediately');
-      if (voiceRecording) tags.push('Voice Submitted');
+      // Add tags
+      const tags = ['Remote Worker', 'Weekend Available'];
+      if (introductionRecording && scriptRecording) tags.push('Voice Submitted');
       
-      // Add tags to candidate
       for (const tag of tags) {
         await supabase
           .from('candidate_tags')
@@ -313,55 +243,18 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           });
       }
 
-      // Analyze voice recording if provided
-      if (voiceRecording) {
-        // Start voice analysis in background
-        analyzeVoiceRecording(newApplication.id, voiceRecording.blob);
-      }
-
-      // Trigger webhook for application submitted
-      try {
-        const webhookData = {
-          candidate: {
-            name: fullName,
-            email: data.email,
-            phone: data.phone,
-          },
-          application: {
-            jobRole: roleId,
-            formData: formData,
-            hasVoiceRecording: !!voiceRecording,
-          },
-          timestamp: new Date().toISOString(),
-        };
-
-        // Call the webhook function
-        await supabase.functions.invoke('trigger-webhook', {
-          body: {
-            eventType: 'application_submitted',
-            data: webhookData
-          }
-        });
-
-        console.log('Webhook triggered successfully for application submission');
-      } catch (webhookError) {
-        console.error('Error triggering webhook:', webhookError);
-        // Don't fail the application submission if webhook fails
-      }
-
-      // Clear saved form data after successful submission
+      // Clear saved data
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(VOICE_STORAGE_KEY);
 
       toast({
         title: "Application Submitted Successfully!",
-        description: voiceRecording 
-          ? "Thank you for your interest. We'll review your application and voice recording analysis soon."
-          : "Thank you for your interest. We'll review your application and get back to you soon.",
+        description: "Thank you for your interest. We'll review your application and get back to you soon.",
       });
 
       form.reset();
-      setVoiceRecording(null);
+      setIntroductionRecording(null);
+      setScriptRecording(null);
       onSuccess?.();
       
     } catch (error) {
@@ -380,7 +273,8 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(VOICE_STORAGE_KEY);
     form.reset();
-    setVoiceRecording(null);
+    setIntroductionRecording(null);
+    setScriptRecording(null);
     toast({
       title: "Form Cleared",
       description: "All saved form data has been cleared.",
@@ -391,13 +285,21 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Appointment Setter Application</CardTitle>
-          <p className="text-center text-gray-600">
-            Join our team and help connect patients with quality healthcare providers
-          </p>
+          <CardTitle className="text-2xl text-center">Appointment Setter – Remote</CardTitle>
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-blue-600">(Must Be Available Weekends + Bonuses!)</p>
+            <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
+              <p><strong>What We Offer:</strong></p>
+              <p>✅ Fully remote position with flexible hours (must be available weekends)</p>
+              <p>✅ Opportunity for performance bonuses & career growth</p>
+              <p>✅ Supportive, world-class team focused on your success</p>
+              <p className="font-semibold text-green-600">💰 Pay: $5/hr + performance bonuses</p>
+            </div>
+          </div>
+          
           {/* Auto-save notice */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700">
-            <strong>Auto-save enabled:</strong> Your form data is automatically saved as you type to prevent data loss.
+            <strong>Auto-save enabled:</strong> Your form data is automatically saved as you type.
             <Button 
               variant="outline" 
               size="sm" 
@@ -408,323 +310,295 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
             </Button>
           </div>
         </CardHeader>
+        
         <CardContent>
-          {/* Video Section */}
-          <div className="mb-8">
-            <div style={{ position: 'relative', paddingBottom: '51.354166666666664%', height: 0 }} className="w-full max-w-2xl mx-auto">
-              <iframe 
-                src="https://www.loom.com/embed/646c1476756c4fc3a96255e0a3a1c6ee?sid=f5ccf346-0d0a-4992-8ae6-59f7d12ce4af" 
-                frameBorder="0" 
-                allowFullScreen 
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                title="About This Position"
-              />
-            </div>
-            <p className="text-center text-sm text-gray-600 mt-2">
-              Watch this video to learn more about the appointment setter position
-            </p>
-          </div>
-
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
                     {...form.register('firstName')}
-                    placeholder="Your first name"
+                    placeholder="Justin"
                   />
                   {form.formState.errors.firstName && (
                     <p className="text-sm text-red-600">{form.formState.errors.firstName.message}</p>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
                     {...form.register('lastName')}
-                    placeholder="Your last name"
+                    placeholder="Lesh"
                   />
                   {form.formState.errors.lastName && (
                     <p className="text-sm text-red-600">{form.formState.errors.lastName.message}</p>
                   )}
                 </div>
               </div>
+              
               <div>
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   {...form.register('email')}
-                  placeholder="your.email@example.com"
+                  placeholder="justinlesh1@gmail.com"
                 />
                 {form.formState.errors.email && (
                   <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
                 )}
               </div>
-              <div>
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  {...form.register('phone')}
-                  placeholder="(555) 123-4567"
-                />
-                {form.formState.errors.phone && (
-                  <p className="text-sm text-red-600">{form.formState.errors.phone.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Experience Questions */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Experience & Background</h3>
               
               <div>
-                <Label>Do you have experience in appointment setting or cold calling? *</Label>
-                <RadioGroup 
-                  value={form.watch('appointmentSettingExperience')} 
-                  onValueChange={(value) => form.setValue('appointmentSettingExperience', value as 'yes' | 'no')}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="exp-yes" />
-                    <Label htmlFor="exp-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="exp-no" />
-                    <Label htmlFor="exp-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="experienceDetails">If yes, please describe your experience:</Label>
-                <Textarea
-                  id="experienceDetails"
-                  {...form.register('experienceDetails')}
-                  placeholder="Describe your relevant experience..."
-                  className="mt-2"
+                <Label htmlFor="location">Where do you live (City, State, Country)</Label>
+                <Input
+                  id="location"
+                  {...form.register('location')}
+                  placeholder="e.g., Miami, FL, USA"
                 />
+                {form.formState.errors.location && (
+                  <p className="text-sm text-red-600">{form.formState.errors.location.message}</p>
+                )}
               </div>
-
-              <div>
-                <Label>Are you currently working? *</Label>
-                <RadioGroup 
-                  value={form.watch('currentlyWorking')} 
-                  onValueChange={(value) => form.setValue('currentlyWorking', value as 'yes' | 'no')}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="work-yes" />
-                    <Label htmlFor="work-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="work-no" />
-                    <Label htmlFor="work-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="currentWorkDetails">If yes, please describe your current work situation:</Label>
-                <Textarea
-                  id="currentWorkDetails"
-                  {...form.register('currentWorkDetails')}
-                  placeholder="Describe your current work situation..."
-                  className="mt-2"
-                />
-              </div>
-            </div>
-
-            {/* Availability */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Availability</h3>
               
               <div>
-                <Label htmlFor="hoursPerWeek">How many hours per week are you available to work? *</Label>
-                <Input
-                  id="hoursPerWeek"
-                  {...form.register('hoursPerWeek')}
-                  placeholder="e.g., 20-40 hours"
+                <Label htmlFor="weekendAvailability">Are You Available To Work Weekends? (Saturday /Sunday)</Label>
+                <Textarea
+                  id="weekendAvailability"
+                  {...form.register('weekendAvailability')}
+                  placeholder="Please describe your weekend availability"
+                  className="mt-2"
                 />
-                {form.formState.errors.hoursPerWeek && (
-                  <p className="text-sm text-red-600">{form.formState.errors.hoursPerWeek.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="startDate">When can you start? *</Label>
-                <Input
-                  id="startDate"
-                  {...form.register('startDate')}
-                  placeholder="e.g., Immediately, 2 weeks notice, etc."
-                />
-                {form.formState.errors.startDate && (
-                  <p className="text-sm text-red-600">{form.formState.errors.startDate.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="timeZone">What time zone are you in? *</Label>
-                <Input
-                  id="timeZone"
-                  {...form.register('timeZone')}
-                  placeholder="e.g., EST, PST, CST"
-                />
-                {form.formState.errors.timeZone && (
-                  <p className="text-sm text-red-600">{form.formState.errors.timeZone.message}</p>
+                {form.formState.errors.weekendAvailability && (
+                  <p className="text-sm text-red-600">{form.formState.errors.weekendAvailability.message}</p>
                 )}
               </div>
             </div>
 
-            {/* Work Setup */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Work Environment</h3>
-              
-              <div>
-                <Label>Do you have a quiet workspace for making calls? *</Label>
-                <RadioGroup 
-                  value={form.watch('quietWorkspace')} 
-                  onValueChange={(value) => form.setValue('quietWorkspace', value as 'yes' | 'no')}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="quiet-yes" />
-                    <Label htmlFor="quiet-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="quiet-no" />
-                    <Label htmlFor="quiet-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label>Do you have reliable internet access? *</Label>
-                <RadioGroup 
-                  value={form.watch('reliableInternet')} 
-                  onValueChange={(value) => form.setValue('reliableInternet', value as 'yes' | 'no')}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="internet-yes" />
-                    <Label htmlFor="internet-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="internet-no" />
-                    <Label htmlFor="internet-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label>Do you have access to a computer/laptop? *</Label>
-                <RadioGroup 
-                  value={form.watch('computerAccess')} 
-                  onValueChange={(value) => form.setValue('computerAccess', value as 'yes' | 'no')}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="computer-yes" />
-                    <Label htmlFor="computer-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="computer-no" />
-                    <Label htmlFor="computer-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-
-            {/* Motivation & Fit */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">About You</h3>
-              
-              <div>
-                <Label htmlFor="whyThisRole">Why are you interested in this appointment setting role? *</Label>
-                <Textarea
-                  id="whyThisRole"
-                  {...form.register('whyThisRole')}
-                  placeholder="Tell us why you're interested in this position..."
-                  className="mt-2"
-                />
-                {form.formState.errors.whyThisRole && (
-                  <p className="text-sm text-red-600">{form.formState.errors.whyThisRole.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="strengths">What are your key strengths that would make you successful in this role? *</Label>
-                <Textarea
-                  id="strengths"
-                  {...form.register('strengths')}
-                  placeholder="Describe your relevant strengths..."
-                  className="mt-2"
-                />
-                {form.formState.errors.strengths && (
-                  <p className="text-sm text-red-600">{form.formState.errors.strengths.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="challengingScenario">Describe a challenging situation you've handled and how you overcame it: *</Label>
-                <Textarea
-                  id="challengingScenario"
-                  {...form.register('challengingScenario')}
-                  placeholder="Share an example of how you handle challenges..."
-                  className="mt-2"
-                />
-                {form.formState.errors.challengingScenario && (
-                  <p className="text-sm text-red-600">{form.formState.errors.challengingScenario.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Voice Recording Section - Updated */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Voice Recording (Required)</h3>
+            {/* Voice Recordings */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Voice Recordings</h3>
               <p className="text-sm text-gray-600">
-                Please record a 2-3 minute voice message introducing yourself and explaining why you'd be great for this appointment setting role. 
-                <span className="font-medium text-blue-600"> This recording will be automatically analyzed by our AI system to evaluate communication skills.</span>
+                For the next two questions, please record yourself using the voice recorder below.
               </p>
               
-              <VoiceRecorder 
-                onRecordingComplete={handleVoiceRecording}
-                disabled={isSubmitting}
-              />
-              
-              {voiceRecording && (
-                <div className="text-sm text-green-600 font-medium">
-                  ✓ Voice recording captured and ready for AI analysis
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base font-medium">
+                    Please Provide a Voice Recording Of Yourself. Just Tell Us a Little About You and Your Experience.
+                  </Label>
+                  <div className="mt-2">
+                    {!introductionRecording ? (
+                      <Button
+                        type="button"
+                        onClick={() => setCurrentRecordingType('introduction')}
+                        disabled={currentRecordingType !== null}
+                        className="mb-2"
+                      >
+                        Record Introduction
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="text-sm text-green-600 font-medium">
+                          ✓ Introduction recording captured
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setCurrentRecordingType('introduction')}
+                          disabled={currentRecordingType !== null}
+                        >
+                          Re-record Introduction
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              <div>
-                <Label htmlFor="voiceRecordingNotes">Additional notes about your recording (optional):</Label>
-                <Textarea
-                  id="voiceRecordingNotes"
-                  {...form.register('voiceRecordingNotes')}
-                  placeholder="Any additional context about your voice recording..."
-                  className="mt-2"
-                />
+                
+                <div>
+                  <Label className="text-base font-medium">
+                    Record Yourself Confirming Call Script:
+                  </Label>
+                  <div className="bg-gray-50 p-3 rounded-md text-sm italic my-2">
+                    "Hey Susan, just a quick check-in to confirm your appointment for tomorrow.—it's {"{Your Name}"} from Apex Vascular. You're all set for your knee pain consultation with Dr. Pollock tomorrow at 2 PM! We're excited to see you and get you on the path to feeling better. Let me know if anything comes up—otherwise, see you then!"
+                  </div>
+                  <div className="mt-2">
+                    {!scriptRecording ? (
+                      <Button
+                        type="button"
+                        onClick={() => setCurrentRecordingType('script')}
+                        disabled={currentRecordingType !== null}
+                        className="mb-2"
+                      >
+                        Record Script
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="text-sm text-green-600 font-medium">
+                          ✓ Script recording captured
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setCurrentRecordingType('script')}
+                          disabled={currentRecordingType !== null}
+                        >
+                          Re-record Script
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {currentRecordingType && (
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">
+                      Recording: {currentRecordingType === 'introduction' ? 'Introduction' : 'Call Script'}
+                    </h4>
+                    <VoiceRecorder 
+                      onRecordingComplete={handleVoiceRecording}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Additional Information */}
+            {/* File Uploads */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Additional Information</h3>
+              <h3 className="text-lg font-semibold">Required Uploads</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">
+                    Upload a Screen Shot of Your Download Internet Speed From https://www.speedtest.net/
+                  </Label>
+                  <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'downloadSpeedScreenshot');
+                      }}
+                      className="mt-2 text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">
+                    Upload a Screen Shot of Your Upload Internet Speed From https://www.speedtest.net/
+                  </Label>
+                  <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'uploadSpeedScreenshot');
+                      }}
+                      className="mt-2 text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">
+                    Please Upload a Picture of Your Work Station or Computer Setup
+                  </Label>
+                  <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'workstationPhoto');
+                      }}
+                      className="mt-2 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Listening Comprehension */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Listening Comprehension Test</h3>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="font-medium mb-2">
+                  Listen to this Recording{' '}
+                  <a 
+                    href="https://voca.ro/1714xBYyDAkt" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    https://voca.ro/1714xBYyDAkt
+                  </a>
+                  {' '}and answer the next two questions off of it.
+                </p>
+              </div>
               
               <div>
-                <Label htmlFor="additionalInfo">Is there anything else you'd like us to know?</Label>
-                <Textarea
-                  id="additionalInfo"
-                  {...form.register('additionalInfo')}
-                  placeholder="Any additional information you'd like to share..."
+                <Label>What Was Her Husband's Name</Label>
+                <RadioGroup 
+                  value={form.watch('husbandName')} 
+                  onValueChange={(value) => form.setValue('husbandName', value as 'Mark' | 'Steve' | 'Joesph' | 'Bob')}
                   className="mt-2"
-                />
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Mark" id="mark" />
+                    <Label htmlFor="mark">Mark</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Steve" id="steve" />
+                    <Label htmlFor="steve">Steve</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Joesph" id="joesph" />
+                    <Label htmlFor="joesph">Joesph</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Bob" id="bob" />
+                    <Label htmlFor="bob">Bob</Label>
+                  </div>
+                </RadioGroup>
+                {form.formState.errors.husbandName && (
+                  <p className="text-sm text-red-600">{form.formState.errors.husbandName.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label>What Treatments Has Sharon NOT Done Yet?</Label>
+                <RadioGroup 
+                  value={form.watch('treatmentNotDone')} 
+                  onValueChange={(value) => form.setValue('treatmentNotDone', value as 'Shots' | 'Knee Replacement Surgery' | 'Physical Therapy')}
+                  className="mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Shots" id="shots" />
+                    <Label htmlFor="shots">Shots</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Knee Replacement Surgery" id="surgery" />
+                    <Label htmlFor="surgery">Knee Replacement Surgery</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Physical Therapy" id="therapy" />
+                    <Label htmlFor="therapy">Physical Therapy</Label>
+                  </div>
+                </RadioGroup>
+                {form.formState.errors.treatmentNotDone && (
+                  <p className="text-sm text-red-600">{form.formState.errors.treatmentNotDone.message}</p>
+                )}
               </div>
             </div>
 
@@ -745,25 +619,15 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
               )}
             </div>
 
-            {/* Submit Button - Updated */}
+            {/* Submit Button */}
             <div className="pt-6">
               <Button
                 type="submit"
-                disabled={isSubmitting || isAnalyzingVoice}
+                disabled={isSubmitting}
                 className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
               >
-                {isSubmitting 
-                  ? 'Submitting Application...' 
-                  : isAnalyzingVoice 
-                  ? 'Analyzing Voice Recording...'
-                  : 'Submit Application'}
+                {isSubmitting ? 'Submitting...' : 'Submit!'}
               </Button>
-              
-              {isAnalyzingVoice && (
-                <p className="text-center text-sm text-gray-600 mt-2">
-                  Your application has been submitted. Voice analysis is running in the background...
-                </p>
-              )}
             </div>
           </form>
         </CardContent>
