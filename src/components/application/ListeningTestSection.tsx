@@ -13,18 +13,28 @@ export const ListeningTestSection = ({ form }: ListeningTestSectionProps) => {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Listening Comprehension Test</h3>
       <div className="bg-blue-50 p-4 rounded-lg">
-        <p className="font-medium mb-2">
-          Listen to this Recording{' '}
+        <p className="font-medium mb-4">
+          Listen to this recording and answer the next two questions based on it:
+        </p>
+        <div className="flex flex-col items-center space-y-2">
+          <iframe 
+            width="300" 
+            height="60" 
+            src="https://vocaroo.com/embed/1714xBYyDAkt?autoplay=0" 
+            frameBorder="0" 
+            allow="autoplay"
+            className="rounded border"
+          />
           <a 
             href="https://voca.ro/1714xBYyDAkt" 
-            target="_blank" 
+            title="Vocaroo Voice Recorder" 
+            target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline"
+            className="text-blue-600 underline text-sm"
           >
-            https://voca.ro/1714xBYyDAkt
+            View on Vocaroo &gt;&gt;
           </a>
-          {' '}and answer the next two questions off of it.
-        </p>
+        </div>
       </div>
       
       <div>
