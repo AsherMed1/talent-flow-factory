@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -57,6 +58,9 @@ interface ApplicationFormProps {
   onSuccess?: () => void;
 }
 
+const STORAGE_KEY = 'application-form-data';
+const VOICE_STORAGE_KEY = 'application-voice-recording';
+
 export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
@@ -73,12 +77,78 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     },
   });
 
+  // Load saved form data on component mount
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        Object.keys(parsedData).forEach(key => {
+          if (parsedData[key] !== undefined && parsedData[key] !== '') {
+            form.setValue(key as keyof ApplicationFormData, parsedData[key]);
+          }
+        });
+        console.log('Restored form data from localStorage');
+      }
+
+      // Try to restore voice recording info (but not the actual blob)
+      const savedVoiceInfo = localStorage.getItem(VOICE_STORAGE_KEY);
+      if (savedVoiceInfo) {
+        const voiceInfo = JSON.parse(savedVoiceInfo);
+        if (voiceInfo.hasRecording) {
+          toast({
+            title: "Voice Recording Found",
+            description: "Your previous voice recording was found but needs to be re-recorded due to browser security restrictions.",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved form data:', error);
+    }
+  }, [form, toast]);
+
+  // Watch form values and save to localStorage
+  const watchedValues = form.watch();
+  useEffect(() => {
+    try {
+      // Only save non-empty values
+      const dataToSave = Object.fromEntries(
+        Object.entries(watchedValues).filter(([_, value]) => 
+          value !== undefined && value !== '' && value !== false
+        )
+      );
+      
+      if (Object.keys(dataToSave).length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      }
+    } catch (error) {
+      console.error('Error saving form data:', error);
+    }
+  }, [watchedValues]);
+
   const handleVoiceRecording = (audioBlob: Blob, audioUrl: string) => {
-    setVoiceRecording({ blob: audioBlob, url: audioUrl });
-    toast({
-      title: "Voice Recording Captured",
-      description: "Your voice recording has been captured and will be analyzed after submission.",
-    });
+    try {
+      setVoiceRecording({ blob: audioBlob, url: audioUrl });
+      
+      // Save voice recording info to localStorage
+      localStorage.setItem(VOICE_STORAGE_KEY, JSON.stringify({
+        hasRecording: true,
+        timestamp: new Date().toISOString()
+      }));
+
+      toast({
+        title: "Voice Recording Captured",
+        description: "Your voice recording has been captured and will be analyzed after submission.",
+      });
+    } catch (error) {
+      console.error('Error handling voice recording:', error);
+      toast({
+        title: "Voice Recording Error",
+        description: "There was an issue saving your voice recording. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const analyzeVoiceRecording = async (applicationId: string, audioBlob: Blob) => {
@@ -279,6 +349,10 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         // Don't fail the application submission if webhook fails
       }
 
+      // Clear saved form data after successful submission
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(VOICE_STORAGE_KEY);
+
       toast({
         title: "Application Submitted Successfully!",
         description: voiceRecording 
@@ -302,6 +376,17 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
     }
   };
 
+  const clearSavedData = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(VOICE_STORAGE_KEY);
+    form.reset();
+    setVoiceRecording(null);
+    toast({
+      title: "Form Cleared",
+      description: "All saved form data has been cleared.",
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <Card>
@@ -310,6 +395,18 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           <p className="text-center text-gray-600">
             Join our team and help connect patients with quality healthcare providers
           </p>
+          {/* Auto-save notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700">
+            <strong>Auto-save enabled:</strong> Your form data is automatically saved as you type to prevent data loss.
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearSavedData}
+              className="ml-2 text-xs"
+            >
+              Clear Saved Data
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Video Section */}
