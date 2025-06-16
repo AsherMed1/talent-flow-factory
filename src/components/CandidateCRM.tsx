@@ -6,74 +6,41 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, Filter, Star, Mail, Phone } from 'lucide-react';
+import { useCandidates } from '@/hooks/useCandidates';
 
 export const CandidateCRM = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const { data: candidates, isLoading } = useCandidates();
 
-  const candidates = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      phone: '+1 (555) 123-4567',
-      role: 'Appointment Setter',
-      status: 'Active Application',
-      rating: 4.5,
-      tags: ['Top Performer', 'Spanish Speaker'],
-      appliedDate: '2024-03-15',
-      notes: 'Excellent communication skills, previous healthcare experience',
-      lastContact: '2024-03-16',
-    },
-    {
-      id: 2,
-      name: 'Mike Chen',
-      email: 'mike.chen@email.com',
-      phone: '+1 (555) 234-5678',
-      role: 'Virtual Assistant',
-      status: 'Interview Scheduled',
-      rating: 4.8,
-      tags: ['Tech Savvy', 'Project Management'],
-      appliedDate: '2024-03-12',
-      notes: 'Strong technical background, great portfolio',
-      lastContact: '2024-03-15',
-    },
-    {
-      id: 3,
-      name: 'Emma Davis',
-      email: 'emma.davis@email.com',
-      phone: '+1 (555) 345-6789',
-      role: 'Appointment Setter',
-      status: 'Offer Sent',
-      rating: 5.0,
-      tags: ['Top Setter', 'Quick Learner'],
-      appliedDate: '2024-03-10',
-      notes: 'Outstanding interview performance, immediate availability',
-      lastContact: '2024-03-16',
-    },
-    {
-      id: 4,
-      name: 'James Wilson',
-      email: 'james.wilson@email.com',
-      phone: '+1 (555) 456-7890',
-      role: 'Sales Closer',
-      status: 'Previous Applicant',
-      rating: 3.5,
-      tags: ['Sales Experience', 'Follow Up'],
-      appliedDate: '2024-02-28',
-      notes: 'Good potential, needs more training',
-      lastContact: '2024-03-01',
-    },
-  ];
+  const filteredCandidates = candidates?.filter(candidate => {
+    const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (selectedFilter === 'all') return true;
+    if (selectedFilter === 'active') {
+      return candidate.applications.some(app => !['hired', 'rejected'].includes(app.status));
+    }
+    if (selectedFilter === 'hired') {
+      return candidate.applications.some(app => app.status === 'hired');
+    }
+    return false;
+  }) || [];
 
   const filters = [
-    { id: 'all', label: 'All Candidates', count: candidates.length },
-    { id: 'active', label: 'Active Applications', count: 2 },
-    { id: 'hired', label: 'Hired', count: 1 },
-    { id: 'previous', label: 'Previous Applicants', count: 1 },
+    { id: 'all', label: 'All Candidates', count: candidates?.length || 0 },
+    { id: 'active', label: 'Active Applications', count: candidates?.filter(c => 
+      c.applications.some(app => !['hired', 'rejected'].includes(app.status))
+    ).length || 0 },
+    { id: 'hired', label: 'Hired', count: candidates?.filter(c => 
+      c.applications.some(app => app.status === 'hired')
+    ).length || 0 },
   ];
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number | null) => {
+    if (!rating) return null;
     const fullStars = Math.floor(rating);
     const halfStar = rating % 1 !== 0;
     
@@ -90,18 +57,52 @@ export const CandidateCRM = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active Application':
+      case 'applied':
         return 'bg-blue-100 text-blue-800';
-      case 'Interview Scheduled':
+      case 'interview_scheduled':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Offer Sent':
+      case 'offer_sent':
         return 'bg-green-100 text-green-800';
-      case 'Previous Applicant':
-        return 'bg-gray-100 text-gray-800';
+      case 'hired':
+        return 'bg-emerald-100 text-emerald-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getDisplayStatus = (status: string) => {
+    switch (status) {
+      case 'applied':
+        return 'Active Application';
+      case 'interview_scheduled':
+        return 'Interview Scheduled';
+      case 'offer_sent':
+        return 'Offer Sent';
+      case 'hired':
+        return 'Hired';
+      default:
+        return 'Previous Applicant';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Talent Vault</h1>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-48 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -141,70 +142,90 @@ export const CandidateCRM = () => {
 
       {/* Candidates Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {candidates.map((candidate) => (
-          <Card key={candidate.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback>
-                      {candidate.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                    <p className="text-sm text-gray-600">{candidate.role}</p>
+        {filteredCandidates.map((candidate) => {
+          const latestApplication = candidate.applications[0];
+          const tags = candidate.candidate_tags.map(tag => tag.tag);
+          
+          return (
+            <Card key={candidate.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback>
+                        {candidate.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-lg">{candidate.name}</CardTitle>
+                      {latestApplication && (
+                        <p className="text-sm text-gray-600">{latestApplication.job_roles.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  {latestApplication && (
+                    <Badge className={getStatusColor(latestApplication.status)}>
+                      {getDisplayStatus(latestApplication.status)}
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  {latestApplication?.rating && renderStars(latestApplication.rating)}
+                  <div className="text-sm text-gray-500">
+                    {latestApplication && `Applied: ${new Date(latestApplication.applied_date).toLocaleDateString()}`}
                   </div>
                 </div>
-                <Badge className={getStatusColor(candidate.status)}>
-                  {candidate.status}
-                </Badge>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                {renderStars(candidate.rating)}
-                <div className="text-sm text-gray-500">
-                  Applied: {candidate.appliedDate}
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span>{candidate.email}</span>
+                  </div>
+                  {candidate.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span>{candidate.phone}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span>{candidate.email}</span>
+                
+                <div className="flex flex-wrap gap-1">
+                  {tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <span>{candidate.phone}</span>
+                
+                {latestApplication?.notes && (
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-700">{latestApplication.notes}</p>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Last contact: {new Date(latestApplication.applied_date).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline">View Profile</Button>
+                  <Button size="sm" variant="outline">Send Message</Button>
+                  <Button size="sm" variant="outline">Schedule Interview</Button>
                 </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-1">
-                {candidate.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-700">{candidate.notes}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  Last contact: {candidate.lastContact}
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline">View Profile</Button>
-                <Button size="sm" variant="outline">Send Message</Button>
-                <Button size="sm" variant="outline">Schedule Interview</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {filteredCandidates.length === 0 && (
+        <div className="text-center text-gray-500 py-12">
+          <p className="text-lg">No candidates found</p>
+          <p className="text-sm">Try adjusting your search or filters</p>
+        </div>
+      )}
     </div>
   );
 };

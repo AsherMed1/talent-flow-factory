@@ -9,7 +9,199 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_date: string | null
+          candidate_id: string | null
+          created_at: string | null
+          form_data: Json | null
+          has_resume: boolean | null
+          has_video: boolean | null
+          has_voice_recording: boolean | null
+          id: string
+          interview_date: string | null
+          job_role_id: string | null
+          notes: string | null
+          offer_sent_date: string | null
+          rating: number | null
+          status: Database["public"]["Enums"]["application_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          applied_date?: string | null
+          candidate_id?: string | null
+          created_at?: string | null
+          form_data?: Json | null
+          has_resume?: boolean | null
+          has_video?: boolean | null
+          has_voice_recording?: boolean | null
+          id?: string
+          interview_date?: string | null
+          job_role_id?: string | null
+          notes?: string | null
+          offer_sent_date?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          applied_date?: string | null
+          candidate_id?: string | null
+          created_at?: string | null
+          form_data?: Json | null
+          has_resume?: boolean | null
+          has_video?: boolean | null
+          has_voice_recording?: boolean | null
+          id?: string
+          interview_date?: string | null
+          job_role_id?: string | null
+          notes?: string | null
+          offer_sent_date?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_job_role_id_fkey"
+            columns: ["job_role_id"]
+            isOneToOne: false
+            referencedRelation: "job_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_tags: {
+        Row: {
+          candidate_id: string | null
+          created_at: string | null
+          id: string
+          tag: string
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string | null
+          id?: string
+          tag: string
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string | null
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_tags_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidates: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      job_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          form_fields: Json | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["role_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          form_fields?: Json | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["role_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          form_fields?: Json | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["role_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +210,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      application_status:
+        | "applied"
+        | "reviewed"
+        | "interview_scheduled"
+        | "interview_completed"
+        | "offer_sent"
+        | "hired"
+        | "rejected"
+      role_status: "active" | "draft" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +333,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_status: [
+        "applied",
+        "reviewed",
+        "interview_scheduled",
+        "interview_completed",
+        "offer_sent",
+        "hired",
+        "rejected",
+      ],
+      role_status: ["active", "draft", "closed"],
+    },
   },
 } as const

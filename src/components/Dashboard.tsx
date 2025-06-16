@@ -1,20 +1,54 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Calendar, TrendingUp, GitBranch } from 'lucide-react';
+import { useApplicationStats, useApplications } from '@/hooks/useApplications';
 
 export const Dashboard = () => {
-  const stats = [
-    { label: 'Active Applications', value: '24', icon: Users, color: 'text-blue-600' },
-    { label: 'Interviews This Week', value: '8', icon: Calendar, color: 'text-purple-600' },
-    { label: 'Hired This Month', value: '3', icon: UserCheck, color: 'text-green-600' },
-    { label: 'Conversion Rate', value: '12.5%', icon: TrendingUp, color: 'text-orange-600' },
+  const { data: stats, isLoading: statsLoading } = useApplicationStats();
+  const { data: applications, isLoading: applicationsLoading } = useApplications();
+
+  const defaultStats = [
+    { label: 'Active Applications', value: '0', icon: Users, color: 'text-blue-600' },
+    { label: 'Interviews This Week', value: '0', icon: Calendar, color: 'text-purple-600' },
+    { label: 'Hired This Month', value: '0', icon: UserCheck, color: 'text-green-600' },
+    { label: 'Conversion Rate', value: '0%', icon: TrendingUp, color: 'text-orange-600' },
   ];
 
-  const recentActivity = [
-    { action: 'New application from Sarah Johnson', role: 'Appointment Setter', time: '2 hours ago' },
-    { action: 'Interview scheduled with Mike Chen', role: 'Virtual Assistant', time: '4 hours ago' },
-    { action: 'Offer sent to Emma Davis', role: 'Appointment Setter', time: '1 day ago' },
-    { action: 'New role template created', role: 'Sales Closer', time: '2 days ago' },
-  ];
+  const statsData = stats ? [
+    { label: 'Active Applications', value: stats.activeApplications.toString(), icon: Users, color: 'text-blue-600' },
+    { label: 'Interviews This Week', value: stats.interviewsThisWeek.toString(), icon: Calendar, color: 'text-purple-600' },
+    { label: 'Hired This Month', value: stats.hiredThisMonth.toString(), icon: UserCheck, color: 'text-green-600' },
+    { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendingUp, color: 'text-orange-600' },
+  ] : defaultStats;
+
+  const recentActivity = applications?.slice(0, 4).map(app => ({
+    action: `${app.status === 'applied' ? 'New application from' : 
+             app.status === 'interview_scheduled' ? 'Interview scheduled with' :
+             app.status === 'offer_sent' ? 'Offer sent to' : 
+             'Updated application for'} ${app.candidates.name}`,
+    role: app.job_roles.name,
+    time: new Date(app.applied_date).toLocaleDateString()
+  })) || [];
+
+  if (statsLoading || applicationsLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Hiring Dashboard</h1>
+          <div className="text-sm text-gray-500">Loading...</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -27,7 +61,7 @@ export const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {statsData.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -92,7 +126,7 @@ export const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
+            {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{activity.action}</p>
@@ -100,7 +134,11 @@ export const Dashboard = () => {
                 </div>
                 <span className="text-xs text-gray-400">{activity.time}</span>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-500 py-8">
+                No recent activity yet. Create your first role to get started!
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

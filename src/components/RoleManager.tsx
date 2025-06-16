@@ -5,46 +5,61 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Copy, Edit, Eye } from 'lucide-react';
+import { useJobRoles, useCreateJobRole } from '@/hooks/useJobRoles';
+import { useToast } from '@/hooks/use-toast';
 
 export const RoleManager = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newRole, setNewRole] = useState({ name: '', description: '' });
+  const { data: roles, isLoading } = useJobRoles();
+  const createRoleMutation = useCreateJobRole();
+  const { toast } = useToast();
 
-  const roles = [
-    {
-      id: 1,
-      name: 'Appointment Setter',
-      description: 'Schedule appointments and manage client outreach',
-      status: 'Active',
-      applicants: 15,
-      created: '2024-01-15',
-      formFields: ['Basic Info', 'Voice Recording', 'Availability', 'Experience'],
-    },
-    {
-      id: 2,
-      name: 'Virtual Assistant',
-      description: 'Provide administrative support and manage tasks',
-      status: 'Active',
-      applicants: 8,
-      created: '2024-02-01',
-      formFields: ['Basic Info', 'Portfolio', 'Skills Assessment', 'Time Zone'],
-    },
-    {
-      id: 3,
-      name: 'Sales Closer',
-      description: 'Close sales calls and convert qualified leads',
-      status: 'Draft',
-      applicants: 0,
-      created: '2024-03-10',
-      formFields: ['Basic Info', 'Sales Experience', 'Video Pitch', 'Objection Handling'],
-    },
-  ];
+  const handleCreateRole = async () => {
+    if (!newRole.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Role name is required",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleCreateRole = () => {
-    console.log('Creating new role:', newRole);
-    setShowCreateForm(false);
-    setNewRole({ name: '', description: '' });
+    try {
+      await createRoleMutation.mutateAsync(newRole);
+      toast({
+        title: "Success",
+        description: "Role created successfully"
+      });
+      setShowCreateForm(false);
+      setNewRole({ name: '', description: '' });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create role",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Role Templates</h1>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -82,7 +97,12 @@ export const RoleManager = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleCreateRole}>Create Role</Button>
+              <Button 
+                onClick={handleCreateRole}
+                disabled={createRoleMutation.isPending}
+              >
+                {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
+              </Button>
               <Button variant="outline" onClick={() => setShowCreateForm(false)}>
                 Cancel
               </Button>
@@ -92,60 +112,63 @@ export const RoleManager = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {roles.map((role) => (
-          <Card key={role.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{role.name}</CardTitle>
-                <Badge 
-                  variant={role.status === 'Active' ? 'default' : 'secondary'}
-                  className={role.status === 'Active' ? 'bg-green-100 text-green-800' : ''}
-                >
-                  {role.status}
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-600">{role.description}</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+        {roles?.map((role) => {
+          const formFields = Array.isArray(role.form_fields) ? role.form_fields : [];
+          return (
+            <Card key={role.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{role.name}</CardTitle>
+                  <Badge 
+                    variant={role.status === 'active' ? 'default' : 'secondary'}
+                    className={role.status === 'active' ? 'bg-green-100 text-green-800' : ''}
+                  >
+                    {role.status}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600">{role.description}</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-500">Applicants:</span>
+                    <span className="ml-2 font-semibold">0</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-500">Created:</span>
+                    <span className="ml-2">{new Date(role.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                
                 <div>
-                  <span className="font-medium text-gray-500">Applicants:</span>
-                  <span className="ml-2 font-semibold">{role.applicants}</span>
+                  <span className="font-medium text-gray-500 text-sm">Form Fields:</span>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {formFields.map((field: any, index: number) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {field.name || field}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-500">Created:</span>
-                  <span className="ml-2">{role.created}</span>
+                
+                <div className="flex gap-2 pt-2">
+                  <Button size="sm" variant="outline">
+                    <Eye className="w-4 h-4 mr-1" />
+                    Preview
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <Copy className="w-4 h-4 mr-1" />
+                    Clone
+                  </Button>
                 </div>
-              </div>
-              
-              <div>
-                <span className="font-medium text-gray-500 text-sm">Form Fields:</span>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {role.formFields.map((field, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {field}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex gap-2 pt-2">
-                <Button size="sm" variant="outline">
-                  <Eye className="w-4 h-4 mr-1" />
-                  Preview
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Copy className="w-4 h-4 mr-1" />
-                  Clone
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
