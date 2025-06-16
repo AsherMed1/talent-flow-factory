@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -216,14 +217,15 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         <CardContent>
           {/* Video Section */}
           <div className="mb-8">
-            <div className="aspect-video w-full max-w-2xl mx-auto">
+            <div style={{ position: 'relative', paddingBottom: '51.354166666666664%', height: 0 }} className="w-full max-w-2xl mx-auto">
               <iframe 
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                title="About This Position" 
-                className="w-full h-full rounded-lg"
+                src="https://www.loom.com/embed/646c1476756c4fc3a96255e0a3a1c6ee?sid=f5ccf346-0d0a-4992-8ae6-59f7d12ce4af" 
                 frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
+                webkitAllowFullScreen 
+                mozAllowFullScreen 
+                allowFullScreen 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                title="About This Position"
               />
             </div>
             <p className="text-center text-sm text-gray-600 mt-2">
