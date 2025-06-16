@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Phone, Calendar, Target, Diamond, DollarSign } from 'lucide-react';
@@ -32,8 +31,6 @@ export const ApplicationFormHeader = ({ onClearSavedData }: ApplicationFormHeade
                 <iframe
                   src="https://www.loom.com/embed/646c1476756c4fc3a96255e0a3a1c6ee?sid=7ea3293d-3735-4500-aadc-e1a790f42062"
                   frameBorder="0"
-                  webkitAllowFullScreen
-                  mozAllowFullScreen
                   allowFullScreen
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                   title="Onboarding Process Overview"
