@@ -29,6 +29,11 @@ export type Database = {
           voice_analysis_completed_at: string | null
           voice_analysis_feedback: string | null
           voice_analysis_score: number | null
+          voice_clarity_score: number | null
+          voice_confidence_score: number | null
+          voice_energy_score: number | null
+          voice_pacing_score: number | null
+          voice_tone_score: number | null
           voice_transcription: string | null
         }
         Insert: {
@@ -50,6 +55,11 @@ export type Database = {
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
           voice_analysis_score?: number | null
+          voice_clarity_score?: number | null
+          voice_confidence_score?: number | null
+          voice_energy_score?: number | null
+          voice_pacing_score?: number | null
+          voice_tone_score?: number | null
           voice_transcription?: string | null
         }
         Update: {
@@ -71,6 +81,11 @@ export type Database = {
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
           voice_analysis_score?: number | null
+          voice_clarity_score?: number | null
+          voice_confidence_score?: number | null
+          voice_energy_score?: number | null
+          voice_pacing_score?: number | null
+          voice_tone_score?: number | null
           voice_transcription?: string | null
         }
         Relationships: [

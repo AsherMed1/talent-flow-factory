@@ -58,37 +58,37 @@ serve(async (req) => {
 
     console.log('Transcription completed:', transcription.substring(0, 100) + '...');
 
-    // Step 2: Analyze the transcription using GPT
+    // Step 2: Analyze the transcription using GPT with detailed trait scoring
     const analysisPrompt = `
 You are an expert HR recruiter evaluating a voice recording for an appointment setter position at a healthcare company. 
 
 The candidate's voice recording transcription is:
 "${transcription}"
 
-Please provide a comprehensive analysis based on these criteria:
+Please provide a comprehensive analysis with individual scores for each communication trait:
 
-1. **Communication Clarity** (1-10): How clear and understandable is their speech?
-2. **Professional Tone** (1-10): Do they sound professional and appropriate for a healthcare setting?
-3. **Enthusiasm & Engagement** (1-10): Do they sound engaged and interested in the role?
-4. **Language Proficiency** (1-10): How well do they use English (grammar, vocabulary, flow)?
-5. **Appointment Setting Suitability** (1-10): Would they be effective at scheduling appointments over the phone?
+1. **Clarity** (1-10): How clear and understandable is their speech? Consider pronunciation, enunciation, and word choice.
+2. **Pacing** (1-10): Is their speaking speed appropriate? Not too fast or too slow, with good rhythm and pauses.
+3. **Tone** (1-10): How warm, friendly, and professional do they sound? Appropriate for healthcare customer service.
+4. **Energy** (1-10): Do they sound enthusiastic, engaged, and motivated? Not monotone or bored.
+5. **Confidence** (1-10): Do they speak with confidence? Minimal hesitation, filler words (um, uh), or uncertainty.
 
 Provide:
-- An overall score from 1-10 (average of the 5 criteria)
+- Individual scores for each trait (1-10)
+- An overall average score
 - Detailed feedback (2-3 paragraphs) covering strengths and areas for improvement
-- Specific recommendations for this candidate
+- A concise 2-3 sentence summary for quick review
 
 Format your response as JSON:
 {
+  "clarity_score": <number 1-10>,
+  "pacing_score": <number 1-10>,
+  "tone_score": <number 1-10>,
+  "energy_score": <number 1-10>,
+  "confidence_score": <number 1-10>,
   "overall_score": <number 1-10>,
   "detailed_feedback": "<string>",
-  "criteria_scores": {
-    "communication_clarity": <number>,
-    "professional_tone": <number>,
-    "enthusiasm": <number>,
-    "language_proficiency": <number>,
-    "appointment_setting_suitability": <number>
-  }
+  "summary": "<string>"
 }
 `;
 
@@ -101,7 +101,7 @@ Format your response as JSON:
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are an expert HR recruiter. Respond only with valid JSON.' },
+          { role: 'system', content: 'You are an expert HR recruiter analyzing voice recordings. Respond only with valid JSON.' },
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.3,
@@ -125,9 +125,9 @@ Format your response as JSON:
       throw new Error('Invalid analysis response format');
     }
 
-    console.log('Analysis completed with score:', analysis.overall_score);
+    console.log('Analysis completed with scores:', analysis);
 
-    // Step 3: Save results to database
+    // Step 3: Save results to database with detailed trait scores
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
     const { error: updateError } = await supabase
@@ -136,6 +136,11 @@ Format your response as JSON:
         voice_transcription: transcription,
         voice_analysis_score: Math.round(analysis.overall_score),
         voice_analysis_feedback: analysis.detailed_feedback,
+        voice_clarity_score: Math.round(analysis.clarity_score),
+        voice_pacing_score: Math.round(analysis.pacing_score),
+        voice_tone_score: Math.round(analysis.tone_score),
+        voice_energy_score: Math.round(analysis.energy_score),
+        voice_confidence_score: Math.round(analysis.confidence_score),
         voice_analysis_completed_at: new Date().toISOString(),
       })
       .eq('id', applicationId);

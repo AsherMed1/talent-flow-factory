@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +19,11 @@ export interface Application {
   voice_analysis_feedback: string | null;
   voice_transcription: string | null;
   voice_analysis_completed_at: string | null;
+  voice_clarity_score: number | null;
+  voice_pacing_score: number | null;
+  voice_tone_score: number | null;
+  voice_energy_score: number | null;
+  voice_confidence_score: number | null;
   candidates: {
     name: string;
     email: string;

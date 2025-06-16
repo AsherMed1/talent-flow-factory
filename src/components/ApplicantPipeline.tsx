@@ -1,10 +1,12 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Star, Calendar, FileText, Play } from 'lucide-react';
+import { Star, Calendar, FileText, Play, Volume2 } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
 import { supabase } from '@/integrations/supabase/client';
+import { VoiceAnalysisDisplay } from './VoiceAnalysisDisplay';
 
 type ApplicationStatus = 'applied' | 'reviewed' | 'interview_scheduled' | 'interview_completed' | 'offer_sent' | 'hired' | 'rejected';
 
@@ -32,6 +34,13 @@ export const ApplicantPipeline = () => {
         className={`w-4 h-4 ${index < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
       />
     ));
+  };
+
+  const getVoiceScoreColor = (score: number | null) => {
+    if (!score) return 'bg-gray-100 text-gray-600';
+    if (score >= 8) return 'bg-green-100 text-green-800';
+    if (score >= 6) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
   };
 
   const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus, candidateData: any) => {
@@ -184,6 +193,39 @@ export const ApplicantPipeline = () => {
                           </Badge>
                         )}
                       </div>
+
+                      {/* Voice Analysis Summary */}
+                      {application.has_voice_recording && application.voice_analysis_score && (
+                        <div className="mb-3 p-2 bg-blue-50 rounded-md">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium flex items-center gap-1">
+                              <Volume2 className="w-3 h-3" />
+                              Voice Analysis
+                            </span>
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${getVoiceScoreColor(application.voice_analysis_score)}`}
+                            >
+                              {application.voice_analysis_score}/10
+                            </Badge>
+                          </div>
+                          {/* Quick trait scores */}
+                          <div className="grid grid-cols-2 gap-1 text-xs">
+                            {application.voice_clarity_score && (
+                              <span>Clarity: {application.voice_clarity_score}/10</span>
+                            )}
+                            {application.voice_confidence_score && (
+                              <span>Confidence: {application.voice_confidence_score}/10</span>
+                            )}
+                            {application.voice_tone_score && (
+                              <span>Tone: {application.voice_tone_score}/10</span>
+                            )}
+                            {application.voice_energy_score && (
+                              <span>Energy: {application.voice_energy_score}/10</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Display candidate tags */}
                       {application.candidates.candidate_tags.length > 0 && (
