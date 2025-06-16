@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,27 +16,17 @@ export const useWebhooks = () => {
   return useQuery({
     queryKey: ['webhooks'],
     queryFn: async (): Promise<WebhookConfig[]> => {
-      try {
-        const { data, error } = await supabase
-          .from('webhook_configs' as any)
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          // If table doesn't exist, return empty array
-          if (error.message.includes('relation "public.webhook_configs" does not exist')) {
-            console.log('webhook_configs table does not exist yet');
-            return [];
-          }
-          throw error;
-        }
-        
-        // Safely return data if it exists and is an array, otherwise empty array
-        return Array.isArray(data) ? (data as unknown as WebhookConfig[]) : [];
-      } catch (error) {
+      const { data, error } = await supabase
+        .from('webhook_configs')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
         console.error('Error fetching webhooks:', error);
-        return [];
+        throw error;
       }
+      
+      return data || [];
     }
   });
 };
@@ -46,21 +37,14 @@ export const useCreateWebhook = () => {
   
   return useMutation({
     mutationFn: async (webhook: Omit<WebhookConfig, 'id' | 'created_at'>) => {
-      try {
-        const { data, error } = await supabase
-          .from('webhook_configs' as any)
-          .insert(webhook)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } catch (error: any) {
-        if (error.message?.includes('relation "public.webhook_configs" does not exist')) {
-          throw new Error('Please run the database migration first to create the webhook_configs table.');
-        }
-        throw error;
-      }
+      const { data, error } = await supabase
+        .from('webhook_configs')
+        .insert(webhook)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
