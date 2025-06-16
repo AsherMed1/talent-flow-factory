@@ -15,7 +15,7 @@ export interface WebhookConfig {
 export const useWebhooks = () => {
   return useQuery({
     queryKey: ['webhooks'],
-    queryFn: async () => {
+    queryFn: async (): Promise<WebhookConfig[]> => {
       try {
         const { data, error } = await supabase
           .from('webhook_configs' as any)
@@ -30,7 +30,7 @@ export const useWebhooks = () => {
           }
           throw error;
         }
-        return data as WebhookConfig[];
+        return (data || []) as WebhookConfig[];
       } catch (error) {
         console.error('Error fetching webhooks:', error);
         return [];
@@ -54,7 +54,7 @@ export const useCreateWebhook = () => {
         
         if (error) throw error;
         return data;
-      } catch (error) {
+      } catch (error: any) {
         if (error.message?.includes('relation "public.webhook_configs" does not exist')) {
           throw new Error('Please run the database migration first to create the webhook_configs table.');
         }

@@ -6,16 +6,18 @@ import { Star, Calendar, FileText, Play } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
 import { supabase } from '@/integrations/supabase/client';
 
+type ApplicationStatus = 'applied' | 'reviewed' | 'interview_scheduled' | 'interview_completed' | 'offer_sent' | 'hired' | 'rejected';
+
 export const ApplicantPipeline = () => {
   const { data: applications, isLoading } = useApplications();
 
   const stages = [
-    { name: 'applied', displayName: 'Applied', color: 'bg-gray-100' },
-    { name: 'reviewed', displayName: 'Reviewed', color: 'bg-blue-100' },
-    { name: 'interview_scheduled', displayName: 'Interview Scheduled', color: 'bg-yellow-100' },
-    { name: 'interview_completed', displayName: 'Interview Completed', color: 'bg-purple-100' },
-    { name: 'offer_sent', displayName: 'Offer Sent', color: 'bg-green-100' },
-    { name: 'hired', displayName: 'Hired', color: 'bg-emerald-100' },
+    { name: 'applied' as ApplicationStatus, displayName: 'Applied', color: 'bg-gray-100' },
+    { name: 'reviewed' as ApplicationStatus, displayName: 'Reviewed', color: 'bg-blue-100' },
+    { name: 'interview_scheduled' as ApplicationStatus, displayName: 'Interview Scheduled', color: 'bg-yellow-100' },
+    { name: 'interview_completed' as ApplicationStatus, displayName: 'Interview Completed', color: 'bg-purple-100' },
+    { name: 'offer_sent' as ApplicationStatus, displayName: 'Offer Sent', color: 'bg-green-100' },
+    { name: 'hired' as ApplicationStatus, displayName: 'Hired', color: 'bg-emerald-100' },
   ];
 
   const getApplicationsByStage = (stageName: string) => {
@@ -32,7 +34,7 @@ export const ApplicantPipeline = () => {
     ));
   };
 
-  const handleStatusChange = async (applicationId: string, newStatus: string, candidateData: any) => {
+  const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus, candidateData: any) => {
     console.log('Updating application status:', applicationId, newStatus);
     
     try {
