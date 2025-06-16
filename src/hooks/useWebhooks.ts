@@ -2,12 +2,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type WebhookConfigRow = Database['public']['Tables']['webhook_configs']['Row'];
 
 export interface WebhookConfig {
   id: string;
   name: string;
   url: string;
-  event_type: 'application_submitted' | 'status_changed' | 'interview_scheduled' | 'offer_sent' | 'candidate_hired' | 'candidate_rejected';
+  event_type: WebhookConfigRow['event_type'];
   is_active: boolean;
   created_at: string;
 }
@@ -26,7 +29,7 @@ export const useWebhooks = () => {
         throw error;
       }
       
-      return data || [];
+      return (data || []) as WebhookConfig[];
     }
   });
 };
