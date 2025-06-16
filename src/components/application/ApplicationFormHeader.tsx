@@ -19,6 +19,39 @@ export const ApplicationFormHeader = ({ onClearSavedData }: ApplicationFormHeade
             (Must Be Available Weekends + Bonuses!)
           </p>
         </div>
+
+        {/* Loom Video Embed */}
+        <div className="mb-6">
+          <div className="bg-gray-100 rounded-lg p-4">
+            <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">J</span>
+              Onboarding Process Overview
+            </h4>
+            <div className="aspect-video w-full max-w-2xl mx-auto">
+              <iframe
+                src="https://www.loom.com/embed/your-loom-video-id"
+                frameBorder="0"
+                allowFullScreen
+                className="w-full h-full rounded-lg"
+                title="Onboarding Process Overview"
+              />
+            </div>
+            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white">⏱</span>
+                </div>
+                <span>1 min 26 sec</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white">👁</span>
+                </div>
+                <span>767 views</span>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <div className="space-y-6 text-gray-700">
           <p className="text-lg">
