@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Check, Phone, Calendar, Target, Diamond, DollarSign } from 'lucide-react';
 
 interface ApplicationFormHeaderProps {
   onClearSavedData: () => void;
@@ -10,20 +11,97 @@ export const ApplicationFormHeader = ({ onClearSavedData }: ApplicationFormHeade
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl text-center">Appointment Setter – Remote</CardTitle>
-        <div className="text-center space-y-2">
-          <p className="text-lg font-semibold text-blue-600">(Must Be Available Weekends + Bonuses!)</p>
-          <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
-            <p><strong>What We Offer:</strong></p>
-            <p>✅ Fully remote position with flexible hours (must be available weekends)</p>
-            <p>✅ Opportunity for performance bonuses & career growth</p>
-            <p>✅ Supportive, world-class team focused on your success</p>
-            <p className="font-semibold text-green-600">💰 Pay: $5/hr + performance bonuses</p>
+        <CardTitle className="text-3xl font-bold text-center text-gray-900">
+          Appointment Setter – Remote
+        </CardTitle>
+        <div className="text-center">
+          <p className="text-xl font-semibold text-blue-600 mb-4">
+            (Must Be Available Weekends + Bonuses!)
+          </p>
+        </div>
+        
+        <div className="space-y-6 text-gray-700">
+          <p className="text-lg">
+            We are a <strong>fast-growing agency</strong> looking for a personable and detail-oriented{' '}
+            <strong>Appointment Setter</strong> to contact prospective clients via phone and email. 
+            You'll be working with various industries, ensuring an{' '}
+            <strong>exciting and dynamic work environment</strong>.
+          </p>
+
+          {/* What We Offer */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">What We Offer:</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span>Fully remote position with <strong>flexible hours</strong> (must be available weekends)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span>Opportunity for <strong>performance bonuses & career growth</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span>Supportive, <strong>world-class team</strong> focused on your success</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Responsibilities */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Key Responsibilities:</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Phone className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span>Call and qualify leads to <strong>book appointments</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                <span><strong>Schedule consultations</strong> and follow up with prospects</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-red-600 flex-shrink-0" />
+                <span>Ensure <strong>high-quality interactions</strong> that drive results</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Requirements:</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span><strong>Fluent English</strong> (B2+ level, spoken & written)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span><strong>Friendly, engaging, and detail-oriented</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span><strong>Reliable internet</strong> (20 Mbps down, 10 Mbps up) & <strong>dual-screen setup</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span>Available to work a <strong>consistent shift (Eastern Time)</strong></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pay */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-green-600" />
+              <span className="text-lg font-bold text-green-700">
+                Pay: $5/hr + performance bonuses
+              </span>
+            </div>
           </div>
         </div>
         
         {/* Auto-save notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700">
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700 mt-6">
           <strong>Auto-save enabled:</strong> Your form data is automatically saved as you type.
           <Button 
             variant="outline" 
