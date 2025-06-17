@@ -12,6 +12,7 @@ import { RatingDisplay } from './RatingDisplay';
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationCardProps {
   application: Application;
@@ -23,12 +24,11 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
 
   const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
     console.log('=== Audio Playback Debug ===');
     console.log('handleVoicePlayback called with:', { recordingKey, recordingUrl });
-    console.log('Current audio element:', audioRef.current);
-    console.log('Current playing key:', playingRecordingKey);
     
     // If the same recording is already playing, stop it
     if (playingRecordingKey === recordingKey) {
@@ -48,57 +48,30 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
       audioRef.current.currentTime = 0;
     }
 
-    // Try to play the specific recording if we have a URL
-    if (recordingUrl) {
+    // Check if we have a valid URL and it's a blob URL
+    if (recordingUrl && recordingUrl.startsWith('blob:')) {
+      console.log('Detected blob URL - these typically don\'t work across page contexts');
+      toast({
+        title: "Audio Unavailable",
+        description: "Voice recording is not accessible. Blob URLs expire when navigating between pages.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Try to play the specific recording if we have a valid URL
+    if (recordingUrl && !recordingUrl.startsWith('blob:')) {
       console.log('Attempting to play audio with URL:', recordingUrl);
-      console.log('URL type:', typeof recordingUrl);
-      console.log('URL starts with blob:', recordingUrl.startsWith('blob:'));
       
       if (audioRef.current) {
-        // Clear previous event listeners
-        audioRef.current.onloadstart = null;
-        audioRef.current.onloadeddata = null;
-        audioRef.current.onerror = null;
-        audioRef.current.oncanplay = null;
-        audioRef.current.onended = null;
-        
-        // Set up comprehensive event listeners
-        audioRef.current.onloadstart = () => {
-          console.log('✓ Audio load started');
-        };
-        
-        audioRef.current.onloadedmetadata = () => {
-          console.log('✓ Audio metadata loaded, duration:', audioRef.current?.duration);
-        };
-        
-        audioRef.current.onloadeddata = () => {
-          console.log('✓ Audio data loaded');
-        };
-        
-        audioRef.current.oncanplay = () => {
-          console.log('✓ Audio can play');
-        };
-        
-        audioRef.current.oncanplaythrough = () => {
-          console.log('✓ Audio can play through');
-        };
-        
         audioRef.current.onerror = (e) => {
-          console.error('❌ Audio error event:', e);
-          console.error('Audio error details:', {
-            error: audioRef.current?.error,
-            code: audioRef.current?.error?.code,
-            message: audioRef.current?.error?.message
+          console.error('❌ Audio error:', e);
+          toast({
+            title: "Audio Error",
+            description: "Could not play the voice recording.",
+            variant: "destructive",
           });
           setPlayingRecordingKey(null);
-        };
-        
-        audioRef.current.onplay = () => {
-          console.log('✓ Audio started playing');
-        };
-        
-        audioRef.current.onpause = () => {
-          console.log('Audio paused');
         };
         
         audioRef.current.onended = () => {
@@ -106,61 +79,29 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
           setPlayingRecordingKey(null);
         };
         
-        // Set the source
         audioRef.current.src = recordingUrl;
-        
-        // Attempt to load and play
-        audioRef.current.load();
-        
-        console.log('Audio element state before play:', {
-          src: audioRef.current.src,
-          readyState: audioRef.current.readyState,
-          networkState: audioRef.current.networkState,
-          paused: audioRef.current.paused,
-          muted: audioRef.current.muted,
-          volume: audioRef.current.volume
-        });
-        
         audioRef.current.play()
           .then(() => {
-            console.log('✓ Play promise resolved successfully');
+            console.log('✓ Audio playing successfully');
             setPlayingRecordingKey(recordingKey);
           })
           .catch((error) => {
-            console.error('❌ Play promise rejected:', error);
-            console.log('Error details:', {
-              name: error.name,
-              message: error.message,
-              code: error.code
+            console.error('❌ Play failed:', error);
+            toast({
+              title: "Playback Failed",
+              description: "Voice recording could not be played.",
+              variant: "destructive",
             });
-            console.log('Audio element final state:', {
-              src: audioRef.current?.src,
-              readyState: audioRef.current?.readyState,
-              networkState: audioRef.current?.networkState,
-              error: audioRef.current?.error,
-              paused: audioRef.current?.paused,
-              currentTime: audioRef.current?.currentTime,
-              duration: audioRef.current?.duration
-            });
-            
-            // Check if it's a blob URL issue
-            if (recordingUrl.startsWith('blob:')) {
-              console.log('❌ Blob URL may have expired or be invalid');
-            }
-            
-            // Fallback to demo mode
-            console.log('Falling back to demo mode');
-            setPlayingRecordingKey(recordingKey);
-            setTimeout(() => setPlayingRecordingKey(null), 3000);
           });
       }
     } else {
-      console.log('No URL provided, using demo mode');
-      // Demo mode - simulate playback
-      setPlayingRecordingKey(recordingKey);
-      setTimeout(() => {
-        setPlayingRecordingKey(null);
-      }, 3000);
+      // No valid URL - show helpful message
+      console.log('No valid audio URL available');
+      toast({
+        title: "Audio Not Available",
+        description: "Voice recording was submitted but audio file is not accessible in this context.",
+        variant: "destructive",
+      });
     }
     console.log('=== End Audio Debug ===');
   };
