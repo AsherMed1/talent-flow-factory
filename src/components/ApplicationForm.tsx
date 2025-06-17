@@ -109,6 +109,14 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         roleId = appointmentSetterRole?.id;
       }
 
+      // Check if application already exists for this candidate and role
+      const { data: existingApplication } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('candidate_id', candidateId)
+        .eq('job_role_id', roleId)
+        .single();
+
       // Prepare form data
       const formData = {
         basicInfo: {
@@ -135,23 +143,54 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         },
       };
 
-      // Create application
-      const { data: newApplication, error: applicationError } = await supabase
-        .from('applications')
-        .insert({
-          candidate_id: candidateId,
-          job_role_id: roleId,
-          status: 'applied',
-          form_data: formData,
-          has_voice_recording: !!(data.introductionRecording || data.scriptRecording),
-          notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
-        })
-        .select('id')
-        .single();
+      if (existingApplication) {
+        // Update existing application
+        const { error: updateError } = await supabase
+          .from('applications')
+          .update({
+            status: 'applied',
+            form_data: formData,
+            has_voice_recording: !!(data.introductionRecording || data.scriptRecording),
+            notes: `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingApplication.id);
 
-      if (applicationError) throw applicationError;
+        if (updateError) throw updateError;
 
-      // Add tags
+        toast({
+          title: "Application Updated Successfully!",
+          description: "Your existing application has been updated with the new information.",
+        });
+      } else {
+        // Create new application
+        const { data: newApplication, error: applicationError } = await supabase
+          .from('applications')
+          .insert({
+            candidate_id: candidateId,
+            job_role_id: roleId,
+            status: 'applied',
+            form_data: formData,
+            has_voice_recording: !!(data.introductionRecording || data.scriptRecording),
+            notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
+          })
+          .select('id')
+          .single();
+
+        if (applicationError) throw applicationError;
+
+        toast({
+          title: "Application Submitted Successfully!",
+          description: "Thank you for your interest. We'll review your application and get back to you soon.",
+        });
+      }
+
+      // Add or update tags (remove existing tags first to avoid duplicates)
+      await supabase
+        .from('candidate_tags')
+        .delete()
+        .eq('candidate_id', candidateId);
+
       const tags = ['Remote Worker', 'Weekend Available'];
       if (data.introductionRecording && data.scriptRecording) tags.push('Voice Submitted');
       
@@ -166,12 +205,6 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
 
       // Clear saved data
       clearSavedData();
-
-      toast({
-        title: "Application Submitted Successfully!",
-        description: "Thank you for your interest. We'll review your application and get back to you soon.",
-      });
-
       form.reset();
       onSuccess?.();
       
