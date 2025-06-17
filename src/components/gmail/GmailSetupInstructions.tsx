@@ -9,8 +9,8 @@ export const GmailSetupInstructions = () => {
         <li>Enable the Gmail API</li>
         <li>Create OAuth 2.0 credentials (Web application)</li>
         <li>Add these exact redirect URIs:</li>
-        <li className="ml-4">• <code>http://localhost:8080/auth/gmail/callback</code></li>
-        <li className="ml-4">• <code>https://preview--talent-flow-factory.lovable.app/auth/gmail/callback</code></li>
+        <li className="ml-4">• <code>http://localhost:8080/</code></li>
+        <li className="ml-4">• <code>https://preview--talent-flow-factory.lovable.app/</code></li>
       </ol>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,60 +26,117 @@ export const useGmailConnection = () => {
       setClientId(savedClientId);
     }
 
-    // Listen for messages from popup window
-    const handleMessage = (event: MessageEvent) => {
-      // Only accept messages from our popup
-      if (event.origin !== window.location.origin) return;
-      
-      console.log('Parent window received message:', event.data);
-      
-      if (event.data.type === 'GMAIL_AUTH_RESULT') {
-        console.log('Received auth result from popup:', event.data);
-        setIsConnecting(false);
-        
-        if (event.data.success) {
-          const newConnection = {
-            email: event.data.email,
-            isConnected: true,
-            lastSync: new Date().toISOString(),
-            accessToken: event.data.accessToken
-          };
-          setGmailConnection(newConnection);
-          localStorage.setItem('gmailConnection', JSON.stringify(newConnection));
-          toast({
-            title: "Gmail Connected",
-            description: `Successfully connected ${event.data.email}`,
-          });
-        } else {
-          console.error('Auth failed:', event.data.error);
-          toast({
-            title: "Authentication Failed",
-            description: event.data.error || "Unknown error occurred",
-            variant: "destructive",
-          });
-        }
-      }
-      
-      if (event.data.type === 'GMAIL_AUTH_REQUEST_CREDENTIALS') {
-        console.log('Popup requesting credentials, sending response...');
-        // Send credentials to popup immediately
-        const credentials = localStorage.getItem('gmailOAuthCredentials');
-        if (credentials) {
-          const response = {
-            type: 'GMAIL_AUTH_CREDENTIALS_RESPONSE',
-            credentials: JSON.parse(credentials)
-          };
-          console.log('Sending credentials to popup:', response);
-          event.source?.postMessage(response, { targetOrigin: window.location.origin });
-        } else {
-          console.error('No credentials found in localStorage to send to popup');
-        }
-      }
-    };
+    // Check if we're returning from OAuth callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');
+    const error = urlParams.get('error');
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    if (error) {
+      console.error('OAuth error:', error);
+      toast({
+        title: "Authentication Failed",
+        description: `OAuth error: ${error}`,
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (authCode) {
+      console.log('Processing OAuth callback with code:', authCode.substring(0, 20) + '...');
+      handleOAuthCallback(authCode);
+    }
   }, [toast]);
+
+  const handleOAuthCallback = async (authCode: string) => {
+    setIsConnecting(true);
+    
+    try {
+      const credentials = localStorage.getItem('gmailOAuthCredentials');
+      if (!credentials) {
+        throw new Error('OAuth credentials not found');
+      }
+
+      const { clientId, clientSecret } = JSON.parse(credentials);
+      
+      // Determine redirect URI based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectUri = isLocalhost 
+        ? 'http://localhost:8080/'
+        : 'https://preview--talent-flow-factory.lovable.app/';
+
+      console.log('Exchange token with redirect URI:', redirectUri);
+
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code: authCode,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json();
+        console.error('Token exchange failed:', errorData);
+        throw new Error(`Token exchange failed: ${errorData.error_description || errorData.error}`);
+      }
+
+      const tokenData = await tokenResponse.json();
+      console.log('Token exchange successful');
+
+      // Get user email
+      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user information');
+      }
+
+      const userData = await userResponse.json();
+      console.log('User data retrieved:', userData.email);
+
+      const newConnection = {
+        email: userData.email,
+        isConnected: true,
+        lastSync: new Date().toISOString(),
+        accessToken: tokenData.access_token
+      };
+      
+      setGmailConnection(newConnection);
+      localStorage.setItem('gmailConnection', JSON.stringify(newConnection));
+      
+      toast({
+        title: "Gmail Connected",
+        description: `Successfully connected ${userData.email}`,
+      });
+
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+    } catch (error: any) {
+      console.error('OAuth callback error:', error);
+      toast({
+        title: "Authentication Failed",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   const loadGmailConnection = () => {
     const saved = localStorage.getItem('gmailConnection');
@@ -105,11 +163,11 @@ export const useGmailConnection = () => {
     localStorage.setItem('gmailOAuthCredentials', JSON.stringify(credentials));
     console.log('Stored credentials to localStorage');
 
-    // Use exact redirect URI - check current environment
+    // Use main window redirect instead of popup
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const redirectUri = isLocalhost 
-      ? 'http://localhost:8080/auth/gmail/callback'
-      : 'https://preview--talent-flow-factory.lovable.app/auth/gmail/callback';
+      ? 'http://localhost:8080/'
+      : 'https://preview--talent-flow-factory.lovable.app/';
     
     console.log('Using redirect URI:', redirectUri);
     
@@ -124,40 +182,8 @@ export const useGmailConnection = () => {
 
     console.log('Full auth URL:', authUrl);
 
-    // Open OAuth popup
-    const popup = window.open(authUrl, 'gmail-auth', 'width=600,height=600');
-    
-    // Handle popup close without completion
-    const checkClosed = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(checkClosed);
-        // Give some time for any final messages
-        setTimeout(() => {
-          if (isConnecting) {
-            setIsConnecting(false);
-            toast({
-              title: "Authentication Cancelled",
-              description: "The authentication window was closed before completion.",
-              variant: "destructive",
-            });
-          }
-        }, 1000);
-      }
-    }, 1000);
-
-    // 10 minute timeout
-    setTimeout(() => {
-      if (!popup?.closed) {
-        popup?.close();
-        clearInterval(checkClosed);
-        setIsConnecting(false);
-        toast({
-          title: "Authentication Timeout",
-          description: "Authentication took too long. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }, 600000);
+    // Redirect to OAuth URL in the same window
+    window.location.href = authUrl;
   };
 
   const disconnectGmail = () => {
