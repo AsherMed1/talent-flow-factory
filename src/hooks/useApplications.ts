@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -54,10 +53,28 @@ export const useApplications = () => {
           ),
           job_roles (name)
         `)
+        .not('form_data', 'is', null)
+        .neq('form_data', '{}')
         .order('applied_date', { ascending: false });
       
       if (error) throw error;
-      return data as Application[];
+      
+      // Additional filtering to ensure applications have proper form data structure
+      const filteredData = data?.filter(app => {
+        if (!app.form_data) return false;
+        
+        // Check if form_data has the expected structure from your application form
+        const formData = app.form_data;
+        return (
+          formData.basicInfo || 
+          formData.availability || 
+          formData.voiceRecordings || 
+          formData.listeningComprehension || 
+          formData.uploads
+        );
+      }) || [];
+      
+      return filteredData as Application[];
     }
   });
 };
@@ -68,27 +85,42 @@ export const useApplicationStats = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('applications')
-        .select('status, applied_date, interview_date');
+        .select('status, applied_date, interview_date, form_data')
+        .not('form_data', 'is', null)
+        .neq('form_data', '{}');
       
       if (error) throw error;
       
+      // Filter to only include applications with proper form structure
+      const filteredData = data.filter(app => {
+        if (!app.form_data) return false;
+        const formData = app.form_data;
+        return (
+          formData.basicInfo || 
+          formData.availability || 
+          formData.voiceRecordings || 
+          formData.listeningComprehension || 
+          formData.uploads
+        );
+      });
+      
       const stats = {
-        activeApplications: data.filter(app => !['hired', 'rejected'].includes(app.status)).length,
-        interviewsThisWeek: data.filter(app => {
+        activeApplications: filteredData.filter(app => !['hired', 'rejected'].includes(app.status)).length,
+        interviewsThisWeek: filteredData.filter(app => {
           if (!app.interview_date) return false;
           const interviewDate = new Date(app.interview_date);
           const oneWeekAgo = new Date();
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
           return interviewDate >= oneWeekAgo;
         }).length,
-        hiredThisMonth: data.filter(app => {
+        hiredThisMonth: filteredData.filter(app => {
           if (app.status !== 'hired') return false;
           const appliedDate = new Date(app.applied_date);
           const oneMonthAgo = new Date();
           oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
           return appliedDate >= oneMonthAgo;
         }).length,
-        conversionRate: data.length > 0 ? ((data.filter(app => app.status === 'hired').length / data.length) * 100).toFixed(1) : '0'
+        conversionRate: filteredData.length > 0 ? ((filteredData.filter(app => app.status === 'hired').length / filteredData.length) * 100).toFixed(1) : '0'
       };
       
       return stats;
