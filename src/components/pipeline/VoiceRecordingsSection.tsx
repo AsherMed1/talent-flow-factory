@@ -33,21 +33,25 @@ export const VoiceRecordingsSection = ({
         
         // Check for introduction recording
         if (formData.voiceRecordings.hasIntroduction || formData.voiceRecordings.introductionRecording) {
+          const url = formData.voiceRecordings.introductionRecording;
+          console.log('Introduction recording URL:', url, 'Type:', typeof url, 'Valid:', url && url.startsWith('blob:'));
           recordings.push({ 
             type: 'Introduction', 
             key: 'introduction',
             hasAudio: true,
-            url: formData.voiceRecordings.introductionRecording
+            url: url
           });
         }
         
         // Check for script recording
         if (formData.voiceRecordings.hasScript || formData.voiceRecordings.scriptRecording) {
+          const url = formData.voiceRecordings.scriptRecording;
+          console.log('Script recording URL:', url, 'Type:', typeof url, 'Valid:', url && url.startsWith('blob:'));
           recordings.push({ 
             type: 'Script Reading', 
             key: 'script',
             hasAudio: true,
-            url: formData.voiceRecordings.scriptRecording
+            url: url
           });
         }
       }
@@ -118,6 +122,8 @@ export const VoiceRecordingsSection = ({
             className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
             onClick={() => {
               console.log('Playing recording:', recording.type, 'for application:', application.id);
+              console.log('Recording URL:', recording.url);
+              console.log('URL valid check:', recording.url && typeof recording.url === 'string');
               onVoicePlayback(recording.key, recording.url);
             }}
           >

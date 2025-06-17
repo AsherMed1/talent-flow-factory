@@ -25,10 +25,13 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
+    console.log('handleVoicePlayback called with:', { recordingKey, recordingUrl });
+    console.log('Current audio element:', audioRef.current);
     console.log('Playing voice recording:', recordingKey, 'for:', application.candidates.name);
     
     // If the same recording is already playing, stop it
     if (playingRecordingKey === recordingKey) {
+      console.log('Stopping currently playing recording');
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -39,14 +42,23 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
 
     // Stop any currently playing audio
     if (audioRef.current) {
+      console.log('Stopping previous audio');
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
 
     // Try to play the specific recording if we have a URL
     if (recordingUrl) {
+      console.log('Attempting to play audio with URL:', recordingUrl);
       if (audioRef.current) {
         audioRef.current.src = recordingUrl;
+        
+        // Add load event listener to see if audio loads
+        audioRef.current.onloadstart = () => console.log('Audio load started');
+        audioRef.current.onloadeddata = () => console.log('Audio data loaded');
+        audioRef.current.onerror = (e) => console.error('Audio error:', e);
+        audioRef.current.oncanplay = () => console.log('Audio can play');
+        
         audioRef.current.play()
           .then(() => {
             setPlayingRecordingKey(recordingKey);
@@ -54,6 +66,12 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
           })
           .catch((error) => {
             console.error('Error playing audio:', error);
+            console.log('Audio element state:', {
+              src: audioRef.current?.src,
+              readyState: audioRef.current?.readyState,
+              networkState: audioRef.current?.networkState,
+              error: audioRef.current?.error
+            });
             // Fallback to demo mode
             setPlayingRecordingKey(recordingKey);
             setTimeout(() => setPlayingRecordingKey(null), 3000);
@@ -65,6 +83,7 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
         };
       }
     } else {
+      console.log('No URL provided, using demo mode');
       // Demo mode - simulate playback
       setPlayingRecordingKey(recordingKey);
       setTimeout(() => {
