@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +57,9 @@ export const EmailIntegration = () => {
     localStorage.setItem('gmailOAuthCredentials', JSON.stringify(credentials));
     console.log('Stored credentials to localStorage');
 
+    // Clear any previous auth results
+    localStorage.removeItem('gmailAuthResult');
+
     // Use exact redirect URI - check current environment
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const redirectUri = isLocalhost 
@@ -80,54 +82,71 @@ export const EmailIntegration = () => {
     // Open OAuth popup
     const popup = window.open(authUrl, 'gmail-auth', 'width=600,height=600');
     
-    // Listen for the callback
+    // Listen for the callback with longer polling interval
     const checkClosed = setInterval(() => {
       if (popup?.closed) {
         clearInterval(checkClosed);
-        setIsConnecting(false);
-        // Check if auth was successful
-        const authResult = localStorage.getItem('gmailAuthResult');
-        if (authResult) {
-          const result = JSON.parse(authResult);
-          if (result.success) {
-            setGmailConnection({
-              email: result.email,
-              isConnected: true,
-              lastSync: new Date().toISOString(),
-              accessToken: result.accessToken
-            });
-            localStorage.setItem('gmailConnection', JSON.stringify({
-              email: result.email,
-              isConnected: true,
-              lastSync: new Date().toISOString(),
-              accessToken: result.accessToken
-            }));
-            toast({
-              title: "Gmail Connected",
-              description: `Successfully connected ${result.email}`,
-            });
+        
+        // Give more time for the callback to complete
+        setTimeout(() => {
+          setIsConnecting(false);
+          // Check if auth was successful
+          const authResult = localStorage.getItem('gmailAuthResult');
+          console.log('Checking auth result after popup closed:', authResult ? 'Found' : 'Not found');
+          
+          if (authResult) {
+            const result = JSON.parse(authResult);
+            if (result.success) {
+              setGmailConnection({
+                email: result.email,
+                isConnected: true,
+                lastSync: new Date().toISOString(),
+                accessToken: result.accessToken
+              });
+              localStorage.setItem('gmailConnection', JSON.stringify({
+                email: result.email,
+                isConnected: true,
+                lastSync: new Date().toISOString(),
+                accessToken: result.accessToken
+              }));
+              toast({
+                title: "Gmail Connected",
+                description: `Successfully connected ${result.email}`,
+              });
+            } else {
+              console.error('Auth failed:', result.error);
+              toast({
+                title: "Authentication Failed",
+                description: result.error || "Unknown error occurred",
+                variant: "destructive",
+              });
+            }
+            localStorage.removeItem('gmailAuthResult');
           } else {
-            console.error('Auth failed:', result.error);
+            console.log('No auth result found in localStorage after extended wait');
             toast({
-              title: "Authentication Failed",
-              description: result.error || "Unknown error occurred",
+              title: "Authentication Incomplete",
+              description: "The authentication window was closed before completion. Please try again.",
               variant: "destructive",
             });
           }
-          localStorage.removeItem('gmailAuthResult');
-        } else {
-          console.log('No auth result found in localStorage');
-        }
+        }, 2000); // Wait 2 seconds after popup closes
       }
     }, 1000);
 
+    // 10 minute timeout
     setTimeout(() => {
       if (!popup?.closed) {
         popup?.close();
         clearInterval(checkClosed);
         setIsConnecting(false);
+        toast({
+          title: "Authentication Timeout",
+          description: "Authentication took too long. Please try again.",
+          variant: "destructive",
+        });
       }
-    }, 300000); // 5 minute timeout
+    }, 600000);
   };
 
   const disconnectGmail = () => {
