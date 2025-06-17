@@ -71,7 +71,7 @@ export const submitApplication = async (
       .eq('job_role_id', roleId)
       .single();
 
-    // Prepare form data with voice recordings
+    // Prepare form data with voice recordings and uploaded files
     const formData = {
       basicInfo: {
         firstName: data.firstName,
@@ -96,6 +96,9 @@ export const submitApplication = async (
         hasDownloadSpeed: !!data.downloadSpeedScreenshot,
         hasUploadSpeed: !!data.uploadSpeedScreenshot,
         hasWorkstation: !!data.workstationPhoto,
+        downloadSpeedScreenshot: data.downloadSpeedScreenshot,
+        uploadSpeedScreenshot: data.uploadSpeedScreenshot,
+        workstationPhoto: data.workstationPhoto,
       },
     };
 

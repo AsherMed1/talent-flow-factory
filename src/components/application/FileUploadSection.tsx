@@ -12,12 +12,35 @@ interface FileUploadSectionProps {
 export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
   const { toast } = useToast();
 
-  const handleFileUpload = (file: File, fieldName: string) => {
-    form.setValue(fieldName as keyof ApplicationFormData, file);
-    toast({
-      title: "File Uploaded",
-      description: `${file.name} has been uploaded successfully.`,
+  const convertFileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
+  };
+
+  const handleFileUpload = async (file: File, fieldName: string) => {
+    try {
+      // Convert file to data URL for storage
+      const dataUrl = await convertFileToDataUrl(file);
+      
+      // Set the data URL in the form
+      form.setValue(fieldName as keyof ApplicationFormData, dataUrl);
+      
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been uploaded successfully.`,
+      });
+    } catch (error) {
+      console.error('Error converting file:', error);
+      toast({
+        title: "Upload Error",
+        description: "There was an error processing your file. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -40,6 +63,9 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
               }}
               className="mt-2 text-sm"
             />
+            {form.watch('downloadSpeedScreenshot') && (
+              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+            )}
           </div>
         </div>
         
@@ -58,6 +84,9 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
               }}
               className="mt-2 text-sm"
             />
+            {form.watch('uploadSpeedScreenshot') && (
+              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+            )}
           </div>
         </div>
         
@@ -76,6 +105,9 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
               }}
               className="mt-2 text-sm"
             />
+            {form.watch('workstationPhoto') && (
+              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+            )}
           </div>
         </div>
       </div>
