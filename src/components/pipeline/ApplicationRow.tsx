@@ -10,6 +10,7 @@ import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
 import { CandidateTagsSection } from './CandidateTagsSection';
 import { RatingDisplay } from './RatingDisplay';
+import { ApplicationStatus } from './PipelineStages';
 
 interface ApplicationRowProps {
   application: Application;

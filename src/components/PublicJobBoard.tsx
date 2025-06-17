@@ -2,14 +2,38 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, DollarSign } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { MapPin, Clock, DollarSign, Copy, Code, ExternalLink } from 'lucide-react';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export const PublicJobBoard = () => {
   const { data: roles, isLoading } = useJobRoles();
+  const [showEmbedSection, setShowEmbedSection] = useState(false);
+  const { toast } = useToast();
 
   const activeRoles = roles?.filter(role => role.status === 'active') || [];
+  const currentDomain = window.location.origin;
+
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: `${type} copied to clipboard`,
+    });
+  };
+
+  const generateDirectLink = (roleId?: string) => {
+    return roleId ? `${currentDomain}/apply/${roleId}` : `${currentDomain}/apply`;
+  };
+
+  const generateEmbedCode = (roleId?: string) => {
+    const link = generateDirectLink(roleId);
+    return `<iframe src="${link}" width="100%" height="800" frameborder="0" style="border: 1px solid #e5e7eb; border-radius: 8px;"></iframe>`;
+  };
 
   if (isLoading) {
     return (
@@ -44,6 +68,132 @@ export const PublicJobBoard = () => {
             Explore our open positions and apply today!
           </p>
         </div>
+
+        {/* Embed & Share Section */}
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Code className="w-5 h-5" />
+                Share Application Form
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEmbedSection(!showEmbedSection)}
+              >
+                {showEmbedSection ? 'Hide' : 'Show'} Options
+              </Button>
+            </div>
+          </CardHeader>
+          {showEmbedSection && (
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* General Application Link */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">General Application Link</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={generateDirectLink()} 
+                      readOnly 
+                      className="text-sm"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={() => copyToClipboard(generateDirectLink(), 'Link')}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.open(generateDirectLink(), '_blank')}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">Allows applicants to choose any open position</p>
+                </div>
+
+                {/* General Embed Code */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">General Embed Code</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={generateEmbedCode()} 
+                      readOnly 
+                      className="text-sm font-mono"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={() => copyToClipboard(generateEmbedCode(), 'Embed code')}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">Embed the application form in your website</p>
+                </div>
+              </div>
+
+              {/* Role-Specific Links */}
+              {activeRoles.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-3">Role-Specific Links & Embed Codes</h4>
+                  <div className="space-y-3">
+                    {activeRoles.map((role) => (
+                      <div key={role.id} className="border rounded-lg p-4 bg-white">
+                        <h5 className="font-medium mb-3">{role.name}</h5>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <Label className="text-xs text-gray-600 mb-1 block">Direct Link</Label>
+                            <div className="flex gap-2">
+                              <Input 
+                                value={generateDirectLink(role.id)} 
+                                readOnly 
+                                className="text-xs"
+                              />
+                              <Button 
+                                size="sm" 
+                                onClick={() => copyToClipboard(generateDirectLink(role.id), `${role.name} link`)}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-600 mb-1 block">Embed Code</Label>
+                            <div className="flex gap-2">
+                              <Input 
+                                value={generateEmbedCode(role.id)} 
+                                readOnly 
+                                className="text-xs font-mono"
+                              />
+                              <Button 
+                                size="sm" 
+                                onClick={() => copyToClipboard(generateEmbedCode(role.id), `${role.name} embed code`)}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Usage Tips:</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Use direct links in emails, social media, or job postings</li>
+                  <li>• Embed codes can be pasted into your website's HTML</li>
+                  <li>• Role-specific links pre-select the position for applicants</li>
+                  <li>• General links let applicants choose from all open positions</li>
+                </ul>
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         {/* Job Listings */}
         <div className="grid gap-6">
