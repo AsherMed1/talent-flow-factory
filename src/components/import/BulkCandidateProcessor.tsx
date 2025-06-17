@@ -31,6 +31,7 @@ interface ProcessedCandidate {
 export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessComplete }: BulkCandidateProcessorProps) => {
   const [processedCandidates, setProcessedCandidates] = useState<ProcessedCandidate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [jobRoleOverride, setJobRoleOverride] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const { toast } = useToast();
@@ -142,7 +143,8 @@ export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessC
       const jobRoleParam = selectedJobRole?.id ? `&jobRole=${encodeURIComponent(selectedJobRole.id)}` : '';
       const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}${jobRoleParam}`;
       
-      const currentJobRole = selectedJobRole?.name || candidate.jobRole || 'Position';
+      // Use job role override if provided, otherwise use selected job role or candidate's original role
+      const currentJobRole = jobRoleOverride || selectedJobRole?.name || candidate.jobRole || 'Position';
       
       const personalizedSubject = template.subject
         .replace(/\{\{firstName\}\}/g, candidate.firstName)
