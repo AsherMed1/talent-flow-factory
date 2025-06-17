@@ -8,6 +8,7 @@ export interface JobRole {
   description: string;
   status: 'active' | 'draft' | 'closed';
   form_fields: any[];
+  booking_link?: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -32,14 +33,36 @@ export const useCreateJobRole = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (roleData: { name: string; description: string }) => {
+    mutationFn: async (roleData: { name: string; description: string; booking_link?: string }) => {
       const { data, error } = await supabase
         .from('job_roles')
         .insert([{
           name: roleData.name,
           description: roleData.description,
+          booking_link: roleData.booking_link,
           status: 'draft' as const
         }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-roles'] });
+    }
+  });
+};
+
+export const useUpdateJobRole = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('job_roles')
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
       

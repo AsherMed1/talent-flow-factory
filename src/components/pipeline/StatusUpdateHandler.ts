@@ -30,12 +30,20 @@ export const useStatusUpdateHandler = () => {
 
       if (error) throw error;
 
+      // Get job role details for booking link
+      const { data: jobRoleData } = await supabase
+        .from('job_roles')
+        .select('booking_link')
+        .eq('id', candidateData.job_role_id)
+        .single();
+
       // Send appropriate email based on status change
       const candidateName = candidateData.candidates.name;
       const candidateEmail = candidateData.candidates.email;
       const jobRole = candidateData.job_roles?.name || 'General';
       const firstName = candidateData.form_data?.basicInfo?.firstName || candidateName.split(' ')[0];
       const lastName = candidateData.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
+      const bookingLink = jobRoleData?.booking_link;
 
       if (newStatus === 'rejected') {
         await sendTemplateEmail({
@@ -44,7 +52,8 @@ export const useStatusUpdateHandler = () => {
           candidateEmail,
           firstName,
           lastName,
-          jobRole
+          jobRole,
+          bookingLink
         });
       } else if (newStatus === 'interview_scheduled') {
         await sendTemplateEmail({
@@ -53,7 +62,8 @@ export const useStatusUpdateHandler = () => {
           candidateEmail,
           firstName,
           lastName,
-          jobRole
+          jobRole,
+          bookingLink
         });
       }
 

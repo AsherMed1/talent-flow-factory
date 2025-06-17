@@ -1,3 +1,4 @@
+
 import { useResendSender } from './useResendSender';
 import { useGoHighLevel } from './useGoHighLevel';
 import { useToast } from './use-toast';
@@ -18,6 +19,7 @@ interface SendTemplateEmailParams {
   firstName?: string;
   lastName?: string;
   jobRole?: string;
+  bookingLink?: string;
 }
 
 export const useEmailTemplates = () => {
@@ -34,7 +36,7 @@ export const useEmailTemplates = () => {
   };
 
   const getDefaultTemplates = (): EmailTemplate[] => {
-    const bookingLink = getBookingLink();
+    const fallbackBookingLink = getBookingLink();
     
     return [
       {
@@ -187,19 +189,11 @@ export const useEmailTemplates = () => {
       <img class="video-thumbnail" src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video">
     </a>
 
-    ${bookingLink ? `
     <p>
-      <a href="${bookingLink}" class="cta-button">
+      <a href="{{bookingLink}}" class="cta-button">
         📅 Schedule Your Interview Now
       </a>
     </p>
-    ` : `
-    <p>
-      <a href="https://link.patientpromarketing.com/widget/bookings/schedulerinterview" class="cta-button">
-        📅 Schedule Your Interview Now
-      </a>
-    </p>
-    `}
 
     <p class="signature">
       Looking forward to speaking with you!<br><br>
@@ -250,7 +244,8 @@ export const useEmailTemplates = () => {
     candidateEmail,
     firstName,
     lastName,
-    jobRole = 'General'
+    jobRole = 'General',
+    bookingLink
   }: SendTemplateEmailParams): Promise<boolean> => {
     if (!isConnected) {
       toast({
@@ -271,12 +266,16 @@ export const useEmailTemplates = () => {
       return false;
     }
 
+    // Use job-specific booking link or fallback to GoHighLevel or default
+    const finalBookingLink = bookingLink || getBookingLink() || 'https://link.patientpromarketing.com/widget/bookings/schedulerinterview';
+
     const variables = {
       firstName: firstName || candidateName.split(' ')[0] || 'Candidate',
       lastName: lastName || candidateName.split(' ').slice(1).join(' ') || '',
       candidateName,
       jobRole,
-      email: candidateEmail
+      email: candidateEmail,
+      bookingLink: finalBookingLink
     };
 
     const subject = replaceVariables(template.subject, variables);
