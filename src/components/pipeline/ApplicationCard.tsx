@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationActions } from './ApplicationActions';
@@ -90,11 +89,6 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
     }
   };
 
-  const handleDocumentView = (docType: string) => {
-    console.log('Viewing document:', docType, 'for:', application.candidates.name);
-    alert(`Opening ${docType} for ${application.candidates.name}`);
-  };
-
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't expand if clicking on buttons or badges
     if ((e.target as HTMLElement).closest('button, .cursor-pointer')) {
@@ -130,10 +124,7 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
         
         <ApplicationDatesSection application={application} />
         
-        <DocumentsSection 
-          application={application} 
-          onDocumentView={handleDocumentView} 
-        />
+        <DocumentsSection application={application} />
 
         <VoiceRecordingsSection 
           application={application} 

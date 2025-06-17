@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp, Calendar, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -141,10 +140,7 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
 
         {/* Documents & Voice - 3 columns */}
         <div className="col-span-3">
-          <DocumentsSection 
-            application={application} 
-            onDocumentView={handleDocumentView} 
-          />
+          <DocumentsSection application={application} />
           <VoiceRecordingsSection 
             application={application} 
             isPlaying={isPlaying} 
