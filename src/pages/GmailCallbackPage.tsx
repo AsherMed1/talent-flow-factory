@@ -1,11 +1,9 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const GmailCallbackPage = () => {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState('Processing Gmail authentication...');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -28,28 +26,44 @@ const GmailCallbackPage = () => {
 
         console.log('Processing auth code:', authCode.substring(0, 20) + '...');
 
-        // Get stored credentials - try multiple times if not immediately available
-        let credentialsStr = null;
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        while (!credentialsStr && attempts < maxAttempts) {
-          credentialsStr = localStorage.getItem('gmailOAuthCredentials');
-          if (!credentialsStr) {
-            console.log(`Attempt ${attempts + 1}: Credentials not found, waiting...`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-          }
-        }
-        
-        console.log('Credentials found in localStorage after', attempts, 'attempts:', credentialsStr ? 'Yes' : 'No');
-        
-        if (!credentialsStr) {
-          console.error('No credentials found in localStorage after', maxAttempts, 'attempts. Available keys:', Object.keys(localStorage));
-          throw new Error('OAuth credentials not found in localStorage');
+        // Request credentials from parent window
+        let credentials = null;
+        const requestCredentials = () => {
+          return new Promise<any>((resolve, reject) => {
+            const handleMessage = (event: MessageEvent) => {
+              if (event.origin !== window.location.origin) return;
+              
+              if (event.data.type === 'GMAIL_AUTH_CREDENTIALS_RESPONSE') {
+                window.removeEventListener('message', handleMessage);
+                resolve(event.data.credentials);
+              }
+            };
+            
+            window.addEventListener('message', handleMessage);
+            
+            // Request credentials from parent
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GMAIL_AUTH_REQUEST_CREDENTIALS'
+              }, window.location.origin);
+            }
+            
+            // Timeout after 5 seconds
+            setTimeout(() => {
+              window.removeEventListener('message', handleMessage);
+              reject(new Error('Timeout waiting for credentials'));
+            }, 5000);
+          });
+        };
+
+        credentials = await requestCredentials();
+        console.log('Received credentials from parent window');
+
+        if (!credentials) {
+          throw new Error('OAuth credentials not received from parent window');
         }
 
-        const { clientId, clientSecret } = JSON.parse(credentialsStr);
+        const { clientId, clientSecret } = credentials;
         console.log('Using clientId:', clientId ? clientId.substring(0, 10) + '...' : 'undefined');
 
         // Determine redirect URI based on environment
@@ -100,62 +114,47 @@ const GmailCallbackPage = () => {
         const userData = await userResponse.json();
         console.log('User data retrieved:', userData.email);
 
-        // Store the result for the main window with retry logic
+        // Send result to parent window
         const authResult = {
+          type: 'GMAIL_AUTH_RESULT',
           success: true,
           email: userData.email,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token,
         };
         
-        // Try storing multiple times to ensure it persists
-        for (let i = 0; i < 3; i++) {
-          localStorage.setItem('gmailAuthResult', JSON.stringify(authResult));
-          console.log(`Auth result stored to localStorage (attempt ${i + 1})`);
-          
-          // Verify it was stored
-          const stored = localStorage.getItem('gmailAuthResult');
-          if (stored) {
-            console.log('Auth result verified in localStorage');
-            break;
-          } else {
-            console.warn('Auth result not found after storing, retrying...');
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
+        if (window.opener) {
+          window.opener.postMessage(authResult, window.location.origin);
+          console.log('Auth result sent to parent window');
         }
 
         setStatus('success');
         setMessage('Gmail connected successfully! Closing window...');
 
-        // Close the popup window after a longer delay to ensure localStorage is persisted
+        // Close the popup window after a brief delay
         setTimeout(() => {
           console.log('Closing popup window');
           window.close();
-        }, 3000);
+        }, 2000);
 
       } catch (error: any) {
         console.error('Gmail callback error:', error);
         setStatus('error');
         setMessage(error.message || 'Authentication failed');
 
-        // Store error result with retry logic
-        for (let i = 0; i < 3; i++) {
-          localStorage.setItem('gmailAuthResult', JSON.stringify({
+        // Send error to parent window
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'GMAIL_AUTH_RESULT',
             success: false,
             error: error.message,
-          }));
-          console.log(`Error result stored to localStorage (attempt ${i + 1})`);
-          
-          // Verify it was stored
-          const stored = localStorage.getItem('gmailAuthResult');
-          if (stored) break;
-          await new Promise(resolve => setTimeout(resolve, 200));
+          }, window.location.origin);
         }
 
         setTimeout(() => {
           console.log('Closing popup window after error');
           window.close();
-        }, 5000);
+        }, 3000);
       }
     };
 
