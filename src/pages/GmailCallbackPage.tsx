@@ -26,15 +26,27 @@ const GmailCallbackPage = () => {
           throw new Error('No authorization code received');
         }
 
-        console.log('Processing auth code:', authCode);
+        console.log('Processing auth code:', authCode.substring(0, 20) + '...');
 
-        // Get stored credentials
-        const credentialsStr = localStorage.getItem('gmailOAuthCredentials');
-        console.log('Credentials found in localStorage:', credentialsStr ? 'Yes' : 'No');
+        // Get stored credentials - try multiple times if not immediately available
+        let credentialsStr = null;
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (!credentialsStr && attempts < maxAttempts) {
+          credentialsStr = localStorage.getItem('gmailOAuthCredentials');
+          if (!credentialsStr) {
+            console.log(`Attempt ${attempts + 1}: Credentials not found, waiting...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+          }
+        }
+        
+        console.log('Credentials found in localStorage after', attempts, 'attempts:', credentialsStr ? 'Yes' : 'No');
         
         if (!credentialsStr) {
-          console.error('No credentials found in localStorage. Available keys:', Object.keys(localStorage));
-          throw new Error('OAuth credentials not found');
+          console.error('No credentials found in localStorage after', maxAttempts, 'attempts. Available keys:', Object.keys(localStorage));
+          throw new Error('OAuth credentials not found in localStorage');
         }
 
         const { clientId, clientSecret } = JSON.parse(credentialsStr);
@@ -72,7 +84,7 @@ const GmailCallbackPage = () => {
         }
 
         const tokenData = await tokenResponse.json();
-        console.log('Token exchange successful');
+        console.log('Token exchange successful, access token length:', tokenData.access_token?.length);
 
         // Get user email
         const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -88,7 +100,7 @@ const GmailCallbackPage = () => {
         const userData = await userResponse.json();
         console.log('User data retrieved:', userData.email);
 
-        // Store the result for the main window
+        // Store the result for the main window with retry logic
         const authResult = {
           success: true,
           email: userData.email,
@@ -96,31 +108,54 @@ const GmailCallbackPage = () => {
           refreshToken: tokenData.refresh_token,
         };
         
-        localStorage.setItem('gmailAuthResult', JSON.stringify(authResult));
-        console.log('Auth result stored to localStorage');
+        // Try storing multiple times to ensure it persists
+        for (let i = 0; i < 3; i++) {
+          localStorage.setItem('gmailAuthResult', JSON.stringify(authResult));
+          console.log(`Auth result stored to localStorage (attempt ${i + 1})`);
+          
+          // Verify it was stored
+          const stored = localStorage.getItem('gmailAuthResult');
+          if (stored) {
+            console.log('Auth result verified in localStorage');
+            break;
+          } else {
+            console.warn('Auth result not found after storing, retrying...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
 
         setStatus('success');
-        setMessage('Gmail connected successfully! You can close this window.');
+        setMessage('Gmail connected successfully! Closing window...');
 
-        // Close the popup window after a short delay
+        // Close the popup window after a longer delay to ensure localStorage is persisted
         setTimeout(() => {
+          console.log('Closing popup window');
           window.close();
-        }, 2000);
+        }, 3000);
 
       } catch (error: any) {
         console.error('Gmail callback error:', error);
         setStatus('error');
         setMessage(error.message || 'Authentication failed');
 
-        // Store error result
-        localStorage.setItem('gmailAuthResult', JSON.stringify({
-          success: false,
-          error: error.message,
-        }));
+        // Store error result with retry logic
+        for (let i = 0; i < 3; i++) {
+          localStorage.setItem('gmailAuthResult', JSON.stringify({
+            success: false,
+            error: error.message,
+          }));
+          console.log(`Error result stored to localStorage (attempt ${i + 1})`);
+          
+          // Verify it was stored
+          const stored = localStorage.getItem('gmailAuthResult');
+          if (stored) break;
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
 
         setTimeout(() => {
+          console.log('Closing popup window after error');
           window.close();
-        }, 3000);
+        }, 5000);
       }
     };
 

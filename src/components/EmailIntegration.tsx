@@ -82,12 +82,12 @@ export const EmailIntegration = () => {
     // Open OAuth popup
     const popup = window.open(authUrl, 'gmail-auth', 'width=600,height=600');
     
-    // Listen for the callback with longer polling interval
+    // Listen for the callback with longer polling interval and extended wait time
     const checkClosed = setInterval(() => {
       if (popup?.closed) {
         clearInterval(checkClosed);
         
-        // Give more time for the callback to complete
+        // Give much more time for the callback to complete (up to 10 seconds)
         setTimeout(() => {
           setIsConnecting(false);
           // Check if auth was successful
@@ -130,11 +130,11 @@ export const EmailIntegration = () => {
               variant: "destructive",
             });
           }
-        }, 2000); // Wait 2 seconds after popup closes
+        }, 5000); // Wait 5 seconds after popup closes
       }
-    }, 1000);
+    }, 500); // Check more frequently
 
-    // 10 minute timeout
+    // 15 minute timeout
     setTimeout(() => {
       if (!popup?.closed) {
         popup?.close();
@@ -146,7 +146,7 @@ export const EmailIntegration = () => {
           variant: "destructive",
         });
       }
-    }, 600000);
+    }, 900000);
   };
 
   const disconnectGmail = () => {
