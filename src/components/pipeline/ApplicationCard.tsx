@@ -1,9 +1,11 @@
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Star, Calendar, FileText, Play, Volume2 } from 'lucide-react';
+import { Star, Calendar, FileText, Play, Volume2, Pause } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationActions } from './ApplicationActions';
+import { useState, useRef } from 'react';
 
 interface ApplicationCardProps {
   application: Application;
@@ -11,6 +13,9 @@ interface ApplicationCardProps {
 }
 
 export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   const renderStars = (rating: number | null) => {
     if (!rating) return null;
     return Array.from({ length: 5 }, (_, index) => (
@@ -26,6 +31,22 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
     if (score >= 8) return 'bg-green-100 text-green-800';
     if (score >= 6) return 'bg-yellow-100 text-yellow-800';
     return 'bg-red-100 text-red-800';
+  };
+
+  const handleVoicePlayback = () => {
+    console.log('Playing voice recording for:', application.candidates.name);
+    
+    // For demo purposes, we'll simulate audio playback
+    // In a real implementation, you would fetch the actual audio file
+    if (!isPlaying) {
+      setIsPlaying(true);
+      // Simulate audio duration
+      setTimeout(() => {
+        setIsPlaying(false);
+      }, 3000);
+    } else {
+      setIsPlaying(false);
+    }
   };
 
   return (
@@ -62,9 +83,17 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
             </Badge>
           )}
           {application.has_voice_recording && (
-            <Badge variant="outline" className="text-xs">
-              <Play className="w-3 h-3 mr-1" />
-              Voice
+            <Badge 
+              variant="outline" 
+              className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
+              onClick={handleVoicePlayback}
+            >
+              {isPlaying ? (
+                <Pause className="w-3 h-3 mr-1" />
+              ) : (
+                <Play className="w-3 h-3 mr-1" />
+              )}
+              Voice {isPlaying && '(Playing...)'}
             </Badge>
           )}
           {application.has_video && (
