@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -41,7 +40,7 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
             </Avatar>
             <div>
               <div className="font-medium text-sm">{application.candidates.name}</div>
-              <div className="text-xs text-gray-500">{application.job_roles.name}</div>
+              <div className="text-xs text-gray-500">{application.job_roles?.name || 'Unknown Role'}</div>
             </div>
           </div>
           {application.rating && (
