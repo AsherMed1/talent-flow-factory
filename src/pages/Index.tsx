@@ -5,6 +5,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { RoleManager } from '@/components/RoleManager';
 import { ApplicantPipeline } from '@/components/ApplicantPipeline';
 import { CandidateCRM } from '@/components/CandidateCRM';
+import { InterviewNotes } from '@/components/InterviewNotes';
 import { CandidateImport } from '@/components/CandidateImport';
 import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
@@ -22,6 +23,8 @@ const Index = () => {
         return <RoleManager />;
       case 'pipeline':
         return <ApplicantPipeline />;
+      case 'interview-notes':
+        return <InterviewNotes />;
       case 'crm':
         return <CandidateCRM />;
       case 'analytics':
@@ -34,7 +37,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col' : 'flex'}`}>
+    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col pb-16' : 'flex'}`}>
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
       <main className={`${isMobile ? 'flex-1 overflow-auto' : 'flex-1 overflow-hidden'}`}>
         {renderActiveView()}
