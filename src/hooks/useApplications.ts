@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -64,7 +65,7 @@ export const useApplications = () => {
         if (!app.form_data) return false;
         
         // Check if form_data has the expected structure from your application form
-        const formData = app.form_data;
+        const formData = app.form_data as any;
         return (
           formData.basicInfo || 
           formData.availability || 
@@ -94,7 +95,7 @@ export const useApplicationStats = () => {
       // Filter to only include applications with proper form structure
       const filteredData = data.filter(app => {
         if (!app.form_data) return false;
-        const formData = app.form_data;
+        const formData = app.form_data as any;
         return (
           formData.basicInfo || 
           formData.availability || 
