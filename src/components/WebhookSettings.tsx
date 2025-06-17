@@ -10,6 +10,7 @@ import { Trash2, Plus, ExternalLink } from 'lucide-react';
 import { useWebhooks, useCreateWebhook, WebhookConfig } from '@/hooks/useWebhooks';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { GHLWebhookSettings } from '@/components/GHLWebhookSettings';
 
 export const WebhookSettings = () => {
   const { data: webhooks, isLoading, refetch } = useWebhooks();
@@ -116,6 +117,10 @@ export const WebhookSettings = () => {
 
   return (
     <div className="space-y-6">
+      {/* GoHighLevel Webhook Integration */}
+      <GHLWebhookSettings />
+
+      {/* Existing Make.com webhook settings */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
