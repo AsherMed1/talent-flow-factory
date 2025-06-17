@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +24,7 @@ interface ApplicationFormProps {
 export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const form = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
@@ -206,7 +208,9 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
       // Clear saved data
       clearSavedData();
       form.reset();
-      onSuccess?.();
+      
+      // Navigate to thank you page instead of calling onSuccess
+      navigate('/thank-you');
       
     } catch (error) {
       console.error('Error submitting application:', error);
