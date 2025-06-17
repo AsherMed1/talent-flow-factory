@@ -26,7 +26,7 @@ export const Dashboard = () => {
              app.status === 'interview_scheduled' ? 'Interview scheduled with' :
              app.status === 'offer_sent' ? 'Offer sent to' : 
              'Updated application for'} ${app.candidates.name}`,
-    role: app.job_roles.name,
+    role: app.job_roles?.name || 'Unknown Role',
     time: new Date(app.applied_date).toLocaleDateString()
   })) || [];
 
