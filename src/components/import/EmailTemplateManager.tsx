@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Mail, Plus, Edit, Trash2 } from 'lucide-react';
 
 interface EmailTemplate {
   id: string;
@@ -207,12 +208,10 @@ export const EmailTemplateManager = () => {
   };
 
   const loadTemplates = () => {
-    // Load from localStorage for now - would be Supabase in production
     const saved = localStorage.getItem('emailTemplates');
     if (saved) {
       setTemplates(JSON.parse(saved));
     } else {
-      // Add default templates
       const defaultTemplates = getDefaultTemplates();
       setTemplates(defaultTemplates);
       localStorage.setItem('emailTemplates', JSON.stringify(defaultTemplates));
@@ -244,7 +243,6 @@ export const EmailTemplateManager = () => {
     setTemplates(updatedTemplates);
     localStorage.setItem('emailTemplates', JSON.stringify(updatedTemplates));
 
-    // Reset form
     setFormData({ name: '', subject: '', content: '', jobRole: '', isDefault: false });
     setIsCreating(false);
     setEditingTemplate(null);
@@ -302,7 +300,7 @@ export const EmailTemplateManager = () => {
         <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
           <li>✅ <strong>Green button (Approve):</strong> Automatically sends "Interview Invitation" email</li>
           <li>❌ <strong>Red button (Reject):</strong> Automatically sends "Rejection Email"</li>
-          <li>📧 Make sure your Resend email is configured in Settings > Email Integration</li>
+          <li>📧 Make sure your Resend email is configured in Settings &gt; Email Integration</li>
         </ul>
       </div>
 
