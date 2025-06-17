@@ -104,6 +104,8 @@ export const submitApplication = async (
 
     const hasVoiceRecording = !!(data.introductionRecording || data.scriptRecording);
 
+    let applicationId: string;
+
     if (existingApplication) {
       // Update existing application
       const { error: updateError } = await supabase
@@ -118,18 +120,7 @@ export const submitApplication = async (
         .eq('id', existingApplication.id);
 
       if (updateError) throw updateError;
-
-      // Update candidate tags
-      await updateCandidateTags(candidateId, data);
-
-      // Clear saved data
-      clearSavedData();
-
-      return {
-        success: true,
-        message: "Your existing application has been updated with the new information.",
-        isUpdate: true,
-      };
+      applicationId = existingApplication.id;
     } else {
       // Create new application
       const { data: newApplication, error: applicationError } = await supabase
@@ -146,19 +137,49 @@ export const submitApplication = async (
         .single();
 
       if (applicationError) throw applicationError;
-
-      // Update candidate tags
-      await updateCandidateTags(candidateId, data);
-
-      // Clear saved data
-      clearSavedData();
-
-      return {
-        success: true,
-        message: "Thank you for your interest. We'll review your application and get back to you soon.",
-        isUpdate: false,
-      };
+      applicationId = newApplication.id;
     }
+
+    // Update candidate tags
+    await updateCandidateTags(candidateId, data);
+
+    // Trigger AI analysis if there are voice recordings
+    if (hasVoiceRecording && (data.introductionRecording || data.scriptRecording)) {
+      console.log('Triggering AI analysis for new application:', applicationId);
+      
+      try {
+        const audioData = data.introductionRecording || data.scriptRecording;
+        
+        // Trigger the analyze-voice edge function in the background
+        supabase.functions.invoke('analyze-voice', {
+          body: {
+            applicationId: applicationId,
+            audioData: audioData
+          }
+        }).then(({ data: analysisData, error: analysisError }) => {
+          if (analysisError) {
+            console.error('Error in background AI analysis:', analysisError);
+          } else {
+            console.log('Background AI analysis completed:', analysisData);
+          }
+        });
+        
+      } catch (analysisError) {
+        console.error('Error triggering AI analysis:', analysisError);
+        // Don't fail the whole submission if AI analysis fails
+      }
+    }
+
+    // Clear saved data
+    clearSavedData();
+
+    return {
+      success: true,
+      message: existingApplication 
+        ? "Your existing application has been updated with the new information." 
+        : "Thank you for your interest. We'll review your application and get back to you soon.",
+      isUpdate: !!existingApplication,
+    };
   } catch (error) {
     console.error('Error submitting application:', error);
     throw error;
