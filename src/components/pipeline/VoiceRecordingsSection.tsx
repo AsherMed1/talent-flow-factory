@@ -13,47 +13,70 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
   const getVoiceRecordings = () => {
     const recordings = [];
     
-    // First check if has_voice_recording flag is true
+    console.log('Checking voice recordings for application:', application.id);
+    console.log('has_voice_recording flag:', application.has_voice_recording);
+    console.log('form_data:', application.form_data);
+    
+    // Check if has_voice_recording flag is true
     if (application.has_voice_recording) {
       recordings.push({ type: 'Voice Recording', key: 'main_recording' });
     }
     
-    // Then check form_data for additional voice recordings
+    // Check form_data for voice recordings
     if (application.form_data) {
       const formData = application.form_data as any;
       
-      // Check for voice recordings in the form data
-      if (formData.voiceRecordings) {
-        if (formData.voiceRecordings.hasIntroduction && !recordings.some(r => r.type.includes('Introduction'))) {
-          recordings.push({ type: 'Introduction', key: 'introduction' });
-        }
-        if (formData.voiceRecordings.hasScript && !recordings.some(r => r.type.includes('Script'))) {
-          recordings.push({ type: 'Script Reading', key: 'script' });
-        }
+      // Log all possible voice recording related fields
+      console.log('Form data keys:', Object.keys(formData));
+      
+      // Check for introduction recording
+      if (formData.introductionRecording || 
+          (formData.voiceRecordings && formData.voiceRecordings.hasIntroduction) ||
+          formData.hasIntroductionRecording) {
+        recordings.push({ type: 'Introduction', key: 'introduction' });
       }
       
-      // Also check for any audio files in uploads
-      if (formData.uploads?.audioFiles && formData.uploads.audioFiles.length > 0) {
+      // Check for script recording
+      if (formData.scriptRecording || 
+          (formData.voiceRecordings && formData.voiceRecordings.hasScript) ||
+          formData.hasScriptRecording) {
+        recordings.push({ type: 'Script Reading', key: 'script' });
+      }
+      
+      // Check for any audio files in uploads
+      if (formData.uploads?.audioFiles && Array.isArray(formData.uploads.audioFiles)) {
         formData.uploads.audioFiles.forEach((file: any, index: number) => {
           recordings.push({ type: `Audio ${index + 1}`, key: `audio_${index}` });
         });
       }
       
-      // Check for voice recording URLs or files
-      if (formData.voiceRecordingUrl || formData.voiceFile) {
+      // Check for other possible voice recording fields
+      if (formData.voiceRecordingUrl || formData.voiceFile || formData.audioRecording) {
         if (!recordings.some(r => r.key === 'main_recording')) {
           recordings.push({ type: 'Voice Recording', key: 'main_recording' });
         }
       }
+      
+      // Check for any field that contains "voice" or "audio" or "recording"
+      Object.keys(formData).forEach(key => {
+        const lowerKey = key.toLowerCase();
+        if ((lowerKey.includes('voice') || lowerKey.includes('audio') || lowerKey.includes('recording')) && 
+            formData[key] && 
+            !recordings.some(r => r.key === key)) {
+          recordings.push({ type: `${key.charAt(0).toUpperCase() + key.slice(1)}`, key });
+        }
+      });
     }
     
+    console.log('Found recordings:', recordings);
     return recordings;
   };
 
   const recordings = getVoiceRecordings();
   
-  // Show voice recordings if we have any recordings OR if has_voice_recording is true
+  // Show voice recordings section if we have any recordings OR if has_voice_recording is true
   if (recordings.length === 0 && !application.has_voice_recording) {
+    console.log('No voice recordings found for application:', application.id);
     return null;
   }
 
