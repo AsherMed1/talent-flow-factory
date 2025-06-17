@@ -1,6 +1,6 @@
 
 import { Badge } from '@/components/ui/badge';
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, Image, Wifi } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 
 interface DocumentsSectionProps {
@@ -14,13 +14,13 @@ export const DocumentsSection = ({ application, onDocumentView }: DocumentsSecti
     if (application.form_data) {
       const formData = application.form_data as any;
       if (formData.uploads?.hasDownloadSpeed) {
-        docs.push({ type: 'Download Speed Test', key: 'downloadSpeed' });
+        docs.push({ type: 'Download Speed Test', key: 'downloadSpeed', icon: Wifi });
       }
       if (formData.uploads?.hasUploadSpeed) {
-        docs.push({ type: 'Upload Speed Test', key: 'uploadSpeed' });
+        docs.push({ type: 'Upload Speed Test', key: 'uploadSpeed', icon: Wifi });
       }
       if (formData.uploads?.hasWorkstation) {
-        docs.push({ type: 'Workstation Photo', key: 'workstation' });
+        docs.push({ type: 'Workstation Photo', key: 'workstation', icon: Image });
       }
     }
     return docs;
@@ -36,33 +36,37 @@ export const DocumentsSection = ({ application, onDocumentView }: DocumentsSecti
       {application.has_resume && (
         <Badge 
           variant="outline" 
-          className="text-xs cursor-pointer hover:bg-green-50 transition-colors"
+          className="text-xs cursor-pointer hover:bg-green-50 transition-colors flex items-center gap-1 bg-green-50 border-green-200"
           onClick={() => onDocumentView('Resume')}
         >
-          <FileText className="w-3 h-3 mr-1" />
+          <FileText className="w-3 h-3" />
           Resume
         </Badge>
       )}
       
-      {uploadedDocs.map((doc, index) => (
-        <Badge 
-          key={index}
-          variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
-          onClick={() => onDocumentView(doc.type)}
-        >
-          <Eye className="w-3 h-3 mr-1" />
-          {doc.type}
-        </Badge>
-      ))}
+      {uploadedDocs.map((doc, index) => {
+        const IconComponent = doc.icon;
+        return (
+          <Badge 
+            key={index}
+            variant="outline" 
+            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1"
+            onClick={() => onDocumentView(doc.type)}
+          >
+            <IconComponent className="w-3 h-3" />
+            {doc.type}
+          </Badge>
+        );
+      })}
       
       {application.has_video && (
         <Badge 
           variant="outline" 
-          className="text-xs cursor-pointer hover:bg-purple-50 transition-colors"
+          className="text-xs cursor-pointer hover:bg-purple-50 transition-colors flex items-center gap-1"
           onClick={() => onDocumentView('Video')}
         >
-          📹 Video
+          <Eye className="w-3 h-3" />
+          Video
         </Badge>
       )}
     </div>

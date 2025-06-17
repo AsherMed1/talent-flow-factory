@@ -1,6 +1,6 @@
 
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Volume2 } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 
 interface VoiceRecordingsSectionProps {
@@ -14,11 +14,22 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
     const recordings = [];
     if (application.form_data) {
       const formData = application.form_data as any;
-      if (formData.voiceRecordings?.hasIntroduction) {
-        recordings.push({ type: 'Introduction', key: 'introduction' });
+      
+      // Check for voice recordings in the form data
+      if (formData.voiceRecordings) {
+        if (formData.voiceRecordings.hasIntroduction) {
+          recordings.push({ type: 'Introduction', key: 'introduction' });
+        }
+        if (formData.voiceRecordings.hasScript) {
+          recordings.push({ type: 'Script Reading', key: 'script' });
+        }
       }
-      if (formData.voiceRecordings?.hasScript) {
-        recordings.push({ type: 'Script Reading', key: 'script' });
+      
+      // Also check for any audio files in uploads
+      if (formData.uploads?.audioFiles && formData.uploads.audioFiles.length > 0) {
+        formData.uploads.audioFiles.forEach((file: any, index: number) => {
+          recordings.push({ type: `Audio ${index + 1}`, key: `audio_${index}` });
+        });
       }
     }
     return recordings;
@@ -36,13 +47,13 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
         <Badge 
           key={index}
           variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
+          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1"
           onClick={onVoicePlayback}
         >
           {isPlaying ? (
-            <Pause className="w-3 h-3 mr-1" />
+            <Pause className="w-3 h-3" />
           ) : (
-            <Play className="w-3 h-3 mr-1" />
+            <Play className="w-3 h-3" />
           )}
           {recording.type} {isPlaying && '(Playing...)'}
         </Badge>
@@ -52,14 +63,10 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
       {application.has_voice_recording && recordings.length === 0 && (
         <Badge 
           variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
+          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1"
           onClick={onVoicePlayback}
         >
-          {isPlaying ? (
-            <Pause className="w-3 h-3 mr-1" />
-          ) : (
-            <Play className="w-3 h-3 mr-1" />
-          )}
+          <Volume2 className="w-3 h-3" />
           Voice Recording {isPlaying && '(Playing...)'}
         </Badge>
       )}
