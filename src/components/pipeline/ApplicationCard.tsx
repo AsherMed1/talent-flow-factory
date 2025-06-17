@@ -2,7 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Star, Calendar, FileText, Play, Volume2, Pause } from 'lucide-react';
+import { Star, Calendar, FileText, Play, Volume2, Pause, Download, Eye } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationActions } from './ApplicationActions';
 import { useState, useRef } from 'react';
@@ -49,6 +49,44 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
     }
   };
 
+  const handleDocumentView = (docType: string) => {
+    console.log('Viewing document:', docType, 'for:', application.candidates.name);
+    // In a real implementation, this would open the document
+    // For now, we'll just show an alert
+    alert(`Opening ${docType} for ${application.candidates.name}`);
+  };
+
+  const getUploadedDocuments = () => {
+    const docs = [];
+    if (application.form_data) {
+      const formData = application.form_data as any;
+      if (formData.uploads?.hasDownloadSpeed) {
+        docs.push({ type: 'Download Speed Test', key: 'downloadSpeed' });
+      }
+      if (formData.uploads?.hasUploadSpeed) {
+        docs.push({ type: 'Upload Speed Test', key: 'uploadSpeed' });
+      }
+      if (formData.uploads?.hasWorkstation) {
+        docs.push({ type: 'Workstation Photo', key: 'workstation' });
+      }
+    }
+    return docs;
+  };
+
+  const getVoiceRecordings = () => {
+    const recordings = [];
+    if (application.form_data) {
+      const formData = application.form_data as any;
+      if (formData.voiceRecordings?.hasIntroduction) {
+        recordings.push({ type: 'Introduction', key: 'introduction' });
+      }
+      if (formData.voiceRecordings?.hasScript) {
+        recordings.push({ type: 'Script Reading', key: 'script' });
+      }
+    }
+    return recordings;
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow bg-white">
       <CardContent className="p-4">
@@ -75,33 +113,66 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
           Applied: {new Date(application.applied_date).toLocaleDateString()}
         </div>
         
-        <div className="flex gap-1 mb-3">
+        {/* Documents Section */}
+        <div className="flex flex-wrap gap-1 mb-3">
           {application.has_resume && (
-            <Badge variant="outline" className="text-xs">
+            <Badge 
+              variant="outline" 
+              className="text-xs cursor-pointer hover:bg-green-50 transition-colors"
+              onClick={() => handleDocumentView('Resume')}
+            >
               <FileText className="w-3 h-3 mr-1" />
               Resume
             </Badge>
           )}
-          {application.has_voice_recording && (
+          
+          {/* Uploaded Documents */}
+          {getUploadedDocuments().map((doc, index) => (
             <Badge 
+              key={index}
               variant="outline" 
               className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
-              onClick={handleVoicePlayback}
+              onClick={() => handleDocumentView(doc.type)}
             >
-              {isPlaying ? (
-                <Pause className="w-3 h-3 mr-1" />
-              ) : (
-                <Play className="w-3 h-3 mr-1" />
-              )}
-              Voice {isPlaying && '(Playing...)'}
+              <Eye className="w-3 h-3 mr-1" />
+              {doc.type}
             </Badge>
-          )}
+          ))}
+          
           {application.has_video && (
-            <Badge variant="outline" className="text-xs">
+            <Badge 
+              variant="outline" 
+              className="text-xs cursor-pointer hover:bg-purple-50 transition-colors"
+              onClick={() => handleDocumentView('Video')}
+            >
               📹 Video
             </Badge>
           )}
         </div>
+
+        {/* Voice Recordings Section */}
+        {application.has_voice_recording && (
+          <div className="mb-3">
+            <div className="text-xs font-medium text-gray-700 mb-1">Voice Recordings:</div>
+            <div className="flex flex-wrap gap-1">
+              {getVoiceRecordings().map((recording, index) => (
+                <Badge 
+                  key={index}
+                  variant="outline" 
+                  className="text-xs cursor-pointer hover:bg-blue-50 transition-colors"
+                  onClick={handleVoicePlayback}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-3 h-3 mr-1" />
+                  ) : (
+                    <Play className="w-3 h-3 mr-1" />
+                  )}
+                  {recording.type} {isPlaying && '(Playing...)'}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Voice Analysis Summary */}
         {application.has_voice_recording && application.voice_analysis_score && (
