@@ -22,7 +22,7 @@ export const MobileApplicationCard = ({
   onSwipeLeft, 
   onSwipeRight 
 }: MobileApplicationCardProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -57,34 +57,41 @@ export const MobileApplicationCard = ({
     if (application.form_data) {
       const formData = application.form_data as any;
       let audioUrl = null;
+      let recordingKey = 'main';
       
       if (formData.voiceRecordings?.introductionRecording) {
         audioUrl = formData.voiceRecordings.introductionRecording;
+        recordingKey = 'introduction';
       } else if (formData.voiceRecordings?.scriptRecording) {
         audioUrl = formData.voiceRecordings.scriptRecording;
+        recordingKey = 'script';
       }
       
-      if (audioUrl && !isPlaying) {
-        if (audioRef.current) {
-          audioRef.current.src = audioUrl;
-          audioRef.current.play()
-            .then(() => setIsPlaying(true))
-            .catch(() => {
-              setIsPlaying(true);
-              setTimeout(() => setIsPlaying(false), 3000);
-            });
-          
-          audioRef.current.onended = () => setIsPlaying(false);
-        }
-      } else if (isPlaying) {
+      // If already playing this recording, stop it
+      if (playingRecordingKey === recordingKey) {
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         }
-        setIsPlaying(false);
+        setPlayingRecordingKey(null);
+        return;
+      }
+      
+      if (audioUrl) {
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play()
+            .then(() => setPlayingRecordingKey(recordingKey))
+            .catch(() => {
+              setPlayingRecordingKey(recordingKey);
+              setTimeout(() => setPlayingRecordingKey(null), 3000);
+            });
+          
+          audioRef.current.onended = () => setPlayingRecordingKey(null);
+        }
       } else {
-        setIsPlaying(true);
-        setTimeout(() => setIsPlaying(false), 3000);
+        setPlayingRecordingKey(recordingKey);
+        setTimeout(() => setPlayingRecordingKey(null), 3000);
       }
     }
   };
@@ -101,6 +108,8 @@ export const MobileApplicationCard = ({
     (application.form_data as any).introductionRecording ||
     (application.form_data as any).scriptRecording
   );
+
+  const isPlaying = playingRecordingKey !== null;
 
   return (
     <Card 

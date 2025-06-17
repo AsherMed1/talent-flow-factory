@@ -5,11 +5,15 @@ import { Application } from '@/hooks/useApplications';
 
 interface VoiceRecordingsSectionProps {
   application: Application;
-  isPlaying: boolean;
-  onVoicePlayback: () => void;
+  playingRecordingKey: string | null;
+  onVoicePlayback: (recordingKey: string, recordingUrl?: string) => void;
 }
 
-export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback }: VoiceRecordingsSectionProps) => {
+export const VoiceRecordingsSection = ({ 
+  application, 
+  playingRecordingKey, 
+  onVoicePlayback 
+}: VoiceRecordingsSectionProps) => {
   const getVoiceRecordings = () => {
     const recordings = [];
     
@@ -32,7 +36,8 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
           recordings.push({ 
             type: 'Introduction', 
             key: 'introduction',
-            hasAudio: true
+            hasAudio: true,
+            url: formData.voiceRecordings.introductionRecording
           });
         }
         
@@ -41,7 +46,8 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
           recordings.push({ 
             type: 'Script Reading', 
             key: 'script',
-            hasAudio: true
+            hasAudio: true,
+            url: formData.voiceRecordings.scriptRecording
           });
         }
       }
@@ -51,7 +57,8 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
         recordings.push({ 
           type: 'Introduction', 
           key: 'introduction',
-          hasAudio: true
+          hasAudio: true,
+          url: formData.introductionRecording
         });
       }
       
@@ -59,7 +66,8 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
         recordings.push({ 
           type: 'Script Reading', 
           key: 'script',
-          hasAudio: true
+          hasAudio: true,
+          url: formData.scriptRecording
         });
       }
       
@@ -70,7 +78,8 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
             type: `Audio File ${index + 1}`, 
             key: `audio_${index}`,
             hasAudio: true,
-            fileName: file.name || `audio_${index + 1}`
+            fileName: file.name || `audio_${index + 1}`,
+            url: file.url || file.src
           });
         });
       }
@@ -99,25 +108,29 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
 
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      {recordings.map((recording, index) => (
-        <Badge 
-          key={index}
-          variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
-          onClick={() => {
-            console.log('Playing recording:', recording.type, 'for application:', application.id);
-            onVoicePlayback();
-          }}
-        >
-          {isPlaying ? (
-            <Pause className="w-3 h-3" />
-          ) : (
-            <Play className="w-3 h-3" />
-          )}
-          {recording.type}
-          {isPlaying && ' (Playing...)'}
-        </Badge>
-      ))}
+      {recordings.map((recording, index) => {
+        const isCurrentlyPlaying = playingRecordingKey === recording.key;
+        
+        return (
+          <Badge 
+            key={index}
+            variant="outline" 
+            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
+            onClick={() => {
+              console.log('Playing recording:', recording.type, 'for application:', application.id);
+              onVoicePlayback(recording.key, recording.url);
+            }}
+          >
+            {isCurrentlyPlaying ? (
+              <Pause className="w-3 h-3" />
+            ) : (
+              <Play className="w-3 h-3" />
+            )}
+            {recording.type}
+            {isCurrentlyPlaying && ' (Playing...)'}
+          </Badge>
+        );
+      })}
     </div>
   );
 };

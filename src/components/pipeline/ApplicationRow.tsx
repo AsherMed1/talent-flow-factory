@@ -18,75 +18,57 @@ interface ApplicationRowProps {
 }
 
 export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleVoicePlayback = () => {
-    console.log('Playing voice recording for:', application.candidates.name);
+  const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
+    console.log('Playing voice recording:', recordingKey, 'for:', application.candidates.name);
     
-    // Check if we have actual audio data in form_data
-    if (application.form_data) {
-      const formData = application.form_data as any;
-      let audioUrl = null;
-      
-      // Try to find audio URL in various locations
-      if (formData.voiceRecordings?.introductionRecording) {
-        audioUrl = formData.voiceRecordings.introductionRecording;
-      } else if (formData.voiceRecordings?.scriptRecording) {
-        audioUrl = formData.voiceRecordings.scriptRecording;
-      } else if (formData.introductionRecording) {
-        audioUrl = formData.introductionRecording;
-      } else if (formData.scriptRecording) {
-        audioUrl = formData.scriptRecording;
+    // If the same recording is already playing, stop it
+    if (playingRecordingKey === recordingKey) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       }
-      
-      if (audioUrl && !isPlaying) {
-        // If we have a real audio URL, try to play it
-        if (audioRef.current) {
-          audioRef.current.src = audioUrl;
-          audioRef.current.play()
-            .then(() => {
-              setIsPlaying(true);
-              console.log('Audio started playing');
-            })
-            .catch((error) => {
-              console.error('Error playing audio:', error);
-              // Fallback to demo mode
-              setIsPlaying(true);
-              setTimeout(() => setIsPlaying(false), 3000);
-            });
-          
-          audioRef.current.onended = () => {
-            setIsPlaying(false);
-            console.log('Audio finished playing');
-          };
-        }
-      } else if (isPlaying) {
-        // Stop playback
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-        setIsPlaying(false);
-      } else {
-        // Demo mode - simulate playback
-        setIsPlaying(true);
-        setTimeout(() => {
-          setIsPlaying(false);
-        }, 3000);
+      setPlayingRecordingKey(null);
+      return;
+    }
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    // Try to play the specific recording if we have a URL
+    if (recordingUrl) {
+      if (audioRef.current) {
+        audioRef.current.src = recordingUrl;
+        audioRef.current.play()
+          .then(() => {
+            setPlayingRecordingKey(recordingKey);
+            console.log('Audio started playing:', recordingKey);
+          })
+          .catch((error) => {
+            console.error('Error playing audio:', error);
+            // Fallback to demo mode
+            setPlayingRecordingKey(recordingKey);
+            setTimeout(() => setPlayingRecordingKey(null), 3000);
+          });
+        
+        audioRef.current.onended = () => {
+          setPlayingRecordingKey(null);
+          console.log('Audio finished playing:', recordingKey);
+        };
       }
     } else {
-      // Demo mode fallback
-      if (!isPlaying) {
-        setIsPlaying(true);
-        setTimeout(() => {
-          setIsPlaying(false);
-        }, 3000);
-      } else {
-        setIsPlaying(false);
-      }
+      // Demo mode - simulate playback
+      setPlayingRecordingKey(recordingKey);
+      setTimeout(() => {
+        setPlayingRecordingKey(null);
+      }, 3000);
     }
   };
 
@@ -145,7 +127,7 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
           <DocumentsSection application={application} />
           <VoiceRecordingsSection 
             application={application} 
-            isPlaying={isPlaying} 
+            playingRecordingKey={playingRecordingKey} 
             onVoicePlayback={handleVoicePlayback} 
           />
         </div>
