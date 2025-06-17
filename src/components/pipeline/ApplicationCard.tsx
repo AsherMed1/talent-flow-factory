@@ -8,7 +8,7 @@ import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
 import { CandidateTagsSection } from './CandidateTagsSection';
 import { ApplicationDatesSection } from './ApplicationDatesSection';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -21,27 +21,77 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
   const [isPlaying, setIsPlaying] = useState(false);
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleVoicePlayback = () => {
     console.log('Playing voice recording for:', application.candidates.name);
     
-    // For demo purposes, we'll simulate audio playback
-    // In a real implementation, you would fetch the actual audio file
-    if (!isPlaying) {
-      setIsPlaying(true);
-      // Simulate audio duration
-      setTimeout(() => {
+    // Check if we have actual audio data in form_data
+    if (application.form_data) {
+      const formData = application.form_data as any;
+      let audioUrl = null;
+      
+      // Try to find audio URL in various locations
+      if (formData.voiceRecordings?.introductionRecording) {
+        audioUrl = formData.voiceRecordings.introductionRecording;
+      } else if (formData.voiceRecordings?.scriptRecording) {
+        audioUrl = formData.voiceRecordings.scriptRecording;
+      } else if (formData.introductionRecording) {
+        audioUrl = formData.introductionRecording;
+      } else if (formData.scriptRecording) {
+        audioUrl = formData.scriptRecording;
+      }
+      
+      if (audioUrl && !isPlaying) {
+        // If we have a real audio URL, try to play it
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play()
+            .then(() => {
+              setIsPlaying(true);
+              console.log('Audio started playing');
+            })
+            .catch((error) => {
+              console.error('Error playing audio:', error);
+              // Fallback to demo mode
+              setIsPlaying(true);
+              setTimeout(() => setIsPlaying(false), 3000);
+            });
+          
+          audioRef.current.onended = () => {
+            setIsPlaying(false);
+            console.log('Audio finished playing');
+          };
+        }
+      } else if (isPlaying) {
+        // Stop playback
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
         setIsPlaying(false);
-      }, 3000);
+      } else {
+        // Demo mode - simulate playback
+        setIsPlaying(true);
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 3000);
+      }
     } else {
-      setIsPlaying(false);
+      // Demo mode fallback
+      if (!isPlaying) {
+        setIsPlaying(true);
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 3000);
+      } else {
+        setIsPlaying(false);
+      }
     }
   };
 
   const handleDocumentView = (docType: string) => {
     console.log('Viewing document:', docType, 'for:', application.candidates.name);
-    // In a real implementation, this would open the document
-    // For now, we'll just show an alert
     alert(`Opening ${docType} for ${application.candidates.name}`);
   };
 
@@ -56,6 +106,9 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
   return (
     <Card className="hover:shadow-md transition-shadow bg-white cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-4">
+        {/* Hidden audio element for actual playback */}
+        <audio ref={audioRef} className="hidden" />
+        
         <div className="flex items-center justify-between mb-2">
           <ApplicationHeader application={application} />
           <Button

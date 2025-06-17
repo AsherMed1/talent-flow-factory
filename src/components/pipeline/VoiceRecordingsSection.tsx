@@ -17,54 +17,71 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
     console.log('has_voice_recording flag:', application.has_voice_recording);
     console.log('form_data:', application.form_data);
     
-    // Check if has_voice_recording flag is true
-    if (application.has_voice_recording) {
-      recordings.push({ type: 'Voice Recording', key: 'main_recording' });
-    }
-    
-    // Check form_data for voice recordings
+    // Check form_data for voice recordings from the application form
     if (application.form_data) {
       const formData = application.form_data as any;
       
-      // Log all possible voice recording related fields
       console.log('Form data keys:', Object.keys(formData));
       
-      // Check for introduction recording
-      if (formData.introductionRecording || 
-          (formData.voiceRecordings && formData.voiceRecordings.hasIntroduction) ||
-          formData.hasIntroductionRecording) {
-        recordings.push({ type: 'Introduction', key: 'introduction' });
+      // Check for voiceRecordings object structure from the form
+      if (formData.voiceRecordings) {
+        console.log('voiceRecordings object found:', formData.voiceRecordings);
+        
+        // Check for introduction recording
+        if (formData.voiceRecordings.hasIntroduction || formData.voiceRecordings.introductionRecording) {
+          recordings.push({ 
+            type: 'Introduction', 
+            key: 'introduction',
+            hasAudio: true
+          });
+        }
+        
+        // Check for script recording
+        if (formData.voiceRecordings.hasScript || formData.voiceRecordings.scriptRecording) {
+          recordings.push({ 
+            type: 'Script Reading', 
+            key: 'script',
+            hasAudio: true
+          });
+        }
       }
       
-      // Check for script recording
-      if (formData.scriptRecording || 
-          (formData.voiceRecordings && formData.voiceRecordings.hasScript) ||
-          formData.hasScriptRecording) {
-        recordings.push({ type: 'Script Reading', key: 'script' });
-      }
-      
-      // Check for any audio files in uploads
-      if (formData.uploads?.audioFiles && Array.isArray(formData.uploads.audioFiles)) {
-        formData.uploads.audioFiles.forEach((file: any, index: number) => {
-          recordings.push({ type: `Audio ${index + 1}`, key: `audio_${index}` });
+      // Check for direct recording fields
+      if (formData.introductionRecording) {
+        recordings.push({ 
+          type: 'Introduction', 
+          key: 'introduction',
+          hasAudio: true
         });
       }
       
-      // Check for other possible voice recording fields
-      if (formData.voiceRecordingUrl || formData.voiceFile || formData.audioRecording) {
-        if (!recordings.some(r => r.key === 'main_recording')) {
-          recordings.push({ type: 'Voice Recording', key: 'main_recording' });
-        }
+      if (formData.scriptRecording) {
+        recordings.push({ 
+          type: 'Script Reading', 
+          key: 'script',
+          hasAudio: true
+        });
       }
       
-      // Check for any field that contains "voice" or "audio" or "recording"
-      Object.keys(formData).forEach(key => {
-        const lowerKey = key.toLowerCase();
-        if ((lowerKey.includes('voice') || lowerKey.includes('audio') || lowerKey.includes('recording')) && 
-            formData[key] && 
-            !recordings.some(r => r.key === key)) {
-          recordings.push({ type: `${key.charAt(0).toUpperCase() + key.slice(1)}`, key });
-        }
+      // Check for any audio files in uploads
+      if (formData.uploads?.audioFiles && Array.isArray(formData.uploads.audioFiles) && formData.uploads.audioFiles.length > 0) {
+        formData.uploads.audioFiles.forEach((file: any, index: number) => {
+          recordings.push({ 
+            type: `Audio File ${index + 1}`, 
+            key: `audio_${index}`,
+            hasAudio: true,
+            fileName: file.name || `audio_${index + 1}`
+          });
+        });
+      }
+    }
+    
+    // If has_voice_recording flag is true but no specific recordings found, add a generic one
+    if (application.has_voice_recording && recordings.length === 0) {
+      recordings.push({ 
+        type: 'Voice Recording', 
+        key: 'main_recording',
+        hasAudio: true
       });
     }
     
@@ -74,43 +91,33 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
 
   const recordings = getVoiceRecordings();
   
-  // Show voice recordings section if we have any recordings OR if has_voice_recording is true
-  if (recordings.length === 0 && !application.has_voice_recording) {
+  // Don't show section if no recordings found
+  if (recordings.length === 0) {
     console.log('No voice recordings found for application:', application.id);
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      {recordings.length > 0 ? (
-        recordings.map((recording, index) => (
-          <Badge 
-            key={index}
-            variant="outline" 
-            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
-            onClick={onVoicePlayback}
-          >
-            {isPlaying ? (
-              <Pause className="w-3 h-3" />
-            ) : (
-              <Play className="w-3 h-3" />
-            )}
-            {recording.type} {isPlaying && '(Playing...)'}
-          </Badge>
-        ))
-      ) : (
-        // Fallback: if has_voice_recording is true but no specific recordings found
-        application.has_voice_recording && (
-          <Badge 
-            variant="outline" 
-            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
-            onClick={onVoicePlayback}
-          >
-            <Volume2 className="w-3 h-3" />
-            Voice Recording {isPlaying && '(Playing...)'}
-          </Badge>
-        )
-      )}
+      {recordings.map((recording, index) => (
+        <Badge 
+          key={index}
+          variant="outline" 
+          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
+          onClick={() => {
+            console.log('Playing recording:', recording.type, 'for application:', application.id);
+            onVoicePlayback();
+          }}
+        >
+          {isPlaying ? (
+            <Pause className="w-3 h-3" />
+          ) : (
+            <Play className="w-3 h-3" />
+          )}
+          {recording.type}
+          {isPlaying && ' (Playing...)'}
+        </Badge>
+      ))}
     </div>
   );
 };

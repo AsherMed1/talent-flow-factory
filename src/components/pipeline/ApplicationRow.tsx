@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp, Calendar, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,17 +20,72 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
   const [isPlaying, setIsPlaying] = useState(false);
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleVoicePlayback = () => {
     console.log('Playing voice recording for:', application.candidates.name);
     
-    if (!isPlaying) {
-      setIsPlaying(true);
-      setTimeout(() => {
+    // Check if we have actual audio data in form_data
+    if (application.form_data) {
+      const formData = application.form_data as any;
+      let audioUrl = null;
+      
+      // Try to find audio URL in various locations
+      if (formData.voiceRecordings?.introductionRecording) {
+        audioUrl = formData.voiceRecordings.introductionRecording;
+      } else if (formData.voiceRecordings?.scriptRecording) {
+        audioUrl = formData.voiceRecordings.scriptRecording;
+      } else if (formData.introductionRecording) {
+        audioUrl = formData.introductionRecording;
+      } else if (formData.scriptRecording) {
+        audioUrl = formData.scriptRecording;
+      }
+      
+      if (audioUrl && !isPlaying) {
+        // If we have a real audio URL, try to play it
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play()
+            .then(() => {
+              setIsPlaying(true);
+              console.log('Audio started playing');
+            })
+            .catch((error) => {
+              console.error('Error playing audio:', error);
+              // Fallback to demo mode
+              setIsPlaying(true);
+              setTimeout(() => setIsPlaying(false), 3000);
+            });
+          
+          audioRef.current.onended = () => {
+            setIsPlaying(false);
+            console.log('Audio finished playing');
+          };
+        }
+      } else if (isPlaying) {
+        // Stop playback
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
         setIsPlaying(false);
-      }, 3000);
+      } else {
+        // Demo mode - simulate playback
+        setIsPlaying(true);
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 3000);
+      }
     } else {
-      setIsPlaying(false);
+      // Demo mode fallback
+      if (!isPlaying) {
+        setIsPlaying(true);
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 3000);
+      } else {
+        setIsPlaying(false);
+      }
     }
   };
 
@@ -51,6 +106,9 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
 
   return (
     <div className="bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors">
+      {/* Hidden audio element for actual playback */}
+      <audio ref={audioRef} className="hidden" />
+      
       {/* Main Row */}
       <div className="grid grid-cols-12 gap-4 p-4 items-center">
         {/* Candidate Info - 3 columns */}
