@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,28 +40,43 @@ export const EmailTemplateManager = () => {
     if (saved) {
       setTemplates(JSON.parse(saved));
     } else {
-      // Add default template
+      // Add default template with your email format
       const defaultTemplate: EmailTemplate = {
         id: '1',
-        name: 'Default Application Invitation',
-        subject: 'Invitation to Apply - {{jobRole}} Position',
-        content: `Hi {{firstName}},
+        name: 'Appointment Setter Application',
+        subject: 'Appointment Setter Application Update',
+        content: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Setter Application Update</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #F4F4F4; padding: 20px;">
+    <div style="max-width: 600px; background: #fff; padding: 20px; margin: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #333;">{{firstName}},</h2>
+        <p>Congratulations! I'm excited to tell you that after reviewing your application, you have reached the next round of our application process for our {{jobRole}} role at <strong>Patient Pro Marketing</strong>.</p>
 
-Thank you for your interest in our {{jobRole}} position!
+        <h3 style="color: #555;">Next Steps for Your Application</h3>
 
-We'd like to invite you to complete our application process. This will include:
-- Basic information form
-- Voice recording to assess communication skills
-- Optional document uploads (resume, portfolio, etc.)
+        <p>
+            <a href="https://www.loom.com/share/9f3c0e5226ca4d68aaecdcdd2ef621de">
+                🎥 Watch This Quick Video Before Proceeding 🎥
+            </a>
+        </p>
 
-Please click the link below to get started:
-{{applicationLink}}
+        <a href="https://www.loom.com/share/9f3c0e5226ca4d68aaecdcdd2ef621de">
+            <img src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video" style="max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px;">
+        </a>
 
-The application typically takes 10-15 minutes to complete.
+        <p>Please go ahead and fill out the application form below to proceed to the next step!</p>
 
-Best regards,
-The Hiring Team`,
-        jobRole: 'General',
+        <p><a href="{{applicationLink}}" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: #fff; text-decoration: none; border-radius: 5px;">Complete Your Application</a></p>
+
+        <p>Thanks,<br><strong>Justin Lesh</strong><br>Founder, Patient Pro Marketing</p>
+    </div>
+</body>
+</html>`,
+        jobRole: 'Appointment Setter',
         isDefault: true
       };
       setTemplates([defaultTemplate]);
@@ -192,7 +206,7 @@ The Hiring Team`,
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Email body content. Use {{firstName}}, {{lastName}}, {{jobRole}}, {{applicationLink}} for personalization"
-                rows={10}
+                rows={15}
               />
             </div>
 
@@ -203,7 +217,7 @@ The Hiring Team`,
                 <div><code>{'{{lastName}}'}</code> - Candidate's last name</div>
                 <div><code>{'{{email}}'}</code> - Candidate's email</div>
                 <div><code>{'{{jobRole}}'}</code> - Job position</div>
-                <div><code>{'{{applicationLink}}'}</code> - Link to application form</div>
+                <div><code>{'{{applicationLink}}'}</code> - Link to your application form</div>
               </div>
             </div>
 
@@ -253,7 +267,7 @@ The Hiring Team`,
                 <div>
                   <Label className="text-xs text-gray-500">Content Preview</Label>
                   <p className="text-sm text-gray-700 line-clamp-3">
-                    {template.content.substring(0, 150)}...
+                    {template.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
                   </p>
                 </div>
               </div>
