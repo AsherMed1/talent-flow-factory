@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ export const MobileSearchFilters = ({ applications, onFilteredApplications }: Mo
 
   const statuses: { value: ApplicationStatus; label: string }[] = [
     { value: 'applied', label: 'Applied' },
-    { value: 'screening', label: 'Screening' },
+    { value: 'reviewed', label: 'Reviewed' },
     { value: 'interview_scheduled', label: 'Interview' },
     { value: 'interview_completed', label: 'Completed' },
     { value: 'offer_sent', label: 'Offer Sent' },
