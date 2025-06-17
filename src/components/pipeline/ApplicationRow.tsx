@@ -1,6 +1,6 @@
 
 import { useState, useRef } from 'react';
-import { ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
