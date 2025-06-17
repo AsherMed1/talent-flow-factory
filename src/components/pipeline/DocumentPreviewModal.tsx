@@ -55,6 +55,10 @@ export const DocumentPreviewModal = ({
   const isPdf = documentType === 'Resume';
   const isVideo = documentType === 'Video';
 
+  console.log('DocumentPreviewModal - Document Type:', documentType);
+  console.log('DocumentPreviewModal - Document URL:', documentUrl);
+  console.log('DocumentPreviewModal - Form Data:', application.form_data);
+
   const handleDownload = () => {
     if (documentUrl) {
       const link = document.createElement('a');
@@ -132,8 +136,8 @@ export const DocumentPreviewModal = ({
             Download File
           </Button>
         </div>
-      </div>
-    );
+      );
+    }
   };
 
   return (
