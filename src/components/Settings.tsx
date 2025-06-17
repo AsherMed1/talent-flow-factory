@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WebhookSettings } from '@/components/WebhookSettings';
+import { EmailIntegration } from '@/components/EmailIntegration';
 
 export const Settings = () => {
   return (
@@ -13,12 +14,17 @@ export const Settings = () => {
       <Tabs defaultValue="webhooks" className="space-y-6">
         <TabsList>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="email">Email Integration</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="webhooks">
           <WebhookSettings />
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailIntegration />
         </TabsContent>
 
         <TabsContent value="general">

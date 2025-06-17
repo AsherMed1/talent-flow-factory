@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Mail, CheckCircle, XCircle, Send, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useGmailSender } from '@/hooks/useGmailSender';
 
 interface BulkCandidateProcessorProps {
   candidates: any[];
@@ -35,6 +36,7 @@ export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessC
   const [isProcessing, setIsProcessing] = useState(false);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const { toast } = useToast();
+  const { sendEmail: sendGmailEmail, isConnected: isGmailConnected } = useGmailSender();
 
   useEffect(() => {
     // Convert imported candidates to processed format
@@ -136,37 +138,51 @@ export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessC
       return candidates;
     }
 
-    // For demo purposes, we'll simulate email sending
-    // In production, this would call your email service
-    const results = candidates.map(candidate => {
-      // Use the selected job role for the application link
-      const jobRoleParam = selectedJobRole?.id ? `&jobRole=${encodeURIComponent(selectedJobRole.id)}` : '';
-      const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}${jobRoleParam}`;
-      
-      // Use job role override if provided, otherwise use selected job role or candidate's original role
-      const currentJobRole = jobRoleOverride || selectedJobRole?.name || candidate.jobRole || 'Position';
-      
-      const personalizedSubject = template.subject
-        .replace(/\{\{firstName\}\}/g, candidate.firstName)
-        .replace(/\{\{lastName\}\}/g, candidate.lastName)
-        .replace(/\{\{jobRole\}\}/g, currentJobRole);
+    const results = [];
+    
+    for (const candidate of candidates) {
+      try {
+        // Use the selected job role for the application link
+        const jobRoleParam = selectedJobRole?.id ? `&jobRole=${encodeURIComponent(selectedJobRole.id)}` : '';
+        const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}${jobRoleParam}`;
+        
+        // Use job role override if provided, otherwise use selected job role or candidate's original role
+        const currentJobRole = jobRoleOverride || selectedJobRole?.name || candidate.jobRole || 'Position';
+        
+        const personalizedSubject = template.subject
+          .replace(/\{\{firstName\}\}/g, candidate.firstName)
+          .replace(/\{\{lastName\}\}/g, candidate.lastName)
+          .replace(/\{\{jobRole\}\}/g, currentJobRole);
 
-      const personalizedContent = template.content
-        .replace(/\{\{firstName\}\}/g, candidate.firstName)
-        .replace(/\{\{lastName\}\}/g, candidate.lastName)
-        .replace(/\{\{email\}\}/g, candidate.email)
-        .replace(/\{\{jobRole\}\}/g, currentJobRole)
-        .replace(/\{\{applicationLink\}\}/g, applicationLink);
+        const personalizedContent = template.content
+          .replace(/\{\{firstName\}\}/g, candidate.firstName)
+          .replace(/\{\{lastName\}\}/g, candidate.lastName)
+          .replace(/\{\{email\}\}/g, candidate.email)
+          .replace(/\{\{jobRole\}\}/g, currentJobRole)
+          .replace(/\{\{applicationLink\}\}/g, applicationLink);
 
-      // Simulate email sending (replace with actual email service)
-      console.log('Sending email to:', candidate.email);
-      console.log('Subject:', personalizedSubject);
-      console.log('Content:', personalizedContent);
-      console.log('Job Role:', currentJobRole);
-      console.log('Application Link:', applicationLink);
+        // Send email via Gmail if connected, otherwise simulate
+        let emailSent = false;
+        if (isGmailConnected) {
+          emailSent = await sendGmailEmail({
+            to: candidate.email,
+            subject: personalizedSubject,
+            htmlContent: personalizedContent
+          });
+        } else {
+          // Simulate email sending for demo purposes
+          console.log('Simulating email send to:', candidate.email);
+          console.log('Subject:', personalizedSubject);
+          console.log('Content:', personalizedContent);
+          emailSent = true;
+        }
 
-      return { ...candidate, emailSent: true };
-    });
+        results.push({ ...candidate, emailSent });
+      } catch (error) {
+        console.error('Error sending email to', candidate.email, error);
+        results.push({ ...candidate, emailSent: false, error: 'Failed to send email' });
+      }
+    }
 
     return results;
   };
@@ -290,6 +306,15 @@ export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessC
           <CardTitle>Email Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!isGmailConnected && (
+            <div className="bg-amber-50 p-3 rounded-lg">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> Gmail is not connected. Emails will be simulated. 
+                Go to <span className="font-medium">Settings → Email Integration</span> to connect your Gmail account for real email sending.
+              </p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="email-template">Email Template</Label>
