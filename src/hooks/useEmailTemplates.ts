@@ -1,5 +1,5 @@
-
 import { useResendSender } from './useResendSender';
+import { useGoHighLevel } from './useGoHighLevel';
 import { useToast } from './use-toast';
 
 interface EmailTemplate {
@@ -22,6 +22,7 @@ interface SendTemplateEmailParams {
 
 export const useEmailTemplates = () => {
   const { sendEmail, isConnected } = useResendSender();
+  const { getBookingLink, isConfigured: isGoHighLevelConfigured } = useGoHighLevel();
   const { toast } = useToast();
 
   const getTemplates = (): EmailTemplate[] => {
@@ -33,6 +34,8 @@ export const useEmailTemplates = () => {
   };
 
   const getDefaultTemplates = (): EmailTemplate[] => {
+    const bookingLink = getBookingLink();
+    
     return [
       {
         id: 'rejection-default',
@@ -184,11 +187,19 @@ export const useEmailTemplates = () => {
       <img class="video-thumbnail" src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video">
     </a>
 
+    ${bookingLink ? `
+    <p>
+      <a href="${bookingLink}" class="cta-button">
+        📅 Schedule Your Interview Now
+      </a>
+    </p>
+    ` : `
     <p>
       <a href="https://link.patientpromarketing.com/widget/bookings/schedulerinterview" class="cta-button">
         📅 Schedule Your Interview Now
       </a>
     </p>
+    `}
 
     <p class="signature">
       Looking forward to speaking with you!<br><br>
@@ -282,6 +293,7 @@ export const useEmailTemplates = () => {
     getTemplates,
     getTemplateByType,
     sendTemplateEmail,
-    isConnected
+    isConnected,
+    isGoHighLevelConfigured
   };
 };
