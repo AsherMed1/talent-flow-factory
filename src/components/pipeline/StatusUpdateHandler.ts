@@ -31,11 +31,15 @@ export const useStatusUpdateHandler = () => {
       if (error) throw error;
 
       // Get job role details for booking link
-      const { data: jobRoleData } = await supabase
+      const { data: jobRoleData, error: jobRoleError } = await supabase
         .from('job_roles')
         .select('booking_link')
         .eq('id', candidateData.job_role_id)
         .single();
+
+      if (jobRoleError) {
+        console.error('Error fetching job role data:', jobRoleError);
+      }
 
       // Send appropriate email based on status change
       const candidateName = candidateData.candidates.name;
