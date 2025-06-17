@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,15 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { useJobRoles } from '@/hooks/useJobRoles';
 
 interface CSVImportProcessorProps {
-  onImportComplete: (candidates: any[]) => void;
+  onImportComplete: (candidates: any[], selectedJobRole?: any) => void;
 }
 
 export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
+  const [selectedJobRoleId, setSelectedJobRoleId] = useState('');
   const [fieldMapping, setFieldMapping] = useState({
     firstName: '',
     lastName: '',
@@ -25,6 +26,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { data: jobRoles, isLoading: jobRolesLoading } = useJobRoles();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,7 +79,14 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
   };
 
   const handleImport = async () => {
-    if (!csvFile) return;
+    if (!csvFile || !selectedJobRoleId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a CSV file and job role before importing.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -102,11 +111,13 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
         originalData: row
       })).filter(candidate => candidate.email && candidate.firstName);
 
-      onImportComplete(candidates);
+      const selectedJobRole = jobRoles?.find(role => role.id === selectedJobRoleId);
+      onImportComplete(candidates, selectedJobRole);
       
       // Reset form
       setCsvFile(null);
       setPreviewData([]);
+      setSelectedJobRoleId('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -134,19 +145,42 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="csv-file">Select LinkedIn CSV Export</Label>
-            <Input
-              id="csv-file"
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              ref={fileInputRef}
-              className="mt-1"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Upload your LinkedIn candidate export CSV file
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="job-role-select">Select Job Role *</Label>
+              <select
+                id="job-role-select"
+                value={selectedJobRoleId}
+                onChange={(e) => setSelectedJobRoleId(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={jobRolesLoading}
+              >
+                <option value="">Select job role...</option>
+                {jobRoles?.map(role => (
+                  <option key={role.id} value={role.id}>
+                    {role.name} ({role.status})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Candidates will receive applications for this specific role
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="csv-file">Select LinkedIn CSV Export</Label>
+              <Input
+                id="csv-file"
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                ref={fileInputRef}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload your LinkedIn candidate export CSV file
+              </p>
+            </div>
           </div>
 
           {csvFile && (
@@ -236,7 +270,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
             <div className="mt-4 flex justify-end">
               <Button
                 onClick={handleImport}
-                disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || isProcessing}
+                disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || !selectedJobRoleId || isProcessing}
                 className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
               >
                 {isProcessing ? 'Processing...' : `Import ${previewData.length} Candidates`}

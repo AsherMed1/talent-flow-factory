@@ -2,9 +2,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Mail, Users, Download } from 'lucide-react';
@@ -15,6 +12,7 @@ import { BulkCandidateProcessor } from './import/BulkCandidateProcessor';
 export const CandidateImport = () => {
   const [activeTab, setActiveTab] = useState<'import' | 'templates' | 'bulk'>('import');
   const [importedCandidates, setImportedCandidates] = useState<any[]>([]);
+  const [selectedJobRole, setSelectedJobRole] = useState<any>(null);
   const { toast } = useToast();
 
   const tabs = [
@@ -23,19 +21,27 @@ export const CandidateImport = () => {
     { id: 'bulk' as const, label: 'Bulk Processing', icon: Users }
   ];
 
-  const handleImportComplete = (candidates: any[]) => {
+  const handleImportComplete = (candidates: any[], jobRole?: any) => {
     setImportedCandidates(candidates);
+    setSelectedJobRole(jobRole);
     setActiveTab('bulk');
     toast({
       title: "Import Complete",
-      description: `Successfully imported ${candidates.length} candidates`,
+      description: `Successfully imported ${candidates.length} candidates for ${jobRole?.name || 'selected role'}`,
     });
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Candidate Import Center</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Candidate Import Center</h1>
+          {selectedJobRole && (
+            <p className="text-sm text-gray-600 mt-1">
+              Current job role: <span className="font-medium">{selectedJobRole.name}</span>
+            </p>
+          )}
+        </div>
         <Button variant="outline" className="flex items-center gap-2">
           <Download className="w-4 h-4" />
           Download Sample CSV
@@ -81,7 +87,11 @@ export const CandidateImport = () => {
         {activeTab === 'bulk' && (
           <BulkCandidateProcessor 
             candidates={importedCandidates}
-            onProcessComplete={() => setImportedCandidates([])}
+            selectedJobRole={selectedJobRole}
+            onProcessComplete={() => {
+              setImportedCandidates([]);
+              setSelectedJobRole(null);
+            }}
           />
         )}
       </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, CheckCircle, XCircle, Send } from 'lucide-react';
+import { Users, Mail, CheckCircle, XCircle, Send, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface BulkCandidateProcessorProps {
   candidates: any[];
+  selectedJobRole?: any;
   onProcessComplete: () => void;
 }
 
@@ -28,10 +28,9 @@ interface ProcessedCandidate {
   error?: string;
 }
 
-export const BulkCandidateProcessor = ({ candidates, onProcessComplete }: BulkCandidateProcessorProps) => {
+export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessComplete }: BulkCandidateProcessorProps) => {
   const [processedCandidates, setProcessedCandidates] = useState<ProcessedCandidate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [jobRoleOverride, setJobRoleOverride] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const { toast } = useToast();
@@ -44,7 +43,7 @@ export const BulkCandidateProcessor = ({ candidates, onProcessComplete }: BulkCa
       lastName: candidate.lastName,
       email: candidate.email,
       phone: candidate.phone || '',
-      jobRole: candidate.jobRole || '',
+      jobRole: selectedJobRole?.name || candidate.jobRole || '',
       selected: true,
       emailSent: false,
       created: false
@@ -56,7 +55,7 @@ export const BulkCandidateProcessor = ({ candidates, onProcessComplete }: BulkCa
     if (saved) {
       setEmailTemplates(JSON.parse(saved));
     }
-  }, [candidates]);
+  }, [candidates, selectedJobRole]);
 
   const toggleSelection = (id: string) => {
     setProcessedCandidates(prev =>
@@ -139,23 +138,30 @@ export const BulkCandidateProcessor = ({ candidates, onProcessComplete }: BulkCa
     // For demo purposes, we'll simulate email sending
     // In production, this would call your email service
     const results = candidates.map(candidate => {
-      const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}`;
+      // Use the selected job role for the application link
+      const jobRoleParam = selectedJobRole?.id ? `&jobRole=${encodeURIComponent(selectedJobRole.id)}` : '';
+      const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}${jobRoleParam}`;
+      
+      const currentJobRole = selectedJobRole?.name || candidate.jobRole || 'Position';
+      
       const personalizedSubject = template.subject
         .replace(/\{\{firstName\}\}/g, candidate.firstName)
         .replace(/\{\{lastName\}\}/g, candidate.lastName)
-        .replace(/\{\{jobRole\}\}/g, jobRoleOverride || candidate.jobRole || 'Position');
+        .replace(/\{\{jobRole\}\}/g, currentJobRole);
 
       const personalizedContent = template.content
         .replace(/\{\{firstName\}\}/g, candidate.firstName)
         .replace(/\{\{lastName\}\}/g, candidate.lastName)
         .replace(/\{\{email\}\}/g, candidate.email)
-        .replace(/\{\{jobRole\}\}/g, jobRoleOverride || candidate.jobRole || 'Position')
+        .replace(/\{\{jobRole\}\}/g, currentJobRole)
         .replace(/\{\{applicationLink\}\}/g, applicationLink);
 
       // Simulate email sending (replace with actual email service)
       console.log('Sending email to:', candidate.email);
       console.log('Subject:', personalizedSubject);
       console.log('Content:', personalizedContent);
+      console.log('Job Role:', currentJobRole);
+      console.log('Application Link:', applicationLink);
 
       return { ...candidate, emailSent: true };
     });
@@ -222,6 +228,23 @@ export const BulkCandidateProcessor = ({ candidates, onProcessComplete }: BulkCa
 
   return (
     <div className="space-y-6">
+      {selectedJobRole && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Briefcase className="w-6 h-6 text-blue-500" />
+              <div>
+                <h3 className="font-semibold text-lg">{selectedJobRole.name}</h3>
+                <p className="text-sm text-gray-600">{selectedJobRole.description}</p>
+                <Badge variant="outline" className="mt-1">
+                  {selectedJobRole.status}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
