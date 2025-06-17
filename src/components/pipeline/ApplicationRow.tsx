@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp, Calendar, Star, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,9 +14,10 @@ import { RatingDisplay } from './RatingDisplay';
 interface ApplicationRowProps {
   application: Application;
   stageIndex: number;
+  onStatusChanged?: (applicationId: string, newStatus: ApplicationStatus) => void;
 }
 
-export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps) => {
+export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: ApplicationRowProps) => {
   const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -180,7 +180,11 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
 
         {/* Actions & Expand - 2 columns */}
         <div className="col-span-2 flex items-center justify-between">
-          <ApplicationActions application={application} currentStageIndex={stageIndex} />
+          <ApplicationActions 
+            application={application} 
+            currentStageIndex={stageIndex} 
+            onStatusChanged={onStatusChanged}
+          />
           <Button
             variant="ghost"
             size="sm"

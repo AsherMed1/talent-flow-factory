@@ -1,8 +1,10 @@
+
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
 import { ApplicationRow } from './ApplicationRow';
 import { MobileApplicationCard } from './MobileApplicationCard';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useState } from 'react';
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -10,9 +12,26 @@ interface KanbanBoardProps {
 
 export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
   const isMobile = useIsMobile();
+  const [processingApplications, setProcessingApplications] = useState<Set<string>>(new Set());
 
   const getApplicationsByStage = (stageName: ApplicationStatus) => {
-    return applications?.filter(app => app.status === stageName) || [];
+    return applications?.filter(app => 
+      app.status === stageName && !processingApplications.has(app.id)
+    ) || [];
+  };
+
+  const handleStatusChanged = (applicationId: string, newStatus: ApplicationStatus) => {
+    // Add to processing set temporarily to hide from current stage
+    setProcessingApplications(prev => new Set(prev).add(applicationId));
+    
+    // Remove from processing set after a delay to allow for smooth transition
+    setTimeout(() => {
+      setProcessingApplications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(applicationId);
+        return newSet;
+      });
+    }, 1000);
   };
 
   const handleSwipeLeft = (application: Application) => {
@@ -47,6 +66,7 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
                       stageIndex={stageIndex}
                       onSwipeLeft={() => handleSwipeLeft(application)}
                       onSwipeRight={() => handleSwipeRight(application)}
+                      onStatusChanged={handleStatusChanged}
                     />
                   ))
                 ) : (
@@ -94,6 +114,7 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
                     key={application.id} 
                     application={application} 
                     stageIndex={stageIndex}
+                    onStatusChanged={handleStatusChanged}
                   />
                 ))
               ) : (

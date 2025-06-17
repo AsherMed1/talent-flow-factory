@@ -14,13 +14,15 @@ interface MobileApplicationCardProps {
   stageIndex: number;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
+  onStatusChanged?: (applicationId: string, newStatus: ApplicationStatus) => void;
 }
 
 export const MobileApplicationCard = ({ 
   application, 
   stageIndex, 
   onSwipeLeft, 
-  onSwipeRight 
+  onSwipeRight,
+  onStatusChanged 
 }: MobileApplicationCardProps) => {
   const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -193,7 +195,11 @@ export const MobileApplicationCard = ({
 
         {/* Actions */}
         <div className="pt-2 border-t">
-          <ApplicationActions application={application} currentStageIndex={stageIndex} />
+          <ApplicationActions 
+            application={application} 
+            currentStageIndex={stageIndex} 
+            onStatusChanged={onStatusChanged}
+          />
         </div>
       </CardContent>
     </Card>
