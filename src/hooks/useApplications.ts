@@ -15,6 +15,7 @@ export interface Application {
   interview_date: string | null;
   offer_sent_date: string | null;
   applied_date: string;
+  updated_at: string | null;
   voice_analysis_score: number | null;
   voice_analysis_feedback: string | null;
   voice_transcription: string | null;
