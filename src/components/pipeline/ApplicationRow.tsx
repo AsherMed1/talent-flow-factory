@@ -1,6 +1,6 @@
 
 import { useState, useRef } from 'react';
-import { ChevronDown, ChevronUp, Calendar, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, Star, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -77,14 +77,35 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
     alert(`Opening ${docType} for ${application.candidates.name}`);
   };
 
-  const renderStars = (rating: number | null) => {
-    if (!rating) return null;
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={`w-3 h-3 ${index < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
+  const getScoreColor = (score: number | null) => {
+    if (!score) return 'text-gray-400';
+    if (score >= 8) return 'text-green-600';
+    if (score >= 6) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const renderVoiceAnalysisStars = (score: number | null) => {
+    if (!score) return null;
+    
+    const fullStars = Math.floor(score / 2); // Convert 10-point scale to 5-star
+    const hasHalfStar = (score % 2) !== 0;
+    
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, index) => {
+          if (index < fullStars) {
+            return <Star key={index} className="w-3 h-3 fill-yellow-400 text-yellow-400" />;
+          } else if (index === fullStars && hasHalfStar) {
+            return <Star key={index} className="w-3 h-3 fill-yellow-200 text-yellow-400" />;
+          } else {
+            return <Star key={index} className="w-3 h-3 text-gray-300" />;
+          }
+        })}
+        <span className={`text-xs ml-1 ${getScoreColor(score)}`}>
+          {score}/10
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -132,13 +153,28 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
           />
         </div>
 
-        {/* Rating & Voice Score - 2 columns */}
-        <div className="col-span-2">
+        {/* Rating & AI Analysis - 2 columns */}
+        <div className="col-span-2 space-y-2">
+          {/* Manual Rating */}
           <RatingDisplay rating={application.rating} size="sm" showEmpty={false} />
+          
+          {/* AI Voice Analysis */}
           {application.voice_analysis_score && (
-            <Badge variant="outline" className="text-xs mt-1">
-              Voice: {application.voice_analysis_score}/10
-            </Badge>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Brain className="w-3 h-3 text-purple-600" />
+                <span className="text-xs font-medium text-purple-600">AI Analysis</span>
+              </div>
+              {renderVoiceAnalysisStars(application.voice_analysis_score)}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 px-2 text-xs text-purple-600 hover:text-purple-700"
+                onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
+              >
+                {showDetailedAnalysis ? 'Hide Details' : 'View Details'}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -160,13 +196,86 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
         </div>
       </div>
 
+      {/* Detailed AI Analysis (when clicked) */}
+      {showDetailedAnalysis && application.voice_analysis_score && (
+        <div className="px-4 pb-4 bg-purple-50 border-t border-purple-100">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Brain className="w-4 h-4 text-purple-600" />
+              <h4 className="font-semibold text-sm text-purple-900">AI Voice Analysis Details</h4>
+            </div>
+            
+            {/* Individual Trait Scores */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {application.voice_clarity_score && (
+                <div className="flex justify-between">
+                  <span>Clarity:</span>
+                  <Badge variant="outline" className={getScoreColor(application.voice_clarity_score)}>
+                    {application.voice_clarity_score}/10
+                  </Badge>
+                </div>
+              )}
+              {application.voice_pacing_score && (
+                <div className="flex justify-between">
+                  <span>Pacing:</span>
+                  <Badge variant="outline" className={getScoreColor(application.voice_pacing_score)}>
+                    {application.voice_pacing_score}/10
+                  </Badge>
+                </div>
+              )}
+              {application.voice_tone_score && (
+                <div className="flex justify-between">
+                  <span>Tone:</span>
+                  <Badge variant="outline" className={getScoreColor(application.voice_tone_score)}>
+                    {application.voice_tone_score}/10
+                  </Badge>
+                </div>
+              )}
+              {application.voice_energy_score && (
+                <div className="flex justify-between">
+                  <span>Energy:</span>
+                  <Badge variant="outline" className={getScoreColor(application.voice_energy_score)}>
+                    {application.voice_energy_score}/10
+                  </Badge>
+                </div>
+              )}
+              {application.voice_confidence_score && (
+                <div className="flex justify-between">
+                  <span>Confidence:</span>
+                  <Badge variant="outline" className={getScoreColor(application.voice_confidence_score)}>
+                    {application.voice_confidence_score}/10
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {/* AI Feedback */}
+            {application.voice_analysis_feedback && (
+              <div className="bg-white p-3 rounded-md">
+                <h5 className="font-medium text-xs text-gray-900 mb-1">AI Feedback:</h5>
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  {application.voice_analysis_feedback}
+                </p>
+              </div>
+            )}
+
+            {/* Analysis Date */}
+            {application.voice_analysis_completed_at && (
+              <div className="text-xs text-gray-500">
+                Analyzed: {new Date(application.voice_analysis_completed_at).toLocaleString()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Expanded Details */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t bg-gray-50 space-y-3">
           <VoiceAnalysisSection 
             application={application} 
-            showDetailedAnalysis={showDetailedAnalysis} 
-            onToggleDetailed={setShowDetailedAnalysis} 
+            showDetailedAnalysis={false} 
+            onToggleDetailed={() => {}} 
           />
           
           <CandidateTagsSection application={application} />
