@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
+import { UseFormReturn } from 'react-hook-form';
+import { ApplicationFormData } from './formSchema';
 
 interface VoiceRecordingSectionProps {
   isSubmitting: boolean;
+  form: UseFormReturn<ApplicationFormData>;
 }
 
-export const VoiceRecordingSection = ({ isSubmitting }: VoiceRecordingSectionProps) => {
+export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSectionProps) => {
   const [introductionRecording, setIntroductionRecording] = useState<{
     blob: Blob;
     url: string;
@@ -22,8 +25,12 @@ export const VoiceRecordingSection = ({ isSubmitting }: VoiceRecordingSectionPro
   const handleVoiceRecording = (audioBlob: Blob, audioUrl: string) => {
     if (currentRecordingType === 'introduction') {
       setIntroductionRecording({ blob: audioBlob, url: audioUrl });
+      // Update form with the recording URL
+      form.setValue('introductionRecording', audioUrl);
     } else if (currentRecordingType === 'script') {
       setScriptRecording({ blob: audioBlob, url: audioUrl });
+      // Update form with the recording URL
+      form.setValue('scriptRecording', audioUrl);
     }
     setCurrentRecordingType(null);
   };

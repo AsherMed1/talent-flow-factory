@@ -119,7 +119,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         .eq('job_role_id', roleId)
         .single();
 
-      // Prepare form data
+      // Prepare form data with voice recordings
       const formData = {
         basicInfo: {
           firstName: data.firstName,
@@ -133,6 +133,8 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         voiceRecordings: {
           hasIntroduction: !!data.introductionRecording,
           hasScript: !!data.scriptRecording,
+          introductionRecording: data.introductionRecording,
+          scriptRecording: data.scriptRecording,
         },
         listeningComprehension: {
           husbandName: data.husbandName,
@@ -145,6 +147,8 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         },
       };
 
+      const hasVoiceRecording = !!(data.introductionRecording || data.scriptRecording);
+
       if (existingApplication) {
         // Update existing application
         const { error: updateError } = await supabase
@@ -152,7 +156,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
           .update({
             status: 'applied',
             form_data: formData,
-            has_voice_recording: !!(data.introductionRecording || data.scriptRecording),
+            has_voice_recording: hasVoiceRecording,
             notes: `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
             updated_at: new Date().toISOString(),
           })
@@ -173,7 +177,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
             job_role_id: roleId,
             status: 'applied',
             form_data: formData,
-            has_voice_recording: !!(data.introductionRecording || data.scriptRecording),
+            has_voice_recording: hasVoiceRecording,
             notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
           })
           .select('id')
@@ -232,7 +236,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <BasicInfoSection form={form} />
-            <VoiceRecordingSection isSubmitting={isSubmitting} />
+            <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
             <FileUploadSection form={form} />
             <ListeningTestSection form={form} />
             <TermsSection form={form} />
