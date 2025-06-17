@@ -143,7 +143,7 @@ export const CandidateCRM = () => {
       {/* Candidates Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredCandidates.map((candidate) => {
-          const latestApplication = candidate.applications[0];
+          const latestApplication = candidate.applications.length > 0 ? candidate.applications[0] : null;
           const tags = candidate.candidate_tags.map(tag => tag.tag);
           
           return (
@@ -158,7 +158,7 @@ export const CandidateCRM = () => {
                     </Avatar>
                     <div>
                       <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                      {latestApplication && (
+                      {latestApplication?.job_roles?.name && (
                         <p className="text-sm text-gray-600">{latestApplication.job_roles.name}</p>
                       )}
                     </div>
