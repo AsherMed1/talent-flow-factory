@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Application } from '@/hooks/useApplications';
@@ -7,6 +6,7 @@ import { Brain, Loader2, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 
 interface ApplicationActionsProps {
   application: Application;
@@ -19,6 +19,7 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { sendTemplateEmail } = useEmailTemplates();
 
   const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus, candidateData: any) => {
     console.log('Updating application status:', applicationId, newStatus);
@@ -34,6 +35,35 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
         .eq('id', applicationId);
 
       if (error) throw error;
+
+      // Send appropriate email based on status change
+      const candidateName = candidateData.candidates.name;
+      const candidateEmail = candidateData.candidates.email;
+      const jobRole = candidateData.job_roles?.name || 'General';
+      const firstName = candidateData.form_data?.basicInfo?.firstName || candidateName.split(' ')[0];
+      const lastName = candidateData.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
+
+      if (newStatus === 'rejected') {
+        // Send rejection email
+        await sendTemplateEmail({
+          templateType: 'rejection',
+          candidateName,
+          candidateEmail,
+          firstName,
+          lastName,
+          jobRole
+        });
+      } else if (newStatus === 'interview_scheduled') {
+        // Send interview invitation email
+        await sendTemplateEmail({
+          templateType: 'interview',
+          candidateName,
+          candidateEmail,
+          firstName,
+          lastName,
+          jobRole
+        });
+      }
 
       // Trigger webhook in background
       try {

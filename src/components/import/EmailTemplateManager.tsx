@@ -34,53 +34,188 @@ export const EmailTemplateManager = () => {
     loadTemplates();
   }, []);
 
+  const getDefaultTemplates = (): EmailTemplate[] => {
+    return [
+      {
+        id: 'rejection-default',
+        name: 'Rejection Email',
+        subject: "I'm Sorry You Were Not Selected",
+        content: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Pro Marketing - Application Update</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      font-size: 16px;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    p {
+      color: #555;
+    }
+    .signature {
+      font-size: 18px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Application Update</h1>
+
+    <p>Hey {{firstName}},</p>
+
+    <p>Thank you so much for showing interest in our company.</p>
+
+    <p>Unfortunately, our team did not select you for further consideration. I would like to note that our hiring team receives multiple resumes for each position, and it's often difficult for us to choose between several high-caliber candidates.</p>
+
+    <p>We truly appreciate the time and effort you put into your application. We wish you the best of luck in your job search and all your future endeavors.</p>
+
+    <p>Thank you,</p>
+
+    <p class="signature">
+      <br>
+      <strong>Justin Lesh, Founder</strong><br>
+      Patient Pro Marketing
+    </p>
+  </div>
+</body>
+</html>`,
+        jobRole: 'General',
+        isDefault: true
+      },
+      {
+        id: 'interview-default',
+        name: 'Interview Invitation',
+        subject: 'Congrats! Please Schedule Your Interview',
+        content: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Pro Marketing - Interview Invitation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      font-size: 16px;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      color: #555;
+    }
+    a {
+      text-decoration: none;
+      color: #0073e6;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .video-thumbnail {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+      border-radius: 8px;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 12px 20px;
+      margin-top: 15px;
+      background-color: #0073e6;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    .cta-button:hover {
+      background-color: #005bb5;
+    }
+    .signature {
+      font-size: 18px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Exciting Opportunity Awaits!</h1>
+
+    <p>Hey {{firstName}},</p>
+
+    <p>We loved your application and appreciate the recordings you sent in! Click the link below to schedule your interview – we're excited to connect with you!</p>
+
+    <p>
+      <a href="https://www.loom.com/share/baf2cd9833434d4c80f4b9e9770d01b5">
+        🎤 Watch This Video Before Your Interview 🎤
+      </a>
+    </p>
+
+    <a href="https://www.loom.com/share/baf2cd9833434d4c80f4b9e9770d01b5">
+      <img class="video-thumbnail" src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video">
+    </a>
+
+    <p>
+      <a href="https://link.patientpromarketing.com/widget/bookings/schedulerinterview" class="cta-button">
+        📅 Schedule Your Interview Now
+      </a>
+    </p>
+
+    <p class="signature">
+      Looking forward to speaking with you!<br><br>
+      Justin Lesh<br>
+      <strong>Founder, Patient Pro Marketing</strong>
+    </p>
+  </div>
+</body>
+</html>`,
+        jobRole: 'General',
+        isDefault: true
+      }
+    ];
+  };
+
   const loadTemplates = () => {
     // Load from localStorage for now - would be Supabase in production
     const saved = localStorage.getItem('emailTemplates');
     if (saved) {
       setTemplates(JSON.parse(saved));
     } else {
-      // Add default template with your email format
-      const defaultTemplate: EmailTemplate = {
-        id: '1',
-        name: 'Appointment Setter Application',
-        subject: 'Appointment Setter Application Update',
-        content: `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Appointment Setter Application Update</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #F4F4F4; padding: 20px;">
-    <div style="max-width: 600px; background: #fff; padding: 20px; margin: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #333;">{{firstName}},</h2>
-        <p>Congratulations! I'm excited to tell you that after reviewing your application, you have reached the next round of our application process for our {{jobRole}} role at <strong>Patient Pro Marketing</strong>.</p>
-
-        <h3 style="color: #555;">Next Steps for Your Application</h3>
-
-        <p>
-            <a href="https://www.loom.com/share/9f3c0e5226ca4d68aaecdcdd2ef621de">
-                🎥 Watch This Quick Video Before Proceeding 🎥
-            </a>
-        </p>
-
-        <a href="https://www.loom.com/share/9f3c0e5226ca4d68aaecdcdd2ef621de">
-            <img src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video" style="max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px;">
-        </a>
-
-        <p>Please go ahead and fill out the application form below to proceed to the next step!</p>
-
-        <p><a href="{{applicationLink}}" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: #fff; text-decoration: none; border-radius: 5px;">Complete Your Application</a></p>
-
-        <p>Thanks,<br><strong>Justin Lesh</strong><br>Founder, Patient Pro Marketing</p>
-    </div>
-</body>
-</html>`,
-        jobRole: 'Appointment Setter',
-        isDefault: true
-      };
-      setTemplates([defaultTemplate]);
-      localStorage.setItem('emailTemplates', JSON.stringify([defaultTemplate]));
+      // Add default templates
+      const defaultTemplates = getDefaultTemplates();
+      setTemplates(defaultTemplates);
+      localStorage.setItem('emailTemplates', JSON.stringify(defaultTemplates));
     }
   };
 
@@ -162,6 +297,15 @@ export const EmailTemplateManager = () => {
         </Button>
       </div>
 
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h4 className="font-medium text-blue-900 mb-2">Automatic Email Sending:</h4>
+        <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+          <li>✅ <strong>Green button (Approve):</strong> Automatically sends "Interview Invitation" email</li>
+          <li>❌ <strong>Red button (Reject):</strong> Automatically sends "Rejection Email"</li>
+          <li>📧 Make sure your Resend email is configured in Settings > Email Integration</li>
+        </ul>
+      </div>
+
       {isCreating && (
         <Card>
           <CardHeader>
@@ -217,7 +361,7 @@ export const EmailTemplateManager = () => {
                 <div><code>{'{{lastName}}'}</code> - Candidate's last name</div>
                 <div><code>{'{{email}}'}</code> - Candidate's email</div>
                 <div><code>{'{{jobRole}}'}</code> - Job position</div>
-                <div><code>{'{{applicationLink}}'}</code> - Link to your application form</div>
+                <div><code>{'{{candidateName}}'}</code> - Full candidate name</div>
               </div>
             </div>
 
