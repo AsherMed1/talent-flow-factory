@@ -22,15 +22,17 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
   } | null>(null);
   const [currentRecordingType, setCurrentRecordingType] = useState<'introduction' | 'script' | null>(null);
 
-  const handleVoiceRecording = (audioBlob: Blob, audioUrl: string) => {
+  const handleVoiceRecording = (audioBlob: Blob, permanentUrl: string) => {
+    console.log('Voice recording completed:', { type: currentRecordingType, url: permanentUrl });
+    
     if (currentRecordingType === 'introduction') {
-      setIntroductionRecording({ blob: audioBlob, url: audioUrl });
-      // Update form with the recording URL
-      form.setValue('introductionRecording', audioUrl);
+      setIntroductionRecording({ blob: audioBlob, url: permanentUrl });
+      // Update form with the permanent URL
+      form.setValue('introductionRecording', permanentUrl);
     } else if (currentRecordingType === 'script') {
-      setScriptRecording({ blob: audioBlob, url: audioUrl });
-      // Update form with the recording URL
-      form.setValue('scriptRecording', audioUrl);
+      setScriptRecording({ blob: audioBlob, url: permanentUrl });
+      // Update form with the permanent URL
+      form.setValue('scriptRecording', permanentUrl);
     }
     setCurrentRecordingType(null);
   };
@@ -60,7 +62,7 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
             ) : (
               <div className="space-y-2">
                 <div className="text-sm text-green-600 font-medium">
-                  ✓ Introduction recording captured
+                  ✓ Introduction recording saved permanently
                 </div>
                 <Button
                   type="button"
@@ -95,7 +97,7 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
             ) : (
               <div className="space-y-2">
                 <div className="text-sm text-green-600 font-medium">
-                  ✓ Script recording captured
+                  ✓ Script recording saved permanently
                 </div>
                 <Button
                   type="button"

@@ -29,8 +29,19 @@ export const useAudioHandler = () => {
       audioRef.current.currentTime = 0;
     }
 
-    // Check if we have a valid URL and it's a blob URL
-    if (recordingUrl && recordingUrl.startsWith('blob:')) {
+    // Check if we have a valid URL
+    if (!recordingUrl) {
+      console.log('No audio URL provided');
+      toast({
+        title: "Audio Not Available",
+        description: "Voice recording URL is not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if it's a blob URL (which might be expired)
+    if (recordingUrl.startsWith('blob:')) {
       console.log('Detected blob URL - these typically don\'t work across page contexts');
       toast({
         title: "Audio Unavailable",
@@ -40,49 +51,47 @@ export const useAudioHandler = () => {
       return;
     }
 
-    // Try to play the specific recording if we have a valid URL
-    if (recordingUrl && !recordingUrl.startsWith('blob:')) {
-      console.log('Attempting to play audio with URL:', recordingUrl);
+    // Try to play the audio with the permanent URL
+    console.log('Attempting to play audio with URL:', recordingUrl);
+    
+    if (audioRef.current) {
+      audioRef.current.onerror = (e) => {
+        console.error('❌ Audio error:', e);
+        toast({
+          title: "Audio Error",
+          description: "Could not play the voice recording. The file may be corrupted or unavailable.",
+          variant: "destructive",
+        });
+        setPlayingRecordingKey(null);
+      };
       
-      if (audioRef.current) {
-        audioRef.current.onerror = (e) => {
-          console.error('❌ Audio error:', e);
+      audioRef.current.onended = () => {
+        console.log('✓ Audio finished playing');
+        setPlayingRecordingKey(null);
+      };
+      
+      audioRef.current.onloadstart = () => {
+        console.log('🔄 Audio loading started');
+      };
+      
+      audioRef.current.oncanplay = () => {
+        console.log('✓ Audio can start playing');
+      };
+      
+      audioRef.current.src = recordingUrl;
+      audioRef.current.play()
+        .then(() => {
+          console.log('✓ Audio playing successfully');
+          setPlayingRecordingKey(recordingKey);
+        })
+        .catch((error) => {
+          console.error('❌ Play failed:', error);
           toast({
-            title: "Audio Error",
-            description: "Could not play the voice recording.",
+            title: "Playback Failed",
+            description: "Voice recording could not be played. Please check your internet connection.",
             variant: "destructive",
           });
-          setPlayingRecordingKey(null);
-        };
-        
-        audioRef.current.onended = () => {
-          console.log('✓ Audio finished playing');
-          setPlayingRecordingKey(null);
-        };
-        
-        audioRef.current.src = recordingUrl;
-        audioRef.current.play()
-          .then(() => {
-            console.log('✓ Audio playing successfully');
-            setPlayingRecordingKey(recordingKey);
-          })
-          .catch((error) => {
-            console.error('❌ Play failed:', error);
-            toast({
-              title: "Playback Failed",
-              description: "Voice recording could not be played.",
-              variant: "destructive",
-            });
-          });
-      }
-    } else {
-      // No valid URL - show helpful message
-      console.log('No valid audio URL available');
-      toast({
-        title: "Audio Not Available",
-        description: "Voice recording was submitted but audio file is not accessible in this context.",
-        variant: "destructive",
-      });
+        });
     }
     console.log('=== End Audio Debug ===');
   };

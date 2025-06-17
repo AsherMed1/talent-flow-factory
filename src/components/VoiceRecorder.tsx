@@ -3,8 +3,9 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Mic, Square, Play, Pause, Upload } from 'lucide-react';
+import { Mic, Square, Play, Pause, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { uploadAudioFile } from '@/utils/audioStorage';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob, audioUrl: string) => void;
@@ -14,7 +15,9 @@ interface VoiceRecorderProps {
 export const VoiceRecorder = ({ onRecordingComplete, disabled }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -38,11 +41,32 @@ export const VoiceRecorder = ({ onRecordingComplete, disabled }: VoiceRecorderPr
         }
       };
       
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        onRecordingComplete(audioBlob, url);
+      mediaRecorder.onstop = async () => {
+        const recordedBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const localUrl = URL.createObjectURL(recordedBlob);
+        
+        setAudioBlob(recordedBlob);
+        setAudioUrl(localUrl);
+        
+        // Upload to storage immediately
+        setIsUploading(true);
+        const uploadResult = await uploadAudioFile(recordedBlob, 'voice_recording.webm');
+        setIsUploading(false);
+        
+        if (uploadResult.success && uploadResult.url) {
+          // Call the parent callback with the permanent URL
+          onRecordingComplete(recordedBlob, uploadResult.url);
+          toast({
+            title: "Recording Saved",
+            description: "Your voice recording has been saved successfully.",
+          });
+        } else {
+          toast({
+            title: "Upload Failed",
+            description: uploadResult.error || "Failed to save recording. Please try again.",
+            variant: "destructive",
+          });
+        }
         
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
@@ -116,7 +140,7 @@ export const VoiceRecorder = ({ onRecordingComplete, disabled }: VoiceRecorderPr
           {!isRecording && !audioUrl && (
             <Button 
               onClick={startRecording}
-              disabled={disabled}
+              disabled={disabled || isUploading}
               className="flex items-center space-x-2"
             >
               <Mic size={16} />
@@ -147,6 +171,7 @@ export const VoiceRecorder = ({ onRecordingComplete, disabled }: VoiceRecorderPr
                 onClick={isPlaying ? pauseRecording : playRecording}
                 variant="outline"
                 className="flex items-center space-x-2"
+                disabled={isUploading}
               >
                 {isPlaying ? <Pause size={16} /> : <Play size={16} />}
                 <span>{isPlaying ? 'Pause' : 'Play'}</span>
@@ -156,10 +181,18 @@ export const VoiceRecorder = ({ onRecordingComplete, disabled }: VoiceRecorderPr
                 onClick={startRecording}
                 variant="outline"
                 className="flex items-center space-x-2"
+                disabled={isUploading}
               >
                 <Mic size={16} />
                 <span>Re-record</span>
               </Button>
+              
+              {isUploading && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Saving...</span>
+                </div>
+              )}
               
               <span className="text-sm text-gray-600">
                 Duration: {formatDuration(duration)}
