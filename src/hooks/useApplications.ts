@@ -24,6 +24,7 @@ export interface Application {
   voice_tone_score: number | null;
   voice_energy_score: number | null;
   voice_confidence_score: number | null;
+  form_data: any | null;
   candidates: {
     name: string;
     email: string;
