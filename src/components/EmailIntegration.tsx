@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,13 @@ export const EmailIntegration = () => {
 
   useEffect(() => {
     loadGmailConnection();
+    // Load existing credentials if they exist
+    const existingCredentials = localStorage.getItem('gmailOAuthCredentials');
+    if (existingCredentials) {
+      console.log('Found existing credentials in localStorage');
+      const { clientId: savedClientId } = JSON.parse(existingCredentials);
+      setClientId(savedClientId);
+    }
   }, []);
 
   const loadGmailConnection = () => {
@@ -42,13 +50,13 @@ export const EmailIntegration = () => {
       return;
     }
 
+    console.log('Starting Gmail auth with clientId:', clientId.substring(0, 10) + '...');
     setIsConnecting(true);
 
     // Store credentials securely (in production, this should be handled server-side)
-    localStorage.setItem('gmailOAuthCredentials', JSON.stringify({
-      clientId,
-      clientSecret
-    }));
+    const credentials = { clientId, clientSecret };
+    localStorage.setItem('gmailOAuthCredentials', JSON.stringify(credentials));
+    console.log('Stored credentials to localStorage');
 
     // Use exact redirect URI - check current environment
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -98,8 +106,17 @@ export const EmailIntegration = () => {
               title: "Gmail Connected",
               description: `Successfully connected ${result.email}`,
             });
+          } else {
+            console.error('Auth failed:', result.error);
+            toast({
+              title: "Authentication Failed",
+              description: result.error || "Unknown error occurred",
+              variant: "destructive",
+            });
           }
           localStorage.removeItem('gmailAuthResult');
+        } else {
+          console.log('No auth result found in localStorage');
         }
       }
     }, 1000);

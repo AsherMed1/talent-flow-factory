@@ -14,6 +14,10 @@ const GmailCallbackPage = () => {
         const authCode = urlParams.get('code');
         const error = urlParams.get('error');
 
+        console.log('Callback page loaded with URL:', window.location.href);
+        console.log('Auth code received:', authCode ? 'Yes' : 'No');
+        console.log('Error received:', error);
+
         if (error) {
           throw new Error(`OAuth error: ${error}`);
         }
@@ -26,11 +30,15 @@ const GmailCallbackPage = () => {
 
         // Get stored credentials
         const credentialsStr = localStorage.getItem('gmailOAuthCredentials');
+        console.log('Credentials found in localStorage:', credentialsStr ? 'Yes' : 'No');
+        
         if (!credentialsStr) {
+          console.error('No credentials found in localStorage. Available keys:', Object.keys(localStorage));
           throw new Error('OAuth credentials not found');
         }
 
         const { clientId, clientSecret } = JSON.parse(credentialsStr);
+        console.log('Using clientId:', clientId ? clientId.substring(0, 10) + '...' : 'undefined');
 
         // Determine redirect URI based on environment
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -55,8 +63,11 @@ const GmailCallbackPage = () => {
           }),
         });
 
+        console.log('Token response status:', tokenResponse.status);
+
         if (!tokenResponse.ok) {
           const errorData = await tokenResponse.json();
+          console.error('Token exchange failed:', errorData);
           throw new Error(`Token exchange failed: ${errorData.error_description || errorData.error}`);
         }
 
@@ -78,12 +89,15 @@ const GmailCallbackPage = () => {
         console.log('User data retrieved:', userData.email);
 
         // Store the result for the main window
-        localStorage.setItem('gmailAuthResult', JSON.stringify({
+        const authResult = {
           success: true,
           email: userData.email,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token,
-        }));
+        };
+        
+        localStorage.setItem('gmailAuthResult', JSON.stringify(authResult));
+        console.log('Auth result stored to localStorage');
 
         setStatus('success');
         setMessage('Gmail connected successfully! You can close this window.');
