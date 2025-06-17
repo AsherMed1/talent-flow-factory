@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,8 +50,14 @@ export const EmailIntegration = () => {
       clientSecret
     }));
 
-    // Construct OAuth URL
-    const redirectUri = `${window.location.origin}/auth/gmail/callback`;
+    // Use exact redirect URI - check current environment
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const redirectUri = isLocalhost 
+      ? 'http://localhost:8080/auth/gmail/callback'
+      : 'https://preview--talent-flow-factory.lovable.app/auth/gmail/callback';
+    
+    console.log('Using redirect URI:', redirectUri);
+    
     const scope = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email';
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${encodeURIComponent(clientId)}&` +
@@ -61,6 +66,8 @@ export const EmailIntegration = () => {
       `response_type=code&` +
       `access_type=offline&` +
       `prompt=consent`;
+
+    console.log('Full auth URL:', authUrl);
 
     // Open OAuth popup
     const popup = window.open(authUrl, 'gmail-auth', 'width=600,height=600');
@@ -170,8 +177,9 @@ export const EmailIntegration = () => {
                   <li>Create a new project or select an existing one</li>
                   <li>Enable the Gmail API</li>
                   <li>Create OAuth 2.0 credentials (Web application)</li>
-                  <li>Add your domain to authorized JavaScript origins</li>
-                  <li>Add <code>{window.location.origin}/auth/gmail/callback</code> to authorized redirect URIs</li>
+                  <li>Add these exact redirect URIs:</li>
+                  <li className="ml-4">• <code>http://localhost:8080/auth/gmail/callback</code></li>
+                  <li className="ml-4">• <code>https://preview--talent-flow-factory.lovable.app/auth/gmail/callback</code></li>
                 </ol>
               </div>
 
