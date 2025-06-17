@@ -136,8 +136,8 @@ export const DocumentPreviewModal = ({
             Download File
           </Button>
         </div>
-      );
-    }
+      </div>
+    );
   };
 
   return (
