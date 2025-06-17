@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,23 @@ interface MobileApplicationCardProps {
 
 export const MobileApplicationCard = ({ application, stageIndex, onSwipeLeft, onSwipeRight, onStatusChanged }: MobileApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
+
+  const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
+    console.log('Playing voice recording:', recordingKey, 'for:', application.candidates.name);
+    
+    if (playingRecordingKey === recordingKey) {
+      setPlayingRecordingKey(null);
+      return;
+    }
+
+    setPlayingRecordingKey(recordingKey);
+    
+    // Demo mode - simulate playback
+    setTimeout(() => {
+      setPlayingRecordingKey(null);
+    }, 3000);
+  };
 
   return (
     <Card className="mb-4">
@@ -30,12 +48,9 @@ export const MobileApplicationCard = ({ application, stageIndex, onSwipeLeft, on
             <h4 className="text-sm font-semibold">
               {application.candidates.name}
             </h4>
-            {application.voice_analysis_score !== null && (
-              <VoiceAnalysisSection score={application.voice_analysis_score} />
-            )}
           </div>
           <p className="text-xs text-gray-500">
-            Applied: {new Date(application.created_at).toLocaleDateString()}
+            Applied: {new Date(application.applied_date).toLocaleDateString()}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
@@ -49,8 +64,17 @@ export const MobileApplicationCard = ({ application, stageIndex, onSwipeLeft, on
       <CardContent className="py-2 space-y-2">
         {isExpanded && (
           <>
-            <VoiceRecordingsSection application={application} />
+            <VoiceRecordingsSection 
+              application={application}
+              playingRecordingKey={playingRecordingKey}
+              onVoicePlayback={handleVoicePlayback}
+            />
             <DocumentsSection application={application} />
+            <VoiceAnalysisSection 
+              application={application}
+              showDetailedAnalysis={false}
+              onToggleDetailed={() => {}}
+            />
             <RatingDisplay rating={application.rating} />
           </>
         )}
