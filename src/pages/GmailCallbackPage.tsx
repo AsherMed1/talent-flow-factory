@@ -26,15 +26,24 @@ const GmailCallbackPage = () => {
 
         console.log('Processing auth code:', authCode.substring(0, 20) + '...');
 
-        // Request credentials from parent window
+        // Try to get credentials from localStorage first (fallback)
         let credentials = null;
-        const requestCredentials = () => {
-          return new Promise<any>((resolve, reject) => {
+        const localCredentials = localStorage.getItem('gmailOAuthCredentials');
+        if (localCredentials) {
+          console.log('Found credentials in localStorage as fallback');
+          credentials = JSON.parse(localCredentials);
+        } else {
+          console.log('No credentials in localStorage, requesting from parent...');
+          
+          // Request credentials from parent window with longer timeout
+          credentials = await new Promise<any>((resolve, reject) => {
             const handleMessage = (event: MessageEvent) => {
+              console.log('Received message in popup:', event.data);
               if (event.origin !== window.location.origin) return;
               
               if (event.data.type === 'GMAIL_AUTH_CREDENTIALS_RESPONSE') {
                 window.removeEventListener('message', handleMessage);
+                console.log('Received credentials response from parent');
                 resolve(event.data.credentials);
               }
             };
@@ -43,24 +52,27 @@ const GmailCallbackPage = () => {
             
             // Request credentials from parent
             if (window.opener) {
+              console.log('Requesting credentials from parent window');
               window.opener.postMessage({
                 type: 'GMAIL_AUTH_REQUEST_CREDENTIALS'
               }, window.location.origin);
+            } else {
+              console.error('No window.opener available');
+              reject(new Error('No parent window available'));
+              return;
             }
             
-            // Timeout after 5 seconds
+            // Longer timeout (10 seconds)
             setTimeout(() => {
               window.removeEventListener('message', handleMessage);
+              console.error('Timeout waiting for credentials from parent');
               reject(new Error('Timeout waiting for credentials'));
-            }, 5000);
+            }, 10000);
           });
-        };
+        }
 
-        credentials = await requestCredentials();
-        console.log('Received credentials from parent window');
-
-        if (!credentials) {
-          throw new Error('OAuth credentials not received from parent window');
+        if (!credentials || !credentials.clientId || !credentials.clientSecret) {
+          throw new Error('OAuth credentials not available');
         }
 
         const { clientId, clientSecret } = credentials;

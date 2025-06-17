@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,6 +30,8 @@ export const useGmailConnection = () => {
       // Only accept messages from our popup
       if (event.origin !== window.location.origin) return;
       
+      console.log('Parent window received message:', event.data);
+      
       if (event.data.type === 'GMAIL_AUTH_RESULT') {
         console.log('Received auth result from popup:', event.data);
         setIsConnecting(false);
@@ -59,13 +60,18 @@ export const useGmailConnection = () => {
       }
       
       if (event.data.type === 'GMAIL_AUTH_REQUEST_CREDENTIALS') {
-        // Send credentials to popup
+        console.log('Popup requesting credentials, sending response...');
+        // Send credentials to popup immediately
         const credentials = localStorage.getItem('gmailOAuthCredentials');
         if (credentials) {
-          event.source?.postMessage({
+          const response = {
             type: 'GMAIL_AUTH_CREDENTIALS_RESPONSE',
             credentials: JSON.parse(credentials)
-          }, { targetOrigin: window.location.origin });
+          };
+          console.log('Sending credentials to popup:', response);
+          event.source?.postMessage(response, { targetOrigin: window.location.origin });
+        } else {
+          console.error('No credentials found in localStorage to send to popup');
         }
       }
     };
