@@ -30,13 +30,27 @@ serve(async (req) => {
 
     console.log('Processing voice analysis for application:', applicationId);
 
-    // Convert base64 audio to binary
-    const binaryAudio = Uint8Array.from(atob(audioData), c => c.charCodeAt(0));
+    let audioBlob: Blob;
+
+    // Check if audioData is a URL or base64 data
+    if (typeof audioData === 'string' && (audioData.startsWith('http') || audioData.startsWith('https'))) {
+      // It's a URL, fetch the audio file
+      console.log('Fetching audio from URL:', audioData);
+      const audioResponse = await fetch(audioData);
+      if (!audioResponse.ok) {
+        throw new Error(`Failed to fetch audio file: ${audioResponse.statusText}`);
+      }
+      audioBlob = await audioResponse.blob();
+    } else {
+      // It's base64 data, convert to blob
+      console.log('Converting base64 audio data to blob');
+      const binaryAudio = Uint8Array.from(atob(audioData), c => c.charCodeAt(0));
+      audioBlob = new Blob([binaryAudio], { type: 'audio/webm' });
+    }
     
     // Step 1: Transcribe audio using Whisper
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
 
     const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
