@@ -12,15 +12,22 @@ interface VoiceRecordingsSectionProps {
 export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback }: VoiceRecordingsSectionProps) => {
   const getVoiceRecordings = () => {
     const recordings = [];
+    
+    // First check if has_voice_recording flag is true
+    if (application.has_voice_recording) {
+      recordings.push({ type: 'Voice Recording', key: 'main_recording' });
+    }
+    
+    // Then check form_data for additional voice recordings
     if (application.form_data) {
       const formData = application.form_data as any;
       
       // Check for voice recordings in the form data
       if (formData.voiceRecordings) {
-        if (formData.voiceRecordings.hasIntroduction) {
+        if (formData.voiceRecordings.hasIntroduction && !recordings.some(r => r.type.includes('Introduction'))) {
           recordings.push({ type: 'Introduction', key: 'introduction' });
         }
-        if (formData.voiceRecordings.hasScript) {
+        if (formData.voiceRecordings.hasScript && !recordings.some(r => r.type.includes('Script'))) {
           recordings.push({ type: 'Script Reading', key: 'script' });
         }
       }
@@ -31,44 +38,55 @@ export const VoiceRecordingsSection = ({ application, isPlaying, onVoicePlayback
           recordings.push({ type: `Audio ${index + 1}`, key: `audio_${index}` });
         });
       }
+      
+      // Check for voice recording URLs or files
+      if (formData.voiceRecordingUrl || formData.voiceFile) {
+        if (!recordings.some(r => r.key === 'main_recording')) {
+          recordings.push({ type: 'Voice Recording', key: 'main_recording' });
+        }
+      }
     }
+    
     return recordings;
   };
 
-  // Check if application has voice recordings
   const recordings = getVoiceRecordings();
-  const hasVoiceRecordings = application.has_voice_recording || recordings.length > 0;
-
-  if (!hasVoiceRecordings) return null;
+  
+  // Show voice recordings if we have any recordings OR if has_voice_recording is true
+  if (recordings.length === 0 && !application.has_voice_recording) {
+    return null;
+  }
 
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      {recordings.map((recording, index) => (
-        <Badge 
-          key={index}
-          variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1"
-          onClick={onVoicePlayback}
-        >
-          {isPlaying ? (
-            <Pause className="w-3 h-3" />
-          ) : (
-            <Play className="w-3 h-3" />
-          )}
-          {recording.type} {isPlaying && '(Playing...)'}
-        </Badge>
-      ))}
-      
-      {/* Fallback: if has_voice_recording is true but no specific recordings in form_data */}
-      {application.has_voice_recording && recordings.length === 0 && (
-        <Badge 
-          variant="outline" 
-          className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1"
-          onClick={onVoicePlayback}
-        >
-          <Volume2 className="w-3 h-3" />
-          Voice Recording {isPlaying && '(Playing...)'}
-        </Badge>
+      {recordings.length > 0 ? (
+        recordings.map((recording, index) => (
+          <Badge 
+            key={index}
+            variant="outline" 
+            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
+            onClick={onVoicePlayback}
+          >
+            {isPlaying ? (
+              <Pause className="w-3 h-3" />
+            ) : (
+              <Play className="w-3 h-3" />
+            )}
+            {recording.type} {isPlaying && '(Playing...)'}
+          </Badge>
+        ))
+      ) : (
+        // Fallback: if has_voice_recording is true but no specific recordings found
+        application.has_voice_recording && (
+          <Badge 
+            variant="outline" 
+            className="text-xs cursor-pointer hover:bg-blue-50 transition-colors flex items-center gap-1 bg-blue-50 border-blue-200"
+            onClick={onVoicePlayback}
+          >
+            <Volume2 className="w-3 h-3" />
+            Voice Recording {isPlaying && '(Playing...)'}
+          </Badge>
+        )
       )}
     </div>
   );
