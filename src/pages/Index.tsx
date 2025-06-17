@@ -7,9 +7,11 @@ import { ApplicantPipeline } from '@/components/ApplicantPipeline';
 import { CandidateCRM } from '@/components/CandidateCRM';
 import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
   const [activeView, setActiveView] = useState('dashboard');
+  const isMobile = useIsMobile();
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -31,9 +33,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col' : 'flex'}`}>
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <main className="flex-1 overflow-hidden">
+      <main className={`${isMobile ? 'flex-1 overflow-auto' : 'flex-1 overflow-hidden'}`}>
         {renderActiveView()}
       </main>
     </div>
