@@ -5,6 +5,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { RoleManager } from '@/components/RoleManager';
 import { ApplicantPipeline } from '@/components/ApplicantPipeline';
 import { CandidateCRM } from '@/components/CandidateCRM';
+import { CandidateImport } from '@/components/CandidateImport';
 import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
 import { useIsMobile } from '@/hooks/useIsMobile';

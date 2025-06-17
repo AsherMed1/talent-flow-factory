@@ -1,13 +1,24 @@
-
-import { cn } from '@/lib/utils';
-import { 
-  LayoutDashboard, 
-  Users, 
-  GitBranch, 
-  Database, 
-  BarChart3, 
-  Settings 
-} from 'lucide-react';
+import { useState } from "react";
+import {
+  BarChart3,
+  Briefcase,
+  Users,
+  Database,
+  TrendingUp,
+  Settings,
+  Upload,
+} from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface SidebarProps {
   activeView: string;
@@ -15,53 +26,70 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ activeView, setActiveView }: SidebarProps) => {
+  const isMobile = useIsMobile();
+
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'roles', label: 'Role Templates', icon: GitBranch },
-    { id: 'pipeline', label: 'Hiring Pipeline', icon: Users },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'roles', label: 'Job Roles', icon: Briefcase },
+    { id: 'pipeline', label: 'Pipeline', icon: Users },
     { id: 'crm', label: 'Talent Vault', icon: Database },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'import', label: 'Import', icon: Upload },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-          PatientPro Hiring
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">Smart Hiring Platform</p>
+  const renderSidebarContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="px-6 py-4">
+        <Avatar className="w-10 h-10">
+          <AvatarFallback>HR</AvatarFallback>
+        </Avatar>
+        <div className="mt-2 font-semibold">HR Dashboard</div>
+        <div className="text-sm text-gray-500">Your Company</div>
       </div>
-      
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => setActiveView(item.id)}
-                  className={cn(
-                    "w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors",
-                    activeView === item.id
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  )}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      
-      <div className="p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
-          Patient Pro Marketing
-        </div>
+      <div className="flex-1 px-2 py-4 space-y-1">
+        {menuItems.map((item) => (
+          <Button
+            key={item.id}
+            variant="ghost"
+            className={`w-full justify-start ${activeView === item.id ? 'font-semibold' : ''}`}
+            onClick={() => setActiveView(item.id)}
+          >
+            <item.icon className="w-4 h-4 mr-2" />
+            {item.label}
+          </Button>
+        ))}
+      </div>
+      <div className="p-4 text-center text-gray-500 text-xs">
+        © {new Date().getFullYear()} Your Company
       </div>
     </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm">
+            Menu
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64">
+          <SheetHeader className="pl-0 pr-6">
+            <SheetTitle>Menu</SheetTitle>
+            <SheetDescription>
+              Navigate your dashboard and manage your HR tasks.
+            </SheetDescription>
+          </SheetHeader>
+          {renderSidebarContent()}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <aside className="w-64 border-r overflow-y-auto h-screen sticky top-0">
+      {renderSidebarContent()}
+    </aside>
   );
 };
