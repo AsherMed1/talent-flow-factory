@@ -20,7 +20,19 @@ export const VoiceAnalysisSection = ({ application, showDetailedAnalysis, onTogg
     return 'bg-red-100 text-red-800';
   };
 
-  if (!application.has_voice_recording || !application.voice_analysis_score) return null;
+  // Check if we have any voice analysis data at all
+  const hasVoiceAnalysis = application.has_voice_recording && (
+    application.voice_analysis_score || 
+    application.voice_clarity_score || 
+    application.voice_pacing_score || 
+    application.voice_tone_score || 
+    application.voice_energy_score || 
+    application.voice_confidence_score ||
+    application.voice_analysis_feedback ||
+    application.voice_transcription
+  );
+
+  if (!hasVoiceAnalysis) return null;
 
   return (
     <div className="mb-3 p-3 bg-blue-50 rounded-md border">
@@ -30,12 +42,14 @@ export const VoiceAnalysisSection = ({ application, showDetailedAnalysis, onTogg
           AI Voice Analysis
         </span>
         <div className="flex items-center gap-2">
-          <Badge 
-            variant="outline" 
-            className={`text-xs ${getVoiceScoreColor(application.voice_analysis_score)}`}
-          >
-            {application.voice_analysis_score}/10
-          </Badge>
+          {application.voice_analysis_score && (
+            <Badge 
+              variant="outline" 
+              className={`text-xs ${getVoiceScoreColor(application.voice_analysis_score)}`}
+            >
+              {application.voice_analysis_score}/10
+            </Badge>
+          )}
           <Dialog open={showDetailedAnalysis} onOpenChange={onToggleDetailed}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
@@ -63,41 +77,62 @@ export const VoiceAnalysisSection = ({ application, showDetailedAnalysis, onTogg
         </div>
       </div>
       
-      {/* Quick trait scores grid */}
-      <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-        {application.voice_clarity_score && (
-          <span className="flex justify-between">
-            <span>Clarity:</span>
-            <span className="font-medium">{application.voice_clarity_score}/10</span>
-          </span>
-        )}
-        {application.voice_confidence_score && (
-          <span className="flex justify-between">
-            <span>Confidence:</span>
-            <span className="font-medium">{application.voice_confidence_score}/10</span>
-          </span>
-        )}
-        {application.voice_tone_score && (
-          <span className="flex justify-between">
-            <span>Tone:</span>
-            <span className="font-medium">{application.voice_tone_score}/10</span>
-          </span>
-        )}
-        {application.voice_energy_score && (
-          <span className="flex justify-between">
-            <span>Energy:</span>
-            <span className="font-medium">{application.voice_energy_score}/10</span>
-          </span>
-        )}
-      </div>
+      {/* Quick trait scores grid - only show if we have trait scores */}
+      {(application.voice_clarity_score || application.voice_confidence_score || 
+        application.voice_tone_score || application.voice_energy_score) && (
+        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+          {application.voice_clarity_score && (
+            <span className="flex justify-between">
+              <span>Clarity:</span>
+              <span className="font-medium">{application.voice_clarity_score}/10</span>
+            </span>
+          )}
+          {application.voice_confidence_score && (
+            <span className="flex justify-between">
+              <span>Confidence:</span>
+              <span className="font-medium">{application.voice_confidence_score}/10</span>
+            </span>
+          )}
+          {application.voice_tone_score && (
+            <span className="flex justify-between">
+              <span>Tone:</span>
+              <span className="font-medium">{application.voice_tone_score}/10</span>
+            </span>
+          )}
+          {application.voice_energy_score && (
+            <span className="flex justify-between">
+              <span>Energy:</span>
+              <span className="font-medium">{application.voice_energy_score}/10</span>
+            </span>
+          )}
+          {application.voice_pacing_score && (
+            <span className="flex justify-between">
+              <span>Pacing:</span>
+              <span className="font-medium">{application.voice_pacing_score}/10</span>
+            </span>
+          )}
+        </div>
+      )}
       
-      {/* Brief feedback preview */}
+      {/* Brief feedback preview - only show if we have feedback */}
       {application.voice_analysis_feedback && (
         <div className="text-xs text-gray-600 border-t pt-2">
           <p className="line-clamp-2">
             {application.voice_analysis_feedback.length > 100 
               ? `${application.voice_analysis_feedback.substring(0, 100)}...` 
               : application.voice_analysis_feedback}
+          </p>
+        </div>
+      )}
+
+      {/* Show if we have transcription but no other scores */}
+      {application.voice_transcription && !application.voice_analysis_score && (
+        <div className="text-xs text-gray-600 border-t pt-2">
+          <p className="font-medium mb-1">Transcription available</p>
+          <p className="line-clamp-1 italic">
+            "{application.voice_transcription.length > 80 
+              ? `${application.voice_transcription.substring(0, 80)}...` 
+              : application.voice_transcription}"
           </p>
         </div>
       )}

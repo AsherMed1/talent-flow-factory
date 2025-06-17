@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationActions } from './ApplicationActions';
@@ -7,6 +8,7 @@ import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
 import { CandidateTagsSection } from './CandidateTagsSection';
 import { ApplicationDatesSection } from './ApplicationDatesSection';
+import { RatingDisplay } from './RatingDisplay';
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -151,6 +153,14 @@ export const ApplicationCard = ({ application, stageIndex }: ApplicationCardProp
               {application.notes && (
                 <div className="bg-gray-50 p-2 rounded text-xs">
                   <strong>Notes:</strong> {application.notes}
+                </div>
+              )}
+              
+              {/* Show detailed rating if available */}
+              {application.rating && (
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <span className="font-medium">Rating:</span>
+                  <RatingDisplay rating={application.rating} size="md" />
                 </div>
               )}
             </div>

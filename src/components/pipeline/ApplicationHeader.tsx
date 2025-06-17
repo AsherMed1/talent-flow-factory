@@ -1,23 +1,13 @@
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Star } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
+import { RatingDisplay } from './RatingDisplay';
 
 interface ApplicationHeaderProps {
   application: Application;
 }
 
 export const ApplicationHeader = ({ application }: ApplicationHeaderProps) => {
-  const renderStars = (rating: number | null) => {
-    if (!rating) return null;
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={`w-4 h-4 ${index < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
-
   return (
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-2">
@@ -33,11 +23,7 @@ export const ApplicationHeader = ({ application }: ApplicationHeaderProps) => {
           </div>
         </div>
       </div>
-      {application.rating && (
-        <div className="flex gap-1">
-          {renderStars(application.rating)}
-        </div>
-      )}
+      <RatingDisplay rating={application.rating} size="sm" showEmpty={false} />
     </div>
   );
 };

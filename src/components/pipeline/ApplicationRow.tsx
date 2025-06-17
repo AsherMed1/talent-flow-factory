@@ -1,5 +1,6 @@
+
 import { useState, useRef } from 'react';
-import { ChevronDown, ChevronUp, Calendar, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { DocumentsSection } from './DocumentsSection';
 import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
 import { CandidateTagsSection } from './CandidateTagsSection';
+import { RatingDisplay } from './RatingDisplay';
 
 interface ApplicationRowProps {
   application: Application;
@@ -148,13 +150,9 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
           />
         </div>
 
-        {/* Rating - 2 columns */}
+        {/* Rating & Voice Score - 2 columns */}
         <div className="col-span-2">
-          {application.rating && (
-            <div className="flex gap-1">
-              {renderStars(application.rating)}
-            </div>
-          )}
+          <RatingDisplay rating={application.rating} size="sm" showEmpty={false} />
           {application.voice_analysis_score && (
             <Badge variant="outline" className="text-xs mt-1">
               Voice: {application.voice_analysis_score}/10
@@ -199,6 +197,14 @@ export const ApplicationRow = ({ application, stageIndex }: ApplicationRowProps)
             {application.notes && (
               <div className="bg-white p-2 rounded text-xs border">
                 <strong>Notes:</strong> {application.notes}
+              </div>
+            )}
+            
+            {/* Show detailed rating if available */}
+            {application.rating && (
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <span className="font-medium">Rating:</span>
+                <RatingDisplay rating={application.rating} size="md" />
               </div>
             )}
           </div>
