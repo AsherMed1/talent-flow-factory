@@ -30,6 +30,22 @@ export const ExpandableCard = ({ application, stageIndex }: ExpandableCardProps)
     setIsExpanded(!isExpanded);
   };
 
+  // Placeholder functions for the required props - these would normally come from a parent component
+  const handleUpdateStatus = (applicationId: string, newStatus: Application['status']) => {
+    console.log('Update status:', applicationId, newStatus);
+    // This would normally update the application status in the database
+  };
+
+  const handleUpdateRating = (applicationId: string, rating: number) => {
+    console.log('Update rating:', applicationId, rating);
+    // This would normally update the application rating in the database
+  };
+
+  const handleUpdateNotes = (applicationId: string, notes: string) => {
+    console.log('Update notes:', applicationId, notes);
+    // This would normally update the application notes in the database
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow bg-white cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-4">
@@ -73,8 +89,9 @@ export const ExpandableCard = ({ application, stageIndex }: ExpandableCardProps)
         {isExpanded && (
           <ExpandedContent 
             application={application}
-            showDetailedAnalysis={showDetailedAnalysis}
-            onToggleDetailed={setShowDetailedAnalysis}
+            onUpdateStatus={handleUpdateStatus}
+            onUpdateRating={handleUpdateRating}
+            onUpdateNotes={handleUpdateNotes}
           />
         )}
         
