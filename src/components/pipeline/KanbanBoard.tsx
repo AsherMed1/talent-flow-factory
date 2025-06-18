@@ -1,4 +1,3 @@
-
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
 import { ApplicationRow } from './ApplicationRow';
@@ -21,10 +20,8 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
   };
 
   const handleStatusChanged = (applicationId: string, newStatus: ApplicationStatus) => {
-    // Add to processing set temporarily to hide from current stage
     setProcessingApplications(prev => new Set(prev).add(applicationId));
     
-    // Remove from processing set after a delay to allow for smooth transition
     setTimeout(() => {
       setProcessingApplications(prev => {
         const newSet = new Set(prev);
@@ -44,34 +41,53 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
 
   if (isMobile) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         {stages.map((stage, stageIndex) => {
           const stageApplications = getApplicationsByStage(stage.name);
           return (
-            <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              {/* Mobile Stage Header */}
-              <div className={`p-3 ${stage.color} border-b border-gray-200`}>
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  {stage.displayName} ({stageApplications.length})
-                </h3>
+            <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+              {/* Enhanced Mobile Stage Header */}
+              <div className={`p-4 ${stage.color} border-b border-gray-200`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {stage.displayName}
+                  </h3>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                    <span className="text-sm font-medium text-gray-800">
+                      {stageApplications.length}
+                    </span>
+                  </div>
+                </div>
               </div>
               
-              {/* Mobile Applications */}
-              <div className="p-2">
+              {/* Enhanced Mobile Applications */}
+              <div className="p-3">
                 {stageApplications.length > 0 ? (
-                  stageApplications.map((application) => (
-                    <MobileApplicationCard 
-                      key={application.id} 
-                      application={application} 
-                      stageIndex={stageIndex}
-                      onSwipeLeft={() => handleSwipeLeft(application)}
-                      onSwipeRight={() => handleSwipeRight(application)}
-                      onStatusChanged={handleStatusChanged}
-                    />
-                  ))
+                  <div className="space-y-3">
+                    {stageApplications.map((application) => (
+                      <div
+                        key={application.id}
+                        className="transform transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                      >
+                        <MobileApplicationCard 
+                          application={application} 
+                          stageIndex={stageIndex}
+                          onSwipeLeft={() => handleSwipeLeft(application)}
+                          onSwipeRight={() => handleSwipeRight(application)}
+                          onStatusChanged={handleStatusChanged}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="p-6 text-center text-gray-500 text-sm">
-                    No applications in this stage
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium">No applications</p>
+                    <p className="text-xs text-gray-400 mt-1">Applications will appear here when available</p>
                   </div>
                 )}
               </div>
@@ -88,14 +104,12 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
         const stageApplications = getApplicationsByStage(stage.name);
         return (
           <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {/* Stage Header */}
             <div className={`p-4 ${stage.color} border-b border-gray-200`}>
               <h3 className="font-semibold text-gray-900">
                 {stage.displayName} ({stageApplications.length})
               </h3>
             </div>
             
-            {/* Table Header */}
             {stageApplications.length > 0 && (
               <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
                 <div className="col-span-3">Candidate</div>
@@ -106,7 +120,6 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
               </div>
             )}
             
-            {/* Applications Rows */}
             <div>
               {stageApplications.length > 0 ? (
                 stageApplications.map((application) => (
