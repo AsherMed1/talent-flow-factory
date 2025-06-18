@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -92,21 +91,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (payload.event === 'endpoint.url_validation') {
       console.log('Handling URL validation challenge');
       const challengePayload = payload as ZoomChallengePayload;
+      const plainToken = challengePayload.payload.plainToken;
       
-      // Calculate the hash of the plainToken
-      const encoder = new TextEncoder();
-      const data = encoder.encode(challengePayload.payload.plainToken);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      console.log('Plain token received:', plainToken);
       
-      console.log('Returning validation response with hash:', hashHex);
+      // For URL validation, Zoom expects us to return the plainToken as encryptedToken
+      // According to Zoom docs, during validation we should return the plainToken as-is
+      const response = {
+        plainToken: plainToken,
+        encryptedToken: plainToken
+      };
+      
+      console.log('Returning validation response:', response);
       
       return new Response(
-        JSON.stringify({
-          plainToken: challengePayload.payload.plainToken,
-          encryptedToken: hashHex
-        }),
+        JSON.stringify(response),
         {
           status: 200,
           headers: {
