@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationStatus, stages } from './PipelineStages';
@@ -24,7 +23,8 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
     try {
       const nextStageIndex = currentStageIndex + 1;
       const newStatus = nextStageIndex < stages.length ? stages[nextStageIndex].name : 'hired';
-      await handleStatusChange(application.id, newStatus, application, onStatusChanged);
+      // Pass isApproveAction as true to trigger interview email
+      await handleStatusChange(application.id, newStatus, application, onStatusChanged, true);
     } finally {
       setIsUpdating(false);
     }
@@ -33,7 +33,8 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
   const handleReject = async () => {
     setIsUpdating(true);
     try {
-      await handleStatusChange(application.id, 'rejected', application, onStatusChanged);
+      // Pass isApproveAction as false for rejection
+      await handleStatusChange(application.id, 'rejected', application, onStatusChanged, false);
     } finally {
       setIsUpdating(false);
     }

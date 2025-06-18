@@ -15,7 +15,8 @@ export const useStatusUpdateHandler = () => {
     applicationId: string, 
     newStatus: ApplicationStatus, 
     candidateData: Application,
-    onStatusChanged?: (applicationId: string, newStatus: ApplicationStatus) => void
+    onStatusChanged?: (applicationId: string, newStatus: ApplicationStatus) => void,
+    isApproveAction?: boolean // New parameter to indicate if this was triggered by the green checkmark
   ) => {
     console.log('Updating application status:', applicationId, newStatus);
     
@@ -56,12 +57,26 @@ export const useStatusUpdateHandler = () => {
         jobRole,
         firstName,
         lastName,
-        bookingLink
+        bookingLink,
+        isApproveAction
       });
 
-      // Send appropriate email based on status change
+      // Send appropriate email based on action and status
       let emailSent = false;
-      if (newStatus === 'rejected') {
+      
+      if (isApproveAction) {
+        // If this was triggered by the green checkmark (approve), always send interview email
+        console.log('Sending interview email (triggered by approve action)...');
+        emailSent = await sendTemplateEmail({
+          templateType: 'interview',
+          candidateName,
+          candidateEmail,
+          firstName,
+          lastName,
+          jobRole,
+          bookingLink
+        });
+      } else if (newStatus === 'rejected') {
         console.log('Sending rejection email...');
         emailSent = await sendTemplateEmail({
           templateType: 'thank_you',
