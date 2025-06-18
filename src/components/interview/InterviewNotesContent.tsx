@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -128,13 +127,15 @@ export const InterviewNotesContent = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs defaultValue="notes" className="w-full">
-          <TabsList>
-            <TabsTrigger value="notes">Interview Notes</TabsTrigger>
-            <TabsTrigger value="recording">Recording Link</TabsTrigger>
-            <TabsTrigger value="rating">Rating & Status</TabsTrigger>
-            <TabsTrigger value="recordings">All Recordings</TabsTrigger>
-            <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="inline-flex min-w-full w-max">
+              <TabsTrigger value="notes" className="whitespace-nowrap">Interview Notes</TabsTrigger>
+              <TabsTrigger value="recording" className="whitespace-nowrap">Recording Link</TabsTrigger>
+              <TabsTrigger value="rating" className="whitespace-nowrap">Rating & Status</TabsTrigger>
+              <TabsTrigger value="recordings" className="whitespace-nowrap">All Recordings</TabsTrigger>
+              <TabsTrigger value="analysis" className="whitespace-nowrap">AI Analysis</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="notes" className="space-y-4">
             <div>
