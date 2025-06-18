@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Save, Calendar, Star, Video, ExternalLink, Link, CalendarDays, List } from 'lucide-react';
+import { Search, Save, Calendar, Star, Video, ExternalLink, Link, CalendarDays, List, Clock } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -111,6 +111,29 @@ export const InterviewNotes = () => {
         ))}
       </div>
     );
+  };
+
+  const formatInterviewTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return 'Time TBD';
+    }
+  };
+
+  const getMeetingLink = (application: any) => {
+    // Check GHL appointment data first
+    if (application.ghl_appointment_data?.calendar?.address) {
+      return application.ghl_appointment_data.calendar.address;
+    }
+    
+    // Fallback to manual recording link if no GHL data
+    return application.interview_recording_link;
   };
 
   const renderRecordings = (application: any) => {
@@ -283,6 +306,26 @@ export const InterviewNotes = () => {
                       <div className="text-sm text-gray-500 font-normal">
                         {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
                       </div>
+                      {/* Meeting Link and Time for Calendar View */}
+                      {selectedApplication.interview_date && (
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="text-xs text-blue-600 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatInterviewTime(selectedApplication.interview_date)}
+                          </div>
+                          {getMeetingLink(selectedApplication) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(getMeetingLink(selectedApplication), '_blank')}
+                              className="text-xs h-6"
+                            >
+                              <Link className="w-3 h-3 mr-1" />
+                              Join Meeting
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <Badge className={getStatusColor(selectedApplication.status)}>
                       {selectedApplication.status.replace('_', ' ')}
@@ -438,13 +481,30 @@ export const InterviewNotes = () => {
                         {application.interview_date && (
                           <div className="text-xs text-blue-600 flex items-center gap-1 mt-1">
                             <Calendar className="w-3 h-3" />
-                            {new Date(application.interview_date).toLocaleDateString()}
+                            {new Date(application.interview_date).toLocaleDateString()} • {formatInterviewTime(application.interview_date)}
                           </div>
                         )}
                         {(application.interview_recording_link || application.zoom_recording_url) && (
                           <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
                             <Video className="w-3 h-3" />
                             Recording Available
+                          </div>
+                        )}
+                        {/* Meeting Link for List View */}
+                        {getMeetingLink(application) && (
+                          <div className="mt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(getMeetingLink(application), '_blank');
+                              }}
+                              className="text-xs h-6"
+                            >
+                              <Link className="w-3 h-3 mr-1" />
+                              Join Meeting
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -479,6 +539,26 @@ export const InterviewNotes = () => {
                         <div className="text-sm text-gray-500 font-normal">
                           {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
                         </div>
+                        {/* Meeting Link and Time for List View Selected Candidate */}
+                        {selectedApplication.interview_date && (
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="text-xs text-blue-600 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {formatInterviewTime(selectedApplication.interview_date)}
+                            </div>
+                            {getMeetingLink(selectedApplication) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(getMeetingLink(selectedApplication), '_blank')}
+                                className="text-xs h-6"
+                              >
+                                <Link className="w-3 h-3 mr-1" />
+                                Join Meeting
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <Badge className={getStatusColor(selectedApplication.status)}>
                         {selectedApplication.status.replace('_', ' ')}
