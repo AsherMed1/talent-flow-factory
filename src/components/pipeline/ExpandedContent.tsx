@@ -6,25 +6,19 @@ import { RatingDisplay } from './RatingDisplay';
 
 interface ExpandedContentProps {
   application: Application;
-  showDetailedAnalysis: boolean;
-  onToggleDetailed: (show: boolean) => void;
+  onUpdateStatus: (applicationId: string, newStatus: Application['status']) => void;
+  onUpdateRating: (applicationId: string, rating: number) => void;
+  onUpdateNotes: (applicationId: string, notes: string) => void;
 }
 
 export const ExpandedContent = ({ 
   application, 
-  showDetailedAnalysis, 
-  onToggleDetailed 
+  onUpdateStatus, 
+  onUpdateRating, 
+  onUpdateNotes 
 }: ExpandedContentProps) => {
   return (
     <div className="mt-3 space-y-3 border-t pt-3">
-      <VoiceAnalysisSection 
-        application={application} 
-        showDetailedAnalysis={showDetailedAnalysis} 
-        onToggleDetailed={onToggleDetailed} 
-      />
-      
-      <CandidateTagsSection application={application} />
-      
       {/* Additional candidate info when expanded */}
       <div className="text-xs text-gray-600 space-y-1">
         <div>Email: {application.candidates.email}</div>

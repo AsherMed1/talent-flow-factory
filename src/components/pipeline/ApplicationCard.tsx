@@ -7,9 +7,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ChevronDown, ChevronUp, Star, Calendar, FileText, Mic, Video, Phone, Mail } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 import { ExpandedContent } from './ExpandedContent';
-import { ActionButtons } from './ActionButtons';
+import { ApplicationActions } from './ApplicationActions';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
 import { PreScreeningAnalysisSection } from './PreScreeningAnalysisSection';
+import { stages } from './PipelineStages';
 
 interface ApplicationCardProps {
   application: Application;
@@ -60,6 +61,9 @@ export const ApplicationCard = ({
       </div>
     );
   };
+
+  // Find current stage index for ApplicationActions
+  const currentStageIndex = stages.findIndex(stage => stage.name === application.status);
 
   return (
     <Card className="mb-4 hover:shadow-md transition-shadow">
@@ -180,7 +184,11 @@ export const ApplicationCard = ({
         )}
 
         {/* Action Buttons */}
-        <ActionButtons application={application} />
+        <ApplicationActions 
+          application={application} 
+          currentStageIndex={currentStageIndex}
+          onStatusChanged={onUpdateStatus}
+        />
       </CardContent>
     </Card>
   );
