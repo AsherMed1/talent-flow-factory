@@ -61,15 +61,21 @@ export const useUpdateJobRole = () => {
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
-      // Update the role directly without checking existence first
+      // Prepare the update object with only the fields we want to update
+      const updateData: Record<string, any> = {};
+      
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.booking_link !== undefined) updateData.booking_link = updates.booking_link;
+      
+      // Always update the timestamp
+      updateData.updated_at = new Date().toISOString();
+      
+      console.log('Update data being sent:', updateData);
+      
       const { data, error } = await supabase
         .from('job_roles')
-        .update({
-          name: updates.name,
-          description: updates.description,
-          booking_link: updates.booking_link,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select();
       
@@ -78,8 +84,19 @@ export const useUpdateJobRole = () => {
         throw error;
       }
       
+      console.log('Raw update response:', data);
+      
       if (!data || data.length === 0) {
-        console.error('No rows were updated - role may not exist');
+        console.error('No rows were updated - role may not exist or no changes detected');
+        
+        // Let's verify the role exists
+        const { data: checkData, error: checkError } = await supabase
+          .from('job_roles')
+          .select('id, name, description, booking_link')
+          .eq('id', id);
+        
+        console.log('Role verification:', { checkData, checkError });
+        
         throw new Error('Role not found or no changes were made');
       }
       
