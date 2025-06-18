@@ -60,69 +60,47 @@ export const useUpdateJobRole = () => {
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('=== UPDATE JOB ROLE DEBUG ===');
-      console.log('Updating job role with ID:', id, 'typeof:', typeof id);
+      console.log('Updating job role with ID:', id);
       console.log('Updates:', updates);
       
-      try {
-        // First, get the current role data
-        const { data: currentRole, error: fetchError } = await supabase
-          .from('job_roles')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (fetchError || !currentRole) {
-          console.error('Role not found:', fetchError);
-          throw new Error('Role not found');
-        }
-        
-        console.log('Current role data:', currentRole);
-        
-        // Build the complete updated role object
-        const updatedRole = {
-          ...currentRole,
-          ...updates,
-          updated_at: new Date().toISOString()
-        };
-        
-        // Handle booking_link properly - empty string becomes null
-        if (updates.booking_link !== undefined) {
-          updatedRole.booking_link = updates.booking_link === '' ? null : updates.booking_link;
-        }
-        
-        console.log('Complete updated role object:', updatedRole);
-        
-        // Use upsert instead of update for more reliability
-        const { data, error } = await supabase
-          .from('job_roles')
-          .upsert(updatedRole, { 
-            onConflict: 'id',
-            ignoreDuplicates: false 
-          })
-          .select()
-          .single();
-        
-        console.log('Upsert response - data:', data, 'error:', error);
-        
-        if (error) {
-          console.error('Supabase upsert error:', error);
-          throw new Error(`Database update failed: ${error.message}`);
-        }
-        
-        if (!data) {
-          console.error('Upsert returned no data');
-          throw new Error('Update operation failed');
-        }
-        
-        console.log('Update successful, returned data:', data);
-        console.log('=== UPDATE COMPLETE ===');
-        return data;
-        
-      } catch (error) {
-        console.error('=== UPDATE FAILED ===');
-        console.error('Full update error:', error);
+      // Build the update object
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (updates.name !== undefined) {
+        updateData.name = updates.name;
+      }
+      if (updates.description !== undefined) {
+        updateData.description = updates.description;
+      }
+      if (updates.booking_link !== undefined) {
+        updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
+      }
+      
+      console.log('Update data:', updateData);
+      
+      const { data, error } = await supabase
+        .from('job_roles')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      console.log('Update response - data:', data, 'error:', error);
+      
+      if (error) {
+        console.error('Update error:', error);
         throw error;
       }
+      
+      if (!data) {
+        throw new Error('Update operation failed - no data returned');
+      }
+      
+      console.log('Update successful:', data);
+      console.log('=== UPDATE COMPLETE ===');
+      return data;
     },
     onSuccess: (data) => {
       console.log('Update mutation successful:', data);
