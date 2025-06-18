@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useApplications } from '@/hooks/useApplications';
 import { PipelineOverview } from './pipeline/PipelineOverview';
 import { KanbanBoard } from './pipeline/KanbanBoard';
 import { SearchAndFilters } from './pipeline/SearchAndFilters';
+import { TestStatusReset } from './pipeline/TestStatusReset';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const ApplicantPipeline = () => {
@@ -42,6 +42,9 @@ export const ApplicantPipeline = () => {
 
   return (
     <div className={`${isMobile ? 'p-4' : 'p-6'} space-y-6`}>
+      {/* Test Reset Button */}
+      <TestStatusReset />
+      
       <div className="flex items-center justify-between">
         <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900`}>
           {isMobile ? 'Pipeline' : 'Hiring Pipeline'}
