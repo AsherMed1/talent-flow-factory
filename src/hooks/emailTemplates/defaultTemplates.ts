@@ -72,13 +72,13 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
     },
     {
       id: 'interview-default',
-      name: 'Interview Invitation',
-      subject: 'Congrats! Please Schedule Your Interview',
+      name: 'Congratulations - Next Step',
+      subject: '🎉 Congratulations! You Made It to the Next Step',
       content: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Patient Pro Marketing - Interview Invitation</title>
+  <title>Patient Pro Marketing - Congratulations!</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -99,71 +99,80 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
     }
     h1 {
       color: #333;
+      font-size: 28px;
     }
     p {
       color: #555;
+      font-size: 16px;
     }
-    a {
-      text-decoration: none;
-      color: #0073e6;
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .video-thumbnail {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 20px auto;
+    .celebration {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      margin: 20px 0;
       border-radius: 8px;
     }
     .cta-button {
       display: inline-block;
-      padding: 12px 20px;
-      margin-top: 15px;
+      padding: 15px 30px;
+      margin-top: 20px;
       background-color: #0073e6;
       color: #ffffff;
       font-size: 18px;
       font-weight: bold;
       border-radius: 5px;
+      text-decoration: none;
     }
     .cta-button:hover {
       background-color: #005bb5;
     }
     .signature {
       font-size: 18px;
-      margin-top: 20px;
+      margin-top: 30px;
       font-weight: bold;
+    }
+    .instructions {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: left;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Exciting Opportunity Awaits!</h1>
+    <div class="celebration">
+      <h1>🎉 Congratulations, {{firstName}}! 🎉</h1>
+      <p style="color: white; font-size: 18px;">You've made it to the next step of our hiring process!</p>
+    </div>
 
-    <p>Hey {{firstName}},</p>
+    <p>We're excited to move forward with your application for the <strong>{{jobRole}}</strong> position at Patient Pro Marketing.</p>
 
-    <p>We loved your application and appreciate the recordings you sent in! Click the link below to schedule your interview – we're excited to connect with you!</p>
-
-    <p>
-      <a href="https://www.loom.com/share/baf2cd9833434d4c80f4b9e9770d01b5">
-        🎤 Watch This Video Before Your Interview 🎤
-      </a>
-    </p>
-
-    <a href="https://www.loom.com/share/baf2cd9833434d4c80f4b9e9770d01b5">
-      <img class="video-thumbnail" src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video">
-    </a>
+    <div class="instructions">
+      <h3>Next Step: Complete Your Application</h3>
+      <p>To continue in our hiring process, please complete our detailed application form. This form includes:</p>
+      <ul style="text-align: left;">
+        <li>Voice recording submissions</li>
+        <li>Additional information about your experience</li>
+        <li>Skills assessment questions</li>
+        <li>Upload of relevant documents</li>
+      </ul>
+      <p><strong>Important:</strong> Please complete this application within the next 48 hours to ensure your spot in our process.</p>
+    </div>
 
     <p>
       <a href="{{bookingLink}}" class="cta-button">
-        📅 Schedule Your Interview Now
+        📝 Complete Your Application Now
       </a>
     </p>
 
+    <p>If you have any questions about the application process, please don't hesitate to reach out to us.</p>
+
     <p class="signature">
-      Looking forward to speaking with you!<br><br>
-      Justin Lesh<br>
-      <strong>Founder, Patient Pro Marketing</strong>
+      Looking forward to your application!<br><br>
+      <strong>Justin Lesh, Founder</strong><br>
+      Patient Pro Marketing
     </p>
   </div>
 </body>

@@ -38,8 +38,16 @@ export const useEmailSender = () => {
       return false;
     }
 
-    // Use the job role's custom booking link if provided, otherwise use default
-    const finalBookingLink = bookingLink || 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
+    // For the interview/congratulations email, direct candidates to the application form
+    let finalApplicationLink = bookingLink;
+    if (templateType === 'interview') {
+      // Get current domain from window location
+      const currentDomain = typeof window !== 'undefined' ? window.location.origin : '';
+      finalApplicationLink = `${currentDomain}/apply`;
+    } else {
+      // For other email types, use the provided booking link or default
+      finalApplicationLink = bookingLink || 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
+    }
 
     const variables = {
       firstName: firstName || candidateName.split(' ')[0] || 'Candidate',
@@ -47,7 +55,7 @@ export const useEmailSender = () => {
       candidateName,
       jobRole,
       email: candidateEmail,
-      bookingLink: finalBookingLink
+      bookingLink: finalApplicationLink
     };
 
     const subject = replaceVariables(template.subject, variables);
