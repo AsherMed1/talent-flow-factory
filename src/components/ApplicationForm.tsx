@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Form } from '@/components/ui/form';
 import { ApplicationFormHeader } from './application/ApplicationFormHeader';
 import { BasicInfoSection } from './application/BasicInfoSection';
 import { VoiceRecordingSection } from './application/VoiceRecordingSection';
@@ -98,35 +100,37 @@ export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormP
       
       <Card>
         <CardContent className="p-4 md:p-6">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <BasicInfoSection form={form} />
-            <PreScreeningSection form={form} roleName={role?.name} />
-            
-            {/* Role-specific sections */}
-            <RoleSpecificSections form={form} roleName={role?.name} />
-            
-            {/* Appointment Setter specific sections */}
-            {isAppointmentSetter && (
-              <>
-                <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
-                <FileUploadSection form={form} />
-                <ListeningTestSection form={form} />
-              </>
-            )}
-            
-            <TermsSection form={form} />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <BasicInfoSection form={form} />
+              <PreScreeningSection form={form} roleName={role?.name} />
+              
+              {/* Role-specific sections */}
+              <RoleSpecificSections form={form} roleName={role?.name} />
+              
+              {/* Appointment Setter specific sections */}
+              {isAppointmentSetter && (
+                <>
+                  <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
+                  <FileUploadSection form={form} />
+                  <ListeningTestSection form={form} />
+                </>
+              )}
+              
+              <TermsSection form={form} />
 
-            {/* Submit Button */}
-            <div className="pt-6">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit!'}
-              </Button>
-            </div>
-          </form>
+              {/* Submit Button */}
+              <div className="pt-6">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit!'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
