@@ -41,7 +41,7 @@ export const useStatusUpdateHandler = () => {
         console.error('Error fetching job role data:', jobRoleError);
       }
 
-      // Send appropriate email based on status change
+      // Prepare candidate info for emails
       const candidateName = candidateData.candidates.name;
       const candidateEmail = candidateData.candidates.email;
       const jobRole = candidateData.job_roles?.name || 'General';
@@ -49,9 +49,10 @@ export const useStatusUpdateHandler = () => {
       const lastName = candidateData.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
       const bookingLink = jobRoleData?.booking_link;
 
+      // Send appropriate email based on status change
       if (newStatus === 'rejected') {
         await sendTemplateEmail({
-          templateType: 'rejection',
+          templateType: 'thank_you',
           candidateName,
           candidateEmail,
           firstName,
@@ -62,6 +63,16 @@ export const useStatusUpdateHandler = () => {
       } else if (newStatus === 'interview_scheduled') {
         await sendTemplateEmail({
           templateType: 'interview',
+          candidateName,
+          candidateEmail,
+          firstName,
+          lastName,
+          jobRole,
+          bookingLink
+        });
+      } else if (newStatus === 'hired') {
+        await sendTemplateEmail({
+          templateType: 'welcome',
           candidateName,
           candidateEmail,
           firstName,

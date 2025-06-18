@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { InterviewDisposition } from './InterviewDisposition';
 
 export const InterviewNotes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -306,121 +308,129 @@ export const InterviewNotes = () => {
         {/* Interview Notes Section */}
         <div className="lg:col-span-2">
           {selectedApplication ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl">{selectedApplication.candidates.name}</div>
-                    <div className="text-sm text-gray-500 font-normal">
-                      {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
-                    </div>
-                  </div>
-                  <Badge className={getStatusColor(selectedApplication.status)}>
-                    {selectedApplication.status.replace('_', ' ')}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <Tabs defaultValue="notes" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="notes">Interview Notes</TabsTrigger>
-                    <TabsTrigger value="recording">Recording Link</TabsTrigger>
-                    <TabsTrigger value="rating">Rating & Status</TabsTrigger>
-                    <TabsTrigger value="recordings">All Recordings</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="notes" className="space-y-4">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="notes" className="text-base font-medium">
-                        Interview Notes
-                      </Label>
-                      <Textarea
-                        id="notes"
-                        placeholder="Take notes during the interview..."
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="mt-2 min-h-64 resize-none"
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="recording" className="space-y-4">
-                    <div>
-                      <Label htmlFor="recording-link" className="text-base font-medium">
-                        Interview Recording Link
-                      </Label>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Add a link to the interview recording (Loom, Zoom, Google Drive, etc.)
-                      </p>
-                      <Input
-                        id="recording-link"
-                        placeholder="https://loom.com/share/... or https://zoom.us/rec/..."
-                        value={interviewRecordingLink}
-                        onChange={(e) => setInterviewRecordingLink(e.target.value)}
-                        className="mt-2"
-                      />
-                      {interviewRecordingLink && (
-                        <div className="mt-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(interviewRecordingLink, '_blank')}
-                          >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Test Link
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="rating" className="space-y-6">
-                    <div>
-                      <Label className="text-base font-medium">Overall Rating</Label>
-                      <div className="mt-2">
-                        {renderStars(rating)}
+                      <div className="text-xl">{selectedApplication.candidates.name}</div>
+                      <div className="text-sm text-gray-500 font-normal">
+                        {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
                       </div>
                     </div>
+                    <Badge className={getStatusColor(selectedApplication.status)}>
+                      {selectedApplication.status.replace('_', ' ')}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Tabs defaultValue="notes" className="w-full">
+                    <TabsList>
+                      <TabsTrigger value="notes">Interview Notes</TabsTrigger>
+                      <TabsTrigger value="recording">Recording Link</TabsTrigger>
+                      <TabsTrigger value="rating">Rating & Status</TabsTrigger>
+                      <TabsTrigger value="recordings">All Recordings</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="notes" className="space-y-4">
+                      <div>
+                        <Label htmlFor="notes" className="text-base font-medium">
+                          Interview Notes
+                        </Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Take notes during the interview..."
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          className="mt-2 min-h-64 resize-none"
+                        />
+                      </div>
+                    </TabsContent>
 
-                    <div>
-                      <Label className="text-base font-medium">Interview Outcome</Label>
-                      <RadioGroup
-                        value={interviewStatus}
-                        onValueChange={(value) => setInterviewStatus(value as any)}
-                        className="mt-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="hired" id="hired" />
-                          <Label htmlFor="hired">Hired - Move to final stage</Label>
+                    <TabsContent value="recording" className="space-y-4">
+                      <div>
+                        <Label htmlFor="recording-link" className="text-base font-medium">
+                          Interview Recording Link
+                        </Label>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Add a link to the interview recording (Loom, Zoom, Google Drive, etc.)
+                        </p>
+                        <Input
+                          id="recording-link"
+                          placeholder="https://loom.com/share/... or https://zoom.us/rec/..."
+                          value={interviewRecordingLink}
+                          onChange={(e) => setInterviewRecordingLink(e.target.value)}
+                          className="mt-2"
+                        />
+                        {interviewRecordingLink && (
+                          <div className="mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(interviewRecordingLink, '_blank')}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Test Link
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="rating" className="space-y-6">
+                      <div>
+                        <Label className="text-base font-medium">Overall Rating</Label>
+                        <div className="mt-2">
+                          {renderStars(rating)}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="interview_completed" id="potential" />
-                          <Label htmlFor="potential">Potential Candidate - Keep for consideration</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="rejected" id="rejected" />
-                          <Label htmlFor="rejected">Not a Fit - Remove from pipeline</Label>
-                        </div>
-                      </RadioGroup>
+                      </div>
+
+                      <div>
+                        <Label className="text-base font-medium">Interview Status</Label>
+                        <RadioGroup
+                          value={interviewStatus}
+                          onValueChange={(value) => setInterviewStatus(value as any)}
+                          className="mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="interview_completed" id="potential" />
+                            <Label htmlFor="potential">Interview Complete - Ready for disposition</Label>
+                          </div>
+                        </RadioGroup>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Use the Disposition section below to make the final hiring decision.
+                        </p>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="recordings" className="space-y-4">
+                      {renderRecordings(selectedApplication)}
+                    </TabsContent>
+                  </Tabs>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="text-sm text-gray-500">
+                      {selectedApplication.notes ? 'Last updated: ' + new Date(selectedApplication.updated_at || '').toLocaleString() : 'No previous notes'}
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="recordings" className="space-y-4">
-                    {renderRecordings(selectedApplication)}
-                  </TabsContent>
-                </Tabs>
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <div className="text-sm text-gray-500">
-                    {selectedApplication.notes ? 'Last updated: ' + new Date(selectedApplication.updated_at || '').toLocaleString() : 'No previous notes'}
+                    <Button onClick={handleSaveNotes} disabled={isSaving}>
+                      <Save className="w-4 h-4 mr-2" />
+                      {isSaving ? 'Saving...' : 'Save Notes'}
+                    </Button>
                   </div>
-                  <Button onClick={handleSaveNotes} disabled={isSaving}>
-                    <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? 'Saving...' : 'Save Notes'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Interview Disposition */}
+              {selectedApplication.status === 'interview_completed' && (
+                <InterviewDisposition 
+                  application={selectedApplication}
+                  onDispositionComplete={() => {
+                    // Refresh the selected candidate data
+                    setSelectedCandidate(null);
+                  }}
+                />
+              )}
+            </div>
           ) : (
             <Card className="h-96 flex items-center justify-center">
               <div className="text-center text-gray-500">
