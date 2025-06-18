@@ -35,6 +35,8 @@ export type Database = {
           voice_pacing_score: number | null
           voice_tone_score: number | null
           voice_transcription: string | null
+          zoom_recording_files: Json | null
+          zoom_recording_url: string | null
         }
         Insert: {
           applied_date?: string | null
@@ -61,6 +63,8 @@ export type Database = {
           voice_pacing_score?: number | null
           voice_tone_score?: number | null
           voice_transcription?: string | null
+          zoom_recording_files?: Json | null
+          zoom_recording_url?: string | null
         }
         Update: {
           applied_date?: string | null
@@ -87,6 +91,8 @@ export type Database = {
           voice_pacing_score?: number | null
           voice_tone_score?: number | null
           voice_transcription?: string | null
+          zoom_recording_files?: Json | null
+          zoom_recording_url?: string | null
         }
         Relationships: [
           {
@@ -256,6 +262,42 @@ export type Database = {
           is_active?: boolean
           name?: string
           url?: string
+        }
+        Relationships: []
+      }
+      zoom_recordings_log: {
+        Row: {
+          created_at: string
+          id: string
+          meeting_id: string
+          meeting_uuid: string
+          processed: boolean | null
+          recording_files: Json | null
+          share_url: string
+          start_time: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meeting_id: string
+          meeting_uuid: string
+          processed?: boolean | null
+          recording_files?: Json | null
+          share_url: string
+          start_time: string
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          meeting_uuid?: string
+          processed?: boolean | null
+          recording_files?: Json | null
+          share_url?: string
+          start_time?: string
+          topic?: string
         }
         Relationships: []
       }

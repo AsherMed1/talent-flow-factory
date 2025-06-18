@@ -26,6 +26,8 @@ export interface Application {
   voice_energy_score: number | null;
   voice_confidence_score: number | null;
   form_data: any | null;
+  zoom_recording_url: string | null;
+  zoom_recording_files: any | null;
   candidates: {
     name: string;
     email: string;
