@@ -38,13 +38,45 @@ interface ZoomWebhookPayload {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Zoom webhook request received:', req.method, req.url);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle HEAD requests for URL validation (Zoom uses this to validate webhook URLs)
+  if (req.method === 'HEAD') {
+    console.log('HEAD request for URL validation');
+    return new Response(null, { 
+      status: 200, 
+      headers: corsHeaders 
+    });
+  }
+
+  // Handle GET requests for URL validation (some services use this)
+  if (req.method === 'GET') {
+    console.log('GET request for URL validation');
+    return new Response('Zoom webhook endpoint is active', { 
+      status: 200, 
+      headers: {
+        'Content-Type': 'text/plain',
+        ...corsHeaders,
+      }
+    });
+  }
+
+  // Only process POST requests for actual webhook events
+  if (req.method !== 'POST') {
+    console.log('Unsupported method:', req.method);
+    return new Response('Method not allowed', { 
+      status: 405, 
+      headers: corsHeaders 
+    });
+  }
+
   try {
-    console.log('Zoom webhook received');
+    console.log('Processing POST webhook request');
     
     // Verify webhook authenticity using secret token
     const webhookSecret = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
