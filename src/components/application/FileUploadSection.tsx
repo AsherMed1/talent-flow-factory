@@ -23,10 +23,7 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
 
   const handleFileUpload = async (file: File, fieldName: string) => {
     try {
-      // Convert file to data URL for storage
       const dataUrl = await convertFileToDataUrl(file);
-      
-      // Set the data URL in the form
       form.setValue(fieldName as keyof ApplicationFormData, dataUrl);
       
       toast({
@@ -44,16 +41,16 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Required Uploads</h3>
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold text-gray-900">Required Uploads</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label className="text-sm font-medium">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-800 leading-tight block">
             Upload a Screen Shot of Your Download Internet Speed From https://www.speedtest.net/
           </Label>
-          <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-3" />
             <input
               type="file"
               accept="image/*"
@@ -61,20 +58,23 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
                 const file = e.target.files?.[0];
                 if (file) handleFileUpload(file, 'downloadSpeedScreenshot');
               }}
-              className="mt-2 text-sm"
+              className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {form.watch('downloadSpeedScreenshot') && (
-              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+              <div className="mt-3 text-sm text-green-600 font-medium flex items-center justify-center gap-2">
+                <span className="text-green-500">✓</span>
+                File uploaded
+              </div>
             )}
           </div>
         </div>
         
-        <div>
-          <Label className="text-sm font-medium">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-800 leading-tight block">
             Upload a Screen Shot of Your Upload Internet Speed From https://www.speedtest.net/
           </Label>
-          <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-3" />
             <input
               type="file"
               accept="image/*"
@@ -82,20 +82,23 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
                 const file = e.target.files?.[0];
                 if (file) handleFileUpload(file, 'uploadSpeedScreenshot');
               }}
-              className="mt-2 text-sm"
+              className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {form.watch('uploadSpeedScreenshot') && (
-              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+              <div className="mt-3 text-sm text-green-600 font-medium flex items-center justify-center gap-2">
+                <span className="text-green-500">✓</span>
+                File uploaded
+              </div>
             )}
           </div>
         </div>
         
-        <div>
-          <Label className="text-sm font-medium">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-800 leading-tight block">
             Please Upload a Picture of Your Work Station or Computer Setup
           </Label>
-          <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-3" />
             <input
               type="file"
               accept="image/*"
@@ -103,10 +106,13 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
                 const file = e.target.files?.[0];
                 if (file) handleFileUpload(file, 'workstationPhoto');
               }}
-              className="mt-2 text-sm"
+              className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {form.watch('workstationPhoto') && (
-              <div className="mt-2 text-xs text-green-600">✓ File uploaded</div>
+              <div className="mt-3 text-sm text-green-600 font-medium flex items-center justify-center gap-2">
+                <span className="text-green-500">✓</span>
+                File uploaded
+              </div>
             )}
           </div>
         </div>

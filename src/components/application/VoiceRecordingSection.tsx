@@ -27,11 +27,9 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
     
     if (currentRecordingType === 'introduction') {
       setIntroductionRecording({ blob: audioBlob, url: permanentUrl });
-      // Update form with the permanent URL
       form.setValue('introductionRecording', permanentUrl);
     } else if (currentRecordingType === 'script') {
       setScriptRecording({ blob: audioBlob, url: permanentUrl });
-      // Update form with the permanent URL
       form.setValue('scriptRecording', permanentUrl);
     }
     setCurrentRecordingType(null);
@@ -39,36 +37,38 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Voice Recordings</h3>
-      <p className="text-sm text-gray-600">
+      <h3 className="text-xl font-semibold text-gray-900">Voice Recordings</h3>
+      <p className="text-sm text-gray-600 leading-relaxed">
         For the next two questions, please record yourself using the voice recorder below.
       </p>
       
-      <div className="space-y-4">
-        <div>
-          <Label className="text-base font-medium">
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <Label className="text-base font-medium text-gray-800 leading-tight">
             Please Provide a Voice Recording Of Yourself. Just Tell Us a Little About You and Your Experience.
           </Label>
-          <div className="mt-2">
+          <div className="mt-3">
             {!introductionRecording ? (
               <Button
                 type="button"
                 onClick={() => setCurrentRecordingType('introduction')}
                 disabled={currentRecordingType !== null}
-                className="mb-2"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Record Introduction
               </Button>
             ) : (
-              <div className="space-y-2">
-                <div className="text-sm text-green-600 font-medium">
-                  ✓ Introduction recording saved permanently
+              <div className="space-y-3">
+                <div className="text-sm text-green-600 font-medium flex items-center gap-2">
+                  <span className="text-green-500">✓</span>
+                  Introduction recording saved permanently
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentRecordingType('introduction')}
                   disabled={currentRecordingType !== null}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
                 >
                   Re-record Introduction
                 </Button>
@@ -77,33 +77,39 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
           </div>
         </div>
         
-        <div>
-          <Label className="text-base font-medium">
+        <div className="space-y-3">
+          <Label className="text-base font-medium text-gray-800 leading-tight block">
             Record Yourself Confirming Call Script:
           </Label>
-          <div className="bg-gray-50 p-3 rounded-md text-sm italic my-2">
-            "Hey Susan, just a quick check-in to confirm your appointment for tomorrow.—it's {"{Your Name}"} from Apex Vascular. You're all set for your knee pain consultation with Dr. Pollock tomorrow at 2 PM! We're excited to see you and get you on the path to feeling better. Let me know if anything comes up—otherwise, see you then!"
+          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+            <p className="text-sm italic text-gray-700 leading-relaxed">
+              "Hey Susan, just a quick check-in to confirm your appointment for tomorrow.—it's {"{Your Name}"} from Apex Vascular. 
+              You're all set for your knee pain consultation with Dr. Pollock tomorrow at 2 PM! We're excited to see you and get you 
+              on the path to feeling better. Let me know if anything comes up—otherwise, see you then!"
+            </p>
           </div>
-          <div className="mt-2">
+          <div className="mt-3">
             {!scriptRecording ? (
               <Button
                 type="button"
                 onClick={() => setCurrentRecordingType('script')}
                 disabled={currentRecordingType !== null}
-                className="mb-2"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Record Script
               </Button>
             ) : (
-              <div className="space-y-2">
-                <div className="text-sm text-green-600 font-medium">
-                  ✓ Script recording saved permanently
+              <div className="space-y-3">
+                <div className="text-sm text-green-600 font-medium flex items-center gap-2">
+                  <span className="text-green-500">✓</span>
+                  Script recording saved permanently
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentRecordingType('script')}
                   disabled={currentRecordingType !== null}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
                 >
                   Re-record Script
                 </Button>
@@ -113,8 +119,8 @@ export const VoiceRecordingSection = ({ isSubmitting, form }: VoiceRecordingSect
         </div>
         
         {currentRecordingType && (
-          <div className="border rounded-lg p-4">
-            <h4 className="font-medium mb-2">
+          <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+            <h4 className="font-semibold text-gray-900 mb-4">
               Recording: {currentRecordingType === 'introduction' ? 'Introduction' : 'Call Script'}
             </h4>
             <VoiceRecorder 
