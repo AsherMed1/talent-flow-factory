@@ -5,7 +5,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, User, ExternalLink } from 'lucide-react';
+import { CalendarDays, Clock, User, ExternalLink, Link } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -51,6 +51,16 @@ export const InterviewCalendar = ({ applications, onSelectCandidate }: Interview
     } catch {
       return 'Time TBD';
     }
+  };
+
+  const getMeetingLink = (application: Application) => {
+    // Check GHL appointment data first
+    if (application.ghl_appointment_data?.calendar?.address) {
+      return application.ghl_appointment_data.calendar.address;
+    }
+    
+    // Fallback to manual recording link if no GHL data
+    return application.interview_recording_link;
   };
 
   const modifiers = {
@@ -152,8 +162,22 @@ export const InterviewCalendar = ({ applications, onSelectCandidate }: Interview
                         <Badge className={`text-xs ${getStatusColor(application.status)}`}>
                           {application.status.replace('_', ' ')}
                         </Badge>
-                        {application.job_roles?.booking_link && (
-                          <div>
+                        <div className="flex gap-2">
+                          {getMeetingLink(application) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(getMeetingLink(application), '_blank');
+                              }}
+                              className="text-xs"
+                            >
+                              <Link className="w-3 h-3 mr-1" />
+                              Join Meeting
+                            </Button>
+                          )}
+                          {application.job_roles?.booking_link && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -166,8 +190,8 @@ export const InterviewCalendar = ({ applications, onSelectCandidate }: Interview
                               <ExternalLink className="w-3 h-3 mr-1" />
                               GHL
                             </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                     
