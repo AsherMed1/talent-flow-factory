@@ -38,8 +38,8 @@ export const useEmailSender = () => {
       return false;
     }
 
-    // Always use the correct Patient Pro Marketing booking link
-    const finalBookingLink = 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
+    // Use the job role's custom booking link if provided, otherwise use default
+    const finalBookingLink = bookingLink || 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
 
     const variables = {
       firstName: firstName || candidateName.split(' ')[0] || 'Candidate',

@@ -1,4 +1,3 @@
-
 import { EmailTemplate } from './types';
 
 export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[] => {
@@ -156,7 +155,7 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
     </a>
 
     <p>
-      <a href="${correctBookingLink}" class="cta-button">
+      <a href="{{bookingLink}}" class="cta-button">
         📅 Schedule Your Interview Now
       </a>
     </p>
