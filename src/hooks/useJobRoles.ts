@@ -9,6 +9,10 @@ export interface JobRole {
   status: 'active' | 'draft' | 'closed';
   form_fields: any[];
   booking_link?: string;
+  hiring_process?: string;
+  screening_questions?: string;
+  job_description?: string;
+  ai_tone_prompt?: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -33,13 +37,25 @@ export const useCreateJobRole = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (roleData: { name: string; description: string; booking_link?: string }) => {
+    mutationFn: async (roleData: { 
+      name: string; 
+      description: string; 
+      booking_link?: string;
+      hiring_process?: string;
+      screening_questions?: string;
+      job_description?: string;
+      ai_tone_prompt?: string;
+    }) => {
       const { data, error } = await supabase
         .from('job_roles')
         .insert([{
           name: roleData.name,
           description: roleData.description,
           booking_link: roleData.booking_link,
+          hiring_process: roleData.hiring_process,
+          screening_questions: roleData.screening_questions,
+          job_description: roleData.job_description,
+          ai_tone_prompt: roleData.ai_tone_prompt,
           status: 'draft' as const
         }])
         .select()
@@ -76,6 +92,18 @@ export const useUpdateJobRole = () => {
       }
       if (updates.booking_link !== undefined) {
         updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
+      }
+      if (updates.hiring_process !== undefined) {
+        updateData.hiring_process = updates.hiring_process === '' ? null : updates.hiring_process;
+      }
+      if (updates.screening_questions !== undefined) {
+        updateData.screening_questions = updates.screening_questions === '' ? null : updates.screening_questions;
+      }
+      if (updates.job_description !== undefined) {
+        updateData.job_description = updates.job_description === '' ? null : updates.job_description;
+      }
+      if (updates.ai_tone_prompt !== undefined) {
+        updateData.ai_tone_prompt = updates.ai_tone_prompt === '' ? null : updates.ai_tone_prompt;
       }
       
       console.log('Update data:', updateData);
