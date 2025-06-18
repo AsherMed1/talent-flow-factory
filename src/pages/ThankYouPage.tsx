@@ -1,8 +1,6 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export const ThankYouPage = () => {
   return (
@@ -22,12 +20,6 @@ export const ThankYouPage = () => {
               Our team will get back to you soon.
             </p>
           </div>
-
-          <Link to="/jobs">
-            <Button className="w-full">
-              View Other Positions
-            </Button>
-          </Link>
         </CardContent>
       </Card>
     </div>
