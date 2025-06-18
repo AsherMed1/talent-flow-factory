@@ -1,17 +1,74 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Filter, Star, Mail, Phone } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Search, Filter, Star, Mail, Phone, Trash2 } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const CandidateCRM = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const { data: candidates, isLoading } = useCandidates();
+  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null);
+  const { data: candidates, isLoading, refetch } = useCandidates();
+  const { toast } = useToast();
+
+  const handleDeleteCandidate = async (candidateId: string, candidateName: string) => {
+    setDeletingCandidateId(candidateId);
+    
+    try {
+      // First delete all applications for this candidate
+      const { error: applicationsError } = await supabase
+        .from('applications')
+        .delete()
+        .eq('candidate_id', candidateId);
+
+      if (applicationsError) {
+        throw applicationsError;
+      }
+
+      // Delete candidate tags
+      const { error: tagsError } = await supabase
+        .from('candidate_tags')
+        .delete()
+        .eq('candidate_id', candidateId);
+
+      if (tagsError) {
+        throw tagsError;
+      }
+
+      // Finally delete the candidate
+      const { error: candidateError } = await supabase
+        .from('candidates')
+        .delete()
+        .eq('id', candidateId);
+
+      if (candidateError) {
+        throw candidateError;
+      }
+
+      toast({
+        title: "Candidate Deleted",
+        description: `${candidateName} has been removed from the system.`,
+      });
+
+      // Refresh the candidates list
+      refetch();
+    } catch (error) {
+      console.error('Error deleting candidate:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete candidate. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCandidateId(null);
+    }
+  };
 
   const filteredCandidates = candidates?.filter(candidate => {
     const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -163,11 +220,42 @@ export const CandidateCRM = () => {
                       )}
                     </div>
                   </div>
-                  {latestApplication && (
-                    <Badge className={getStatusColor(latestApplication.status)}>
-                      {getDisplayStatus(latestApplication.status)}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {latestApplication && (
+                      <Badge className={getStatusColor(latestApplication.status)}>
+                        {getDisplayStatus(latestApplication.status)}
+                      </Badge>
+                    )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          disabled={deletingCandidateId === candidate.id}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Candidate</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {candidate.name}? This will permanently remove their profile, all applications, and notes from the system. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCandidate(candidate.id, candidate.name)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete Candidate
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardHeader>
               
