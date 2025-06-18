@@ -6,12 +6,11 @@ import { searchLocations, LocationSuggestion } from '@/utils/locationHelper';
 import { MapPin } from 'lucide-react';
 
 interface LocationInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  value?: string;
   onLocationSelect?: (location: LocationSuggestion) => void;
 }
 
 export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputProps>(
-  ({ className, value = '', onLocationSelect, onChange, ...props }, ref) => {
+  ({ className, onLocationSelect, ...props }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -19,7 +18,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const query = e.target.value;
-      onChange?.(e);
+      
+      // Call the original onChange from react-hook-form
+      if (props.onChange) {
+        props.onChange(e);
+      }
       
       if (query.length >= 2) {
         const results = searchLocations(query);
@@ -37,11 +40,17 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       setIsOpen(false);
       setSuggestions([]);
       
-      // Create a synthetic event to trigger form updates
+      // Create a synthetic event to update the form
       const syntheticEvent = {
-        target: { value: suggestion.displayName }
+        target: { 
+          name: props.name,
+          value: suggestion.displayName 
+        }
       } as React.ChangeEvent<HTMLInputElement>;
-      onChange?.(syntheticEvent);
+      
+      if (props.onChange) {
+        props.onChange(syntheticEvent);
+      }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -83,22 +92,24 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       }, 200);
     };
 
+    const handleFocus = () => {
+      const currentValue = (props.value as string) || '';
+      if (currentValue && currentValue.length >= 2) {
+        const results = searchLocations(currentValue);
+        setSuggestions(results);
+        setIsOpen(results.length > 0);
+      }
+    };
+
     return (
       <div ref={containerRef} className="relative">
         <Input
           {...props}
           ref={ref}
-          value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          onFocus={() => {
-            if (value && value.length >= 2) {
-              const results = searchLocations(value);
-              setSuggestions(results);
-              setIsOpen(results.length > 0);
-            }
-          }}
+          onFocus={handleFocus}
           className={cn(className)}
           autoComplete="off"
         />
@@ -127,3 +138,4 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 );
 
 LocationInput.displayName = "LocationInput";
+```
