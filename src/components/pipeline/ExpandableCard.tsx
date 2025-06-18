@@ -8,6 +8,8 @@ import { ApplicationHeader } from './ApplicationHeader';
 import { ApplicationDatesSection } from './ApplicationDatesSection';
 import { DocumentsSection } from './DocumentsSection';
 import { VoiceRecordingsSection } from './VoiceRecordingsSection';
+import { VoiceAnalysisSection } from './VoiceAnalysisSection';
+import { PreScreeningAnalysisSection } from './PreScreeningAnalysisSection';
 import { ApplicationActions } from './ApplicationActions';
 import { ExpandedContent } from './ExpandedContent';
 import { useAudioHandler } from './AudioHandler';
@@ -84,6 +86,16 @@ export const ExpandableCard = ({ application, stageIndex }: ExpandableCardProps)
           application={application} 
           playingRecordingKey={playingRecordingKey} 
           onVoicePlayback={handleVoicePlayback} 
+        />
+
+        <VoiceAnalysisSection 
+          application={application} 
+          showDetailedAnalysis={showDetailedAnalysis} 
+          onToggleDetailed={setShowDetailedAnalysis} 
+        />
+
+        <PreScreeningAnalysisSection 
+          responses={application.pre_screening_responses || []} 
         />
 
         {isExpanded && (

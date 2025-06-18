@@ -51,10 +51,23 @@ export const useAudioHandler = () => {
       return;
     }
 
+    // Check if URL is accessible
+    const isValidHttpUrl = recordingUrl.startsWith('http://') || recordingUrl.startsWith('https://');
+    if (!isValidHttpUrl) {
+      console.log('Invalid URL format:', recordingUrl);
+      toast({
+        title: "Invalid Audio URL",
+        description: "The audio URL format is not supported.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Try to play the audio with the permanent URL
     console.log('Attempting to play audio with URL:', recordingUrl);
     
     if (audioRef.current) {
+      // Set up event handlers before setting src
       audioRef.current.onerror = (e) => {
         console.error('❌ Audio error:', e);
         toast({
@@ -77,21 +90,52 @@ export const useAudioHandler = () => {
       audioRef.current.oncanplay = () => {
         console.log('✓ Audio can start playing');
       };
+
+      audioRef.current.onpause = () => {
+        console.log('⏸️ Audio paused');
+      };
+
+      audioRef.current.onplay = () => {
+        console.log('▶️ Audio started playing');
+      };
       
+      // Set source and attempt to play
       audioRef.current.src = recordingUrl;
-      audioRef.current.play()
-        .then(() => {
-          console.log('✓ Audio playing successfully');
-          setPlayingRecordingKey(recordingKey);
-        })
-        .catch((error) => {
-          console.error('❌ Play failed:', error);
-          toast({
-            title: "Playback Failed",
-            description: "Voice recording could not be played. Please check your internet connection.",
-            variant: "destructive",
+      audioRef.current.load(); // Reload the audio element with new source
+      
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('✓ Audio playing successfully');
+            setPlayingRecordingKey(recordingKey);
+          })
+          .catch((error) => {
+            console.error('❌ Play failed:', error);
+            
+            // Provide more specific error messages
+            if (error.name === 'NotSupportedError') {
+              toast({
+                title: "Audio Format Not Supported",
+                description: "This audio format is not supported by your browser.",
+                variant: "destructive",
+              });
+            } else if (error.name === 'NotAllowedError') {
+              toast({
+                title: "Audio Blocked",
+                description: "Audio playback was blocked. Try clicking play again.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Playback Failed",
+                description: "Voice recording could not be played. Please check your internet connection.",
+                variant: "destructive",
+              });
+            }
           });
-        });
+      }
     }
     console.log('=== End Audio Debug ===');
   };

@@ -10,7 +10,9 @@ import { RatingDisplay } from './RatingDisplay';
 import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { DocumentsSection } from './DocumentsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
+import { PreScreeningAnalysisSection } from './PreScreeningAnalysisSection';
 import { ApplicationStatus } from './PipelineStages';
+import { useAudioHandler } from './AudioHandler';
 
 interface MobileApplicationCardProps {
   application: Application;
@@ -20,28 +22,22 @@ interface MobileApplicationCardProps {
   onStatusChanged?: (applicationId: string, newStatus: ApplicationStatus) => void;
 }
 
-export const MobileApplicationCard = ({ application, stageIndex, onSwipeLeft, onSwipeRight, onStatusChanged }: MobileApplicationCardProps) => {
+export const MobileApplicationCard = ({ 
+  application, 
+  stageIndex, 
+  onSwipeLeft, 
+  onSwipeRight, 
+  onStatusChanged 
+}: MobileApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
-
-  const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
-    console.log('Playing voice recording:', recordingKey, 'for:', application.candidates.name);
-    
-    if (playingRecordingKey === recordingKey) {
-      setPlayingRecordingKey(null);
-      return;
-    }
-
-    setPlayingRecordingKey(recordingKey);
-    
-    // Demo mode - simulate playback
-    setTimeout(() => {
-      setPlayingRecordingKey(null);
-    }, 3000);
-  };
+  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
+  const { playingRecordingKey, audioRef, handleVoicePlayback } = useAudioHandler();
 
   return (
     <Card className="mb-4">
+      {/* Hidden audio element for actual playback */}
+      <audio ref={audioRef} className="hidden" />
+      
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex flex-col space-y-1">
           <div className="flex items-center">
@@ -72,8 +68,11 @@ export const MobileApplicationCard = ({ application, stageIndex, onSwipeLeft, on
             <DocumentsSection application={application} />
             <VoiceAnalysisSection 
               application={application}
-              showDetailedAnalysis={false}
-              onToggleDetailed={() => {}}
+              showDetailedAnalysis={showDetailedAnalysis}
+              onToggleDetailed={setShowDetailedAnalysis}
+            />
+            <PreScreeningAnalysisSection 
+              responses={application.pre_screening_responses || []} 
             />
             <RatingDisplay rating={application.rating} />
           </>

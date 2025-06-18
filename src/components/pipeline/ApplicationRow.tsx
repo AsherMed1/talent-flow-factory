@@ -9,9 +9,11 @@ import { ApplicationActions } from './ApplicationActions';
 import { DocumentsSection } from './DocumentsSection';
 import { VoiceRecordingsSection } from './VoiceRecordingsSection';
 import { VoiceAnalysisSection } from './VoiceAnalysisSection';
+import { PreScreeningAnalysisSection } from './PreScreeningAnalysisSection';
 import { CandidateTagsSection } from './CandidateTagsSection';
 import { RatingDisplay } from './RatingDisplay';
 import { ApplicationStatus } from './PipelineStages';
+import { useAudioHandler } from './AudioHandler';
 
 interface ApplicationRowProps {
   application: Application;
@@ -20,64 +22,9 @@ interface ApplicationRowProps {
 }
 
 export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: ApplicationRowProps) => {
-  const [playingRecordingKey, setPlayingRecordingKey] = useState<string | null>(null);
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const handleVoicePlayback = (recordingKey: string, recordingUrl?: string) => {
-    console.log('Playing voice recording:', recordingKey, 'for:', application.candidates.name);
-    
-    // If the same recording is already playing, stop it
-    if (playingRecordingKey === recordingKey) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      setPlayingRecordingKey(null);
-      return;
-    }
-
-    // Stop any currently playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
-    // Try to play the specific recording if we have a URL
-    if (recordingUrl) {
-      if (audioRef.current) {
-        audioRef.current.src = recordingUrl;
-        audioRef.current.play()
-          .then(() => {
-            setPlayingRecordingKey(recordingKey);
-            console.log('Audio started playing:', recordingKey);
-          })
-          .catch((error) => {
-            console.error('Error playing audio:', error);
-            // Fallback to demo mode
-            setPlayingRecordingKey(recordingKey);
-            setTimeout(() => setPlayingRecordingKey(null), 3000);
-          });
-        
-        audioRef.current.onended = () => {
-          setPlayingRecordingKey(null);
-          console.log('Audio finished playing:', recordingKey);
-        };
-      }
-    } else {
-      // Demo mode - simulate playback
-      setPlayingRecordingKey(recordingKey);
-      setTimeout(() => {
-        setPlayingRecordingKey(null);
-      }, 3000);
-    }
-  };
-
-  const handleDocumentView = (docType: string) => {
-    console.log('Viewing document:', docType, 'for:', application.candidates.name);
-    alert(`Opening ${docType} for ${application.candidates.name}`);
-  };
+  const { playingRecordingKey, audioRef, handleVoicePlayback } = useAudioHandler();
 
   const getScoreColor = (score: number | null) => {
     if (!score) return 'text-gray-400';
@@ -169,14 +116,19 @@ export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: App
                 <span className="text-xs font-medium text-purple-600">AI Analysis</span>
               </div>
               {renderVoiceAnalysisStars(application.voice_analysis_score)}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-2 text-xs text-purple-600 hover:text-purple-700"
-                onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
-              >
-                {showDetailedAnalysis ? 'Hide Details' : 'View Details'}
-              </Button>
+            </div>
+          )}
+
+          {/* Pre-screening Analysis Score */}
+          {application.pre_screening_responses && application.pre_screening_responses.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Brain className="w-3 h-3 text-green-600" />
+                <span className="text-xs font-medium text-green-600">Pre-screening</span>
+              </div>
+              <Badge className="text-xs bg-green-50 text-green-700 border-green-200">
+                {application.pre_screening_responses[0].overall_prescreening_score}/100
+              </Badge>
             </div>
           )}
         </div>
@@ -203,86 +155,17 @@ export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: App
         </div>
       </div>
 
-      {/* Detailed AI Analysis (when clicked) */}
-      {showDetailedAnalysis && application.voice_analysis_score && (
-        <div className="px-4 pb-4 bg-purple-50 border-t border-purple-100">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-purple-600" />
-              <h4 className="font-semibold text-sm text-purple-900">AI Voice Analysis Details</h4>
-            </div>
-            
-            {/* Individual Trait Scores */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              {application.voice_clarity_score && (
-                <div className="flex justify-between">
-                  <span>Clarity:</span>
-                  <Badge variant="outline" className={getScoreColor(application.voice_clarity_score)}>
-                    {application.voice_clarity_score}/10
-                  </Badge>
-                </div>
-              )}
-              {application.voice_pacing_score && (
-                <div className="flex justify-between">
-                  <span>Pacing:</span>
-                  <Badge variant="outline" className={getScoreColor(application.voice_pacing_score)}>
-                    {application.voice_pacing_score}/10
-                  </Badge>
-                </div>
-              )}
-              {application.voice_tone_score && (
-                <div className="flex justify-between">
-                  <span>Tone:</span>
-                  <Badge variant="outline" className={getScoreColor(application.voice_tone_score)}>
-                    {application.voice_tone_score}/10
-                  </Badge>
-                </div>
-              )}
-              {application.voice_energy_score && (
-                <div className="flex justify-between">
-                  <span>Energy:</span>
-                  <Badge variant="outline" className={getScoreColor(application.voice_energy_score)}>
-                    {application.voice_energy_score}/10
-                  </Badge>
-                </div>
-              )}
-              {application.voice_confidence_score && (
-                <div className="flex justify-between">
-                  <span>Confidence:</span>
-                  <Badge variant="outline" className={getScoreColor(application.voice_confidence_score)}>
-                    {application.voice_confidence_score}/10
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* AI Feedback */}
-            {application.voice_analysis_feedback && (
-              <div className="bg-white p-3 rounded-md">
-                <h5 className="font-medium text-xs text-gray-900 mb-1">AI Feedback:</h5>
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  {application.voice_analysis_feedback}
-                </p>
-              </div>
-            )}
-
-            {/* Analysis Date */}
-            {application.voice_analysis_completed_at && (
-              <div className="text-xs text-gray-500">
-                Analyzed: {new Date(application.voice_analysis_completed_at).toLocaleString()}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Expanded Details */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t bg-gray-50 space-y-3">
           <VoiceAnalysisSection 
             application={application} 
-            showDetailedAnalysis={false} 
-            onToggleDetailed={() => {}} 
+            showDetailedAnalysis={showDetailedAnalysis} 
+            onToggleDetailed={setShowDetailedAnalysis} 
+          />
+          
+          <PreScreeningAnalysisSection 
+            responses={application.pre_screening_responses || []} 
           />
           
           <CandidateTagsSection application={application} />
