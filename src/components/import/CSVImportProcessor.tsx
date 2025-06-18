@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Users } from 'lucide-react';
 import { useJobRoles } from '@/hooks/useJobRoles';
+import { useAddUploadedCandidates, useUploadedCandidateStats } from '@/hooks/useUploadedCandidates';
 
 interface CSVImportProcessorProps {
   onImportComplete: (candidates: any[], selectedJobRole?: any) => void;
@@ -27,6 +28,8 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { data: jobRoles, isLoading: jobRolesLoading } = useJobRoles();
+  const addUploadedCandidates = useAddUploadedCandidates();
+  const { data: candidateStats } = useUploadedCandidateStats();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -111,6 +114,15 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
         originalData: row
       })).filter(candidate => candidate.email && candidate.firstName);
 
+      // Add to uploaded candidates tracking
+      await addUploadedCandidates.mutateAsync(candidates.map(c => ({
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: c.phone,
+        jobRole: c.jobRole
+      })));
+
       const selectedJobRole = jobRoles?.find(role => role.id === selectedJobRoleId);
       onImportComplete(candidates, selectedJobRole);
       
@@ -137,6 +149,26 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
 
   return (
     <div className="space-y-6">
+      {/* Candidates Stats Card */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-blue-900">
+                {candidateStats?.totalUploaded || 0}
+              </h3>
+              <p className="text-blue-700 font-medium">Total Candidates Uploaded</p>
+              <p className="text-sm text-blue-600">
+                {candidateStats?.notYetApplied || 0} awaiting application emails
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -194,90 +226,90 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
       </Card>
 
       {previewData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Field Mapping</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(fieldMapping).map(([field, value]) => (
-                <div key={field}>
-                  <Label htmlFor={field}>
-                    {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
-                    {field === 'firstName' || field === 'lastName' || field === 'email' ? (
-                      <span className="text-red-500 ml-1">*</span>
-                    ) : null}
-                  </Label>
-                  <select
-                    id={field}
-                    value={value}
-                    onChange={(e) => setFieldMapping(prev => ({ ...prev, [field]: e.target.value }))}
-                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select column...</option>
-                    {availableHeaders.map(header => (
-                      <option key={header} value={header}>{header}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Field Mapping</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(fieldMapping).map(([field, value]) => (
+                  <div key={field}>
+                    <Label htmlFor={field}>
+                      {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+                      {field === 'firstName' || field === 'lastName' || field === 'email' ? (
+                        <span className="text-red-500 ml-1">*</span>
+                      ) : null}
+                    </Label>
+                    <select
+                      id={field}
+                      value={value}
+                      onChange={(e) => setFieldMapping(prev => ({ ...prev, [field]: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select column...</option>
+                      {availableHeaders.map(header => (
+                        <option key={header} value={header}>{header}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
 
-            <div className="bg-yellow-50 p-3 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-700">
-                  <p className="font-medium">Required fields: First Name, Last Name, Email</p>
-                  <p>Phone and Job Role are optional but recommended for better candidate tracking.</p>
+              <div className="bg-yellow-50 p-3 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
+                  <div className="text-sm text-yellow-700">
+                    <p className="font-medium">Required fields: First Name, Last Name, Email</p>
+                    <p>Phone and Job Role are optional but recommended for better candidate tracking.</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
 
-      {previewData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Preview (First 5 rows)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">First Name</th>
-                    <th className="text-left p-2">Last Name</th>
-                    <th className="text-left p-2">Email</th>
-                    <th className="text-left p-2">Phone</th>
-                    <th className="text-left p-2">Job Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewData.map((row, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-2">{row[fieldMapping.firstName] || '-'}</td>
-                      <td className="p-2">{row[fieldMapping.lastName] || '-'}</td>
-                      <td className="p-2">{row[fieldMapping.email] || '-'}</td>
-                      <td className="p-2">{row[fieldMapping.phone] || '-'}</td>
-                      <td className="p-2">{row[fieldMapping.jobRole] || '-'}</td>
+          <Card>
+            <CardHeader>
+              <CardTitle>Preview (First 5 rows)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">First Name</th>
+                      <th className="text-left p-2">Last Name</th>
+                      <th className="text-left p-2">Email</th>
+                      <th className="text-left p-2">Phone</th>
+                      <th className="text-left p-2">Job Role</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {previewData.map((row, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="p-2">{row[fieldMapping.firstName] || '-'}</td>
+                        <td className="p-2">{row[fieldMapping.lastName] || '-'}</td>
+                        <td className="p-2">{row[fieldMapping.email] || '-'}</td>
+                        <td className="p-2">{row[fieldMapping.phone] || '-'}</td>
+                        <td className="p-2">{row[fieldMapping.jobRole] || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="mt-4 flex justify-end">
-              <Button
-                onClick={handleImport}
-                disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || !selectedJobRoleId || isProcessing}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-              >
-                {isProcessing ? 'Processing...' : `Import ${previewData.length} Candidates`}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="mt-4 flex justify-end">
+                <Button
+                  onClick={handleImport}
+                  disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || !selectedJobRoleId || isProcessing}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                >
+                  {isProcessing ? 'Processing...' : `Import ${previewData.length} Candidates`}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
