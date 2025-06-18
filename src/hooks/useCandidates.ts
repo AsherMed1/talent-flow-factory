@@ -17,6 +17,16 @@ export interface Candidate {
     job_roles: {
       name: string;
     };
+    pre_screening_responses?: Array<{
+      motivation_response: string;
+      motivation_score: number;
+      experience_response: string;
+      experience_score: number;
+      availability_response: string;
+      availability_score: number;
+      communication_score: number;
+      overall_prescreening_score: number;
+    }>;
   }[];
   candidate_tags: {
     tag: string;
@@ -37,7 +47,17 @@ export const useCandidates = () => {
             rating,
             notes,
             applied_date,
-            job_roles (name)
+            job_roles (name),
+            pre_screening_responses (
+              motivation_response,
+              motivation_score,
+              experience_response,
+              experience_score,
+              availability_response,
+              availability_score,
+              communication_score,
+              overall_prescreening_score
+            )
           ),
           candidate_tags (tag)
         `)
