@@ -61,12 +61,12 @@ export const useStatusUpdateHandler = () => {
         isApproveAction
       });
 
-      // Send appropriate email based on action and status
+      // Send appropriate email based on status
       let emailSent = false;
       
-      if (isApproveAction) {
-        // If this was triggered by the green checkmark (approve), always send interview email
-        console.log('Sending interview email (triggered by approve action)...');
+      if (newStatus === 'reviewed') {
+        // Send interview email when moved to reviewed status
+        console.log('Sending interview email (moved to reviewed status)...');
         emailSent = await sendTemplateEmail({
           templateType: 'interview',
           candidateName,
