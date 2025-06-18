@@ -12,6 +12,13 @@ export interface VideoAnalysisResults {
     details: string;
   };
   recommendations: string[];
+  recruiterSummary: {
+    overallAssessment: string;
+    strengths: string[];
+    concerns: string[];
+    hiringRecommendation: 'strong_hire' | 'hire' | 'no_hire' | 'more_data_needed';
+    confidenceLevel: number;
+  };
   analysisTimestamp: string;
 }
 

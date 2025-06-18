@@ -8,6 +8,7 @@ import { EngagementAnalysis } from './components/EngagementAnalysis';
 import { SentimentAnalysis } from './components/SentimentAnalysis';
 import { KeyTopicsCard } from './components/KeyTopicsCard';
 import { RecommendationsCard } from './components/RecommendationsCard';
+import { RecruiterSummaryCard } from './components/RecruiterSummaryCard';
 import { NoVideoRecording } from './components/NoVideoRecording';
 
 export const VideoAnalysisPanel = ({ application, autoAnalyze = false, onAnalysisComplete }: VideoAnalysisPanelProps) => {
@@ -36,6 +37,7 @@ export const VideoAnalysisPanel = ({ application, autoAnalyze = false, onAnalysi
 
       {analysisResults && (
         <>
+          <RecruiterSummaryCard recruiterSummary={analysisResults.recruiterSummary} />
           <SpeakingTimeAnalysis results={analysisResults} />
           <EngagementAnalysis results={analysisResults} />
           <SentimentAnalysis results={analysisResults} />
