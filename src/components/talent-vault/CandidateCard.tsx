@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Star } from 'lucide-react';
+import { Mail, Phone, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { CandidateDeleteButton } from './CandidateDeleteButton';
 import type { Candidate } from '@/hooks/useCandidates';
+import { useState } from 'react';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -16,6 +17,7 @@ interface CandidateCardProps {
 export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: CandidateCardProps) => {
   const latestApplication = candidate.applications.length > 0 ? candidate.applications[0] : null;
   const tags = candidate.candidate_tags.map(tag => tag.tag);
+  const [showScreeningDetails, setShowScreeningDetails] = useState(false);
 
   const renderStars = (rating: number | null) => {
     if (!rating) return null;
@@ -61,6 +63,12 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
       default:
         return 'Previous Applicant';
     }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600 bg-green-50';
+    if (score >= 60) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
   };
 
   return (
@@ -126,6 +134,91 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
             </Badge>
           ))}
         </div>
+
+        {/* Pre-screening Analysis Section */}
+        {latestApplication?.pre_screening_responses && latestApplication.pre_screening_responses.length > 0 && (
+          <div className="border-t pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 p-0 h-auto font-medium text-gray-700"
+              onClick={() => setShowScreeningDetails(!showScreeningDetails)}
+            >
+              Pre-screening Analysis
+              {showScreeningDetails ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </Button>
+            
+            {showScreeningDetails && (
+              <div className="mt-3 space-y-3">
+                {latestApplication.pre_screening_responses.map((response, index) => (
+                  <div key={index} className="space-y-3">
+                    {/* Overall Score */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Overall Score:</span>
+                      <Badge className={`${getScoreColor(response.overall_prescreening_score)} border-0`}>
+                        {response.overall_prescreening_score}/100
+                      </Badge>
+                    </div>
+
+                    {/* Individual Scores */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex justify-between">
+                        <span>Motivation:</span>
+                        <span className={`px-2 py-1 rounded ${getScoreColor(response.motivation_score)}`}>
+                          {response.motivation_score}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Experience:</span>
+                        <span className={`px-2 py-1 rounded ${getScoreColor(response.experience_score)}`}>
+                          {response.experience_score}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Availability:</span>
+                        <span className={`px-2 py-1 rounded ${getScoreColor(response.availability_score)}`}>
+                          {response.availability_score}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Communication:</span>
+                        <span className={`px-2 py-1 rounded ${getScoreColor(response.communication_score)}`}>
+                          {response.communication_score}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Responses */}
+                    <div className="space-y-2">
+                      {response.motivation_response && (
+                        <div className="bg-gray-50 p-2 rounded text-xs">
+                          <div className="font-medium text-gray-700 mb-1">Motivation:</div>
+                          <div className="text-gray-600">{response.motivation_response}</div>
+                        </div>
+                      )}
+                      {response.experience_response && (
+                        <div className="bg-gray-50 p-2 rounded text-xs">
+                          <div className="font-medium text-gray-700 mb-1">Experience:</div>
+                          <div className="text-gray-600">{response.experience_response}</div>
+                        </div>
+                      )}
+                      {response.availability_response && (
+                        <div className="bg-gray-50 p-2 rounded text-xs">
+                          <div className="font-medium text-gray-700 mb-1">Availability:</div>
+                          <div className="text-gray-600">{response.availability_response}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         {latestApplication?.notes && (
           <div className="bg-gray-50 p-3 rounded-lg">
