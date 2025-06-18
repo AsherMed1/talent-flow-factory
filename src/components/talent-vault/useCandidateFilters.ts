@@ -17,6 +17,11 @@ export const useCandidateFilters = (candidates: Candidate[] | undefined, searchT
       if (selectedFilter === 'hired') {
         return candidate.applications.some(app => app.status === 'hired');
       }
+      if (selectedFilter === 'hold_for_future') {
+        return candidate.applications.some(app => 
+          app.notes && app.notes.toLowerCase().includes('hold for future')
+        );
+      }
       return false;
     }) || [];
   }, [candidates, searchTerm, selectedFilter]);
@@ -28,6 +33,9 @@ export const useCandidateFilters = (candidates: Candidate[] | undefined, searchT
     ).length || 0 },
     { id: 'hired', label: 'Hired', count: candidates?.filter(c => 
       c.applications.some(app => app.status === 'hired')
+    ).length || 0 },
+    { id: 'hold_for_future', label: 'Hold for Future', count: candidates?.filter(c => 
+      c.applications.some(app => app.notes && app.notes.toLowerCase().includes('hold for future'))
     ).length || 0 },
   ], [candidates]);
 
