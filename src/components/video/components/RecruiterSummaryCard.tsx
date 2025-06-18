@@ -14,6 +14,11 @@ interface RecruiterSummaryCardProps {
 }
 
 export const RecruiterSummaryCard = ({ recruiterSummary }: RecruiterSummaryCardProps) => {
+  // Add null check to prevent runtime errors
+  if (!recruiterSummary) {
+    return null;
+  }
+
   const getRecommendationColor = (recommendation: string) => {
     switch (recommendation) {
       case 'strong_hire': return 'bg-green-100 text-green-800';
@@ -54,7 +59,7 @@ export const RecruiterSummaryCard = ({ recruiterSummary }: RecruiterSummaryCardP
           </p>
         </div>
 
-        {recruiterSummary.strengths.length > 0 && (
+        {recruiterSummary.strengths && recruiterSummary.strengths.length > 0 && (
           <div>
             <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-green-700">
               <TrendingUp className="w-4 h-4" />
@@ -71,7 +76,7 @@ export const RecruiterSummaryCard = ({ recruiterSummary }: RecruiterSummaryCardP
           </div>
         )}
 
-        {recruiterSummary.concerns.length > 0 && (
+        {recruiterSummary.concerns && recruiterSummary.concerns.length > 0 && (
           <div>
             <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-orange-600">
               <AlertTriangle className="w-4 h-4" />
