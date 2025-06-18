@@ -1,9 +1,14 @@
+
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
 import { ApplicationRow } from './ApplicationRow';
 import { MobileApplicationCard } from './MobileApplicationCard';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useState } from 'react';
+import { SmartFilters, SmartFilterCriteria } from './SmartFilters';
+import { useSmartFilters } from './useSmartFilters';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Users, Brain } from 'lucide-react';
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -12,9 +17,20 @@ interface KanbanBoardProps {
 export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
   const isMobile = useIsMobile();
   const [processingApplications, setProcessingApplications] = useState<Set<string>>(new Set());
+  const [smartFilters, setSmartFilters] = useState<SmartFilterCriteria>({
+    minOverallScore: 6,
+    minEnglishFluency: 7,
+    minMotivation: 6,
+    minClarity: 6,
+    requireVoiceAnalysis: true,
+    hideRejected: true,
+    topPercentOnly: null,
+  });
+
+  const { filteredApplications, statistics } = useSmartFilters(applications, smartFilters);
 
   const getApplicationsByStage = (stageName: ApplicationStatus) => {
-    return applications?.filter(app => 
+    return filteredApplications?.filter(app => 
       app.status === stageName && !processingApplications.has(app.id)
     ) || [];
   };
@@ -39,106 +55,171 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
     console.log('Swipe right - approve/move forward:', application.candidates.name);
   };
 
-  if (isMobile) {
-    return (
-      <div className="space-y-4 pb-20">
-        {stages.map((stage, stageIndex) => {
-          const stageApplications = getApplicationsByStage(stage.name);
-          return (
-            <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              {/* Enhanced Mobile Stage Header */}
-              <div className={`p-4 ${stage.color} border-b border-gray-200`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-base">
-                    {stage.displayName}
-                  </h3>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-                    <span className="text-sm font-medium text-gray-800">
-                      {stageApplications.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Enhanced Mobile Applications */}
-              <div className="p-3">
-                {stageApplications.length > 0 ? (
-                  <div className="space-y-3">
-                    {stageApplications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="transform transition-all duration-200 hover:scale-[1.02] active:scale-95"
-                      >
-                        <MobileApplicationCard 
-                          application={application} 
-                          stageIndex={stageIndex}
-                          onSwipeLeft={() => handleSwipeLeft(application)}
-                          onSwipeRight={() => handleSwipeRight(application)}
-                          onStatusChanged={handleStatusChanged}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-gray-500">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium">No applications</p>
-                    <p className="text-xs text-gray-400 mt-1">Applications will appear here when available</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {stages.map((stage, stageIndex) => {
-        const stageApplications = getApplicationsByStage(stage.name);
-        return (
-          <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className={`p-4 ${stage.color} border-b border-gray-200`}>
-              <h3 className="font-semibold text-gray-900">
-                {stage.displayName} ({stageApplications.length})
-              </h3>
-            </div>
-            
-            {stageApplications.length > 0 && (
-              <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                <div className="col-span-3">Candidate</div>
-                <div className="col-span-2">Applied</div>
-                <div className="col-span-3">Files & Audio</div>
-                <div className="col-span-2">Rating</div>
-                <div className="col-span-2">Actions</div>
-              </div>
-            )}
-            
-            <div>
-              {stageApplications.length > 0 ? (
-                stageApplications.map((application) => (
-                  <ApplicationRow 
-                    key={application.id} 
-                    application={application} 
-                    stageIndex={stageIndex}
-                    onStatusChanged={handleStatusChanged}
-                  />
-                ))
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  No applications in this stage
+      {/* Smart Filters */}
+      <SmartFilters
+        onFiltersChange={setSmartFilters}
+        applicantCount={applications?.length || 0}
+        filteredCount={filteredApplications?.length || 0}
+      />
+
+      {/* Statistics Dashboard */}
+      {statistics && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                Total Candidates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.total}</div>
+              <p className="text-xs text-gray-600">All applicants</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Brain className="w-4 h-4 text-purple-600" />
+                Analyzed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.analyzed}</div>
+              <p className="text-xs text-gray-600">Voice analysis complete</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                High Scoring
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.highScoring}</div>
+              <p className="text-xs text-gray-600">8+ overall score</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-orange-600" />
+                Filtered Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.filtered}</div>
+              <p className="text-xs text-gray-600">Match your criteria</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Pipeline Stages */}
+      {isMobile ? (
+        <div className="space-y-4 pb-20">
+          {stages.map((stage, stageIndex) => {
+            const stageApplications = getApplicationsByStage(stage.name);
+            return (
+              <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                {/* Enhanced Mobile Stage Header */}
+                <div className={`p-4 ${stage.color} border-b border-gray-200`}>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900 text-base">
+                      {stage.displayName}
+                    </h3>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                      <span className="text-sm font-medium text-gray-800">
+                        {stageApplications.length}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
+                
+                {/* Enhanced Mobile Applications */}
+                <div className="p-3">
+                  {stageApplications.length > 0 ? (
+                    <div className="space-y-3">
+                      {stageApplications.map((application) => (
+                        <div
+                          key={application.id}
+                          className="transform transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                        >
+                          <MobileApplicationCard 
+                            application={application} 
+                            stageIndex={stageIndex}
+                            onSwipeLeft={() => handleSwipeLeft(application)}
+                            onSwipeRight={() => handleSwipeRight(application)}
+                            onStatusChanged={handleStatusChanged}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center text-gray-500">
+                      <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium">No applications</p>
+                      <p className="text-xs text-gray-400 mt-1">Applications will appear here when available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {stages.map((stage, stageIndex) => {
+            const stageApplications = getApplicationsByStage(stage.name);
+            return (
+              <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className={`p-4 ${stage.color} border-b border-gray-200`}>
+                  <h3 className="font-semibold text-gray-900">
+                    {stage.displayName} ({stageApplications.length})
+                  </h3>
+                </div>
+                
+                {stageApplications.length > 0 && (
+                  <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <div className="col-span-3">Candidate</div>
+                    <div className="col-span-2">Applied</div>
+                    <div className="col-span-3">Files & Audio</div>
+                    <div className="col-span-2">Rating</div>
+                    <div className="col-span-2">Actions</div>
+                  </div>
+                )}
+                
+                <div>
+                  {stageApplications.length > 0 ? (
+                    stageApplications.map((application) => (
+                      <ApplicationRow 
+                        key={application.id} 
+                        application={application} 
+                        stageIndex={stageIndex}
+                        onStatusChanged={handleStatusChanged}
+                      />
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-gray-500">
+                      No applications match your filters in this stage
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
