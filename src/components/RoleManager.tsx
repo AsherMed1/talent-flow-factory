@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +36,7 @@ export const RoleManager = () => {
       setShowCreateForm(false);
       setNewRole({ name: '', description: '', booking_link: '' });
     } catch (error) {
+      console.error('Create role error:', error);
       toast({
         title: "Error",
         description: "Failed to create role",
@@ -46,6 +46,7 @@ export const RoleManager = () => {
   };
 
   const handleEditRole = (role: any) => {
+    console.log('Editing role:', role);
     setEditingRole(role.id);
     setEditRole({
       name: role.name,
@@ -64,20 +65,40 @@ export const RoleManager = () => {
       return;
     }
 
-    try {
-      await updateRoleMutation.mutateAsync({
-        id: editingRole!,
-        ...editRole
+    if (!editingRole) {
+      toast({
+        title: "Error",
+        description: "No role selected for editing",
+        variant: "destructive"
       });
+      return;
+    }
+
+    try {
+      console.log('Updating role with data:', {
+        id: editingRole,
+        name: editRole.name,
+        description: editRole.description,
+        booking_link: editRole.booking_link
+      });
+
+      await updateRoleMutation.mutateAsync({
+        id: editingRole,
+        name: editRole.name,
+        description: editRole.description,
+        booking_link: editRole.booking_link
+      });
+      
       toast({
         title: "Success",
         description: "Role updated successfully"
       });
       setEditingRole(null);
     } catch (error) {
+      console.error('Update role error:', error);
       toast({
         title: "Error",
-        description: "Failed to update role",
+        description: `Failed to update role: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
