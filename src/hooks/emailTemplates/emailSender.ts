@@ -43,13 +43,23 @@ export const useEmailSender = () => {
 
     const template = getTemplateByType(templateType, jobRole);
     if (!template) {
-      console.error('Template not found:', templateType, jobRole);
-      toast({
-        title: "Template Not Found",
-        description: `No ${templateType.replace('_', ' ')} email template found for ${jobRole}`,
-        variant: "destructive",
-      });
-      return false;
+      console.error('Template not found for:', { templateType, jobRole });
+      
+      // Try to get a generic template without job role
+      const genericTemplate = getTemplateByType(templateType);
+      if (!genericTemplate) {
+        console.error('No generic template found either for:', templateType);
+        toast({
+          title: "Template Not Found",
+          description: `No ${templateType.replace('_', ' ')} email template found. Please check your email templates.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      console.log('Using generic template:', genericTemplate.name);
+      // Use the generic template
+      const template = genericTemplate;
     }
 
     // For the interview/congratulations email, direct candidates to the application form
@@ -79,7 +89,8 @@ export const useEmailSender = () => {
     console.log('Sending email:', {
       to: candidateEmail,
       subject,
-      service: resend.isConnected ? 'Resend' : 'SMTP'
+      service: resend.isConnected ? 'Resend' : 'SMTP',
+      templateUsed: template.name
     });
 
     try {

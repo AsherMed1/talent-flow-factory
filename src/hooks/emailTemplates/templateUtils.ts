@@ -17,13 +17,18 @@ export const getTemplateByType = (
 ): EmailTemplate | null => {
   const templates = getTemplates();
   
+  console.log('Looking for template:', { type, jobRole, availableTemplates: templates.map(t => ({ name: t.name, jobRole: t.jobRole, isDefault: t.isDefault })) });
+  
   // Try to find a job-specific template first
   if (jobRole) {
     const jobSpecificTemplate = templates.find(t => 
       t.name.toLowerCase().includes(type.replace('_', ' ')) && 
       t.jobRole.toLowerCase() === jobRole.toLowerCase()
     );
-    if (jobSpecificTemplate) return jobSpecificTemplate;
+    if (jobSpecificTemplate) {
+      console.log('Found job-specific template:', jobSpecificTemplate.name);
+      return jobSpecificTemplate;
+    }
   }
   
   // Fall back to default template based on type
@@ -52,11 +57,28 @@ export const getTemplateByType = (
       break;
   }
   
+  // Look for default template
   const defaultTemplate = templates.find(t => 
     t.name.toLowerCase().includes(searchTerm) && t.isDefault
   );
   
-  return defaultTemplate || null;
+  if (defaultTemplate) {
+    console.log('Found default template:', defaultTemplate.name);
+    return defaultTemplate;
+  }
+  
+  // If no specific default found, try to find any template that matches the type
+  const anyMatchingTemplate = templates.find(t => 
+    t.name.toLowerCase().includes(searchTerm)
+  );
+  
+  if (anyMatchingTemplate) {
+    console.log('Found any matching template:', anyMatchingTemplate.name);
+    return anyMatchingTemplate;
+  }
+  
+  console.error('No template found for type:', type, 'with search term:', searchTerm);
+  return null;
 };
 
 export const replaceVariables = (content: string, variables: Record<string, string>): string => {
