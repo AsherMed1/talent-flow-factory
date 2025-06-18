@@ -14,6 +14,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { InterviewCalendar } from './InterviewCalendar';
 import { DispositionDialog } from './DispositionDialog';
+import { LoomVideoPreview } from './video/LoomVideoPreview';
+import { VideoAnalysisPanel } from './video/VideoAnalysisPanel';
 
 export const InterviewNotes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,11 +154,19 @@ export const InterviewNotes = () => {
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <h4 className="font-medium text-gray-900">Interview Recordings</h4>
         
-        {/* Manual Recording Link */}
-        {hasManualLink && (
+        {/* Loom Video Preview */}
+        {hasManualLink && hasManualLink.includes('loom.com') && (
+          <LoomVideoPreview 
+            loomUrl={application.interview_recording_link}
+            title={`${application.candidates.name} Interview`}
+          />
+        )}
+        
+        {/* Manual Recording Link (non-Loom) */}
+        {hasManualLink && !hasManualLink.includes('loom.com') && (
           <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
             <div className="flex items-center gap-2">
               <Link className="w-4 h-4 text-blue-600" />
@@ -347,6 +357,7 @@ export const InterviewNotes = () => {
                       <TabsTrigger value="recording">Recording Link</TabsTrigger>
                       <TabsTrigger value="rating">Rating & Status</TabsTrigger>
                       <TabsTrigger value="recordings">All Recordings</TabsTrigger>
+                      <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="notes" className="space-y-4">
@@ -422,6 +433,10 @@ export const InterviewNotes = () => {
 
                     <TabsContent value="recordings" className="space-y-4">
                       {renderRecordings(selectedApplication)}
+                    </TabsContent>
+
+                    <TabsContent value="analysis" className="space-y-4">
+                      <VideoAnalysisPanel application={selectedApplication} />
                     </TabsContent>
                   </Tabs>
 
@@ -570,6 +585,7 @@ export const InterviewNotes = () => {
                         <TabsTrigger value="recording">Recording Link</TabsTrigger>
                         <TabsTrigger value="rating">Rating & Status</TabsTrigger>
                         <TabsTrigger value="recordings">All Recordings</TabsTrigger>
+                        <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="notes" className="space-y-4">
@@ -641,10 +657,14 @@ export const InterviewNotes = () => {
                             This will open the disposition dialog to make the final hiring decision.
                           </p>
                         </div>
-                      </TabsContent>
+                      </div>
 
                       <TabsContent value="recordings" className="space-y-4">
                         {renderRecordings(selectedApplication)}
+                      </TabsContent>
+
+                      <TabsContent value="analysis" className="space-y-4">
+                        <VideoAnalysisPanel application={selectedApplication} />
                       </TabsContent>
                     </Tabs>
 
