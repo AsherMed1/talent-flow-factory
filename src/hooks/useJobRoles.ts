@@ -64,53 +64,59 @@ export const useUpdateJobRole = () => {
       console.log('Updates:', updates);
       
       try {
-        // Build the update object with only the fields that are being updated
-        const updateData: any = {
+        // First, get the current role data
+        const { data: currentRole, error: fetchError } = await supabase
+          .from('job_roles')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (fetchError || !currentRole) {
+          console.error('Role not found:', fetchError);
+          throw new Error('Role not found');
+        }
+        
+        console.log('Current role data:', currentRole);
+        
+        // Build the complete updated role object
+        const updatedRole = {
+          ...currentRole,
+          ...updates,
           updated_at: new Date().toISOString()
         };
         
-        if (updates.name !== undefined) {
-          updateData.name = updates.name;
-        }
-        if (updates.description !== undefined) {
-          updateData.description = updates.description;
-        }
+        // Handle booking_link properly - empty string becomes null
         if (updates.booking_link !== undefined) {
-          // Handle booking_link properly - empty string becomes null
-          updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
+          updatedRole.booking_link = updates.booking_link === '' ? null : updates.booking_link;
         }
         
-        console.log('Final update data being sent to Supabase:', updateData);
+        console.log('Complete updated role object:', updatedRole);
         
-        // Use a more robust update approach
-        const { data, error, count } = await supabase
+        // Use upsert instead of update for more reliability
+        const { data, error } = await supabase
           .from('job_roles')
-          .update(updateData)
-          .eq('id', id)
-          .select('*');
+          .upsert(updatedRole, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          })
+          .select()
+          .single();
         
-        console.log('Update response - data:', data, 'error:', error, 'count:', count);
+        console.log('Upsert response - data:', data, 'error:', error);
         
         if (error) {
-          console.error('Supabase update error:', error);
+          console.error('Supabase upsert error:', error);
           throw new Error(`Database update failed: ${error.message}`);
         }
         
-        if (!data || data.length === 0) {
-          console.error('Update returned no data - role may not exist');
-          // Let's verify the role exists
-          const { data: checkData } = await supabase
-            .from('job_roles')
-            .select('id, name')
-            .eq('id', id);
-          console.log('Role exists check after failed update:', checkData);
-          throw new Error('Role not found or update failed');
+        if (!data) {
+          console.error('Upsert returned no data');
+          throw new Error('Update operation failed');
         }
         
-        const updatedRole = data[0];
-        console.log('Update successful, returned data:', updatedRole);
+        console.log('Update successful, returned data:', data);
         console.log('=== UPDATE COMPLETE ===');
-        return updatedRole;
+        return data;
         
       } catch (error) {
         console.error('=== UPDATE FAILED ===');
