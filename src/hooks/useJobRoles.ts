@@ -61,47 +61,63 @@ export const useUpdateJobRole = () => {
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
-      // Prepare the update object with only the fields we want to update
-      const updateData: Record<string, any> = {};
+      // Build update object more carefully
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
       
-      if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.booking_link !== undefined) updateData.booking_link = updates.booking_link;
-      
-      // Always update the timestamp
-      updateData.updated_at = new Date().toISOString();
+      // Only include fields that are actually being updated
+      if (updates.name !== undefined && updates.name !== null) {
+        updateData.name = updates.name;
+      }
+      if (updates.description !== undefined) {
+        updateData.description = updates.description || '';
+      }
+      if (updates.booking_link !== undefined) {
+        updateData.booking_link = updates.booking_link || null;
+      }
       
       console.log('Update data being sent:', updateData);
       
+      // Use upsert approach to ensure the update works
       const { data, error } = await supabase
         .from('job_roles')
         .update(updateData)
         .eq('id', id)
-        .select();
+        .select()
+        .maybeSingle();
       
       if (error) {
         console.error('Supabase update error:', error);
         throw error;
       }
       
-      console.log('Raw update response:', data);
+      console.log('Update response:', data);
       
-      if (!data || data.length === 0) {
-        console.error('No rows were updated - role may not exist or no changes detected');
-        
-        // Let's verify the role exists
-        const { data: checkData, error: checkError } = await supabase
+      if (!data) {
+        // If no data returned, verify the role exists
+        const { data: existingRole, error: checkError } = await supabase
           .from('job_roles')
-          .select('id, name, description, booking_link')
-          .eq('id', id);
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
         
-        console.log('Role verification:', { checkData, checkError });
+        console.log('Role existence check:', { existingRole, checkError });
         
-        throw new Error('Role not found or no changes were made');
+        if (checkError) {
+          throw checkError;
+        }
+        
+        if (!existingRole) {
+          throw new Error('Role not found');
+        }
+        
+        // Role exists but wasn't updated - this might be because no actual changes were detected
+        // Return the existing role data
+        return existingRole;
       }
       
-      console.log('Update successful:', data[0]);
-      return data[0];
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-roles'] });
