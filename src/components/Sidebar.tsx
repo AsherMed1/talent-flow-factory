@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +10,8 @@ import {
   Settings,
   Menu,
   X,
-  FileText
+  FileText,
+  Upload
 } from 'lucide-react';
 import { useApplicationStats } from '@/hooks/useApplications';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -49,6 +49,12 @@ export const Sidebar = ({ activeView, setActiveView }: SidebarProps) => {
       id: 'interview-notes', 
       label: 'Interview Notes', 
       icon: FileText,
+      badge: null
+    },
+    { 
+      id: 'import', 
+      label: 'Import Candidates', 
+      icon: Upload,
       badge: null
     },
     { 

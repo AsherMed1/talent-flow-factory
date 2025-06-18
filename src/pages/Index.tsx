@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
@@ -25,6 +24,8 @@ const Index = () => {
         return <ApplicantPipeline />;
       case 'interview-notes':
         return <InterviewNotes />;
+      case 'import':
+        return <CandidateImport />;
       case 'crm':
         return <CandidateCRM />;
       case 'analytics':
