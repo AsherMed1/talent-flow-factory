@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp, Calendar, Star, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,7 @@ export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: App
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="font-medium text-sm truncate">{application.candidates.name}</div>
+            <div className="text-xs text-gray-600 truncate">{application.candidates.email}</div>
             <div className="text-xs text-gray-500 truncate">
               {application.job_roles && application.job_roles.name ? application.job_roles.name : 'Unknown Role'}
             </div>
