@@ -70,47 +70,52 @@ serve(async (req) => {
 
     console.log('Transcription completed:', transcription.substring(0, 100) + '...');
 
-    // Step 2: Enhanced analysis with focus on naturalness and motivation
+    // Step 2: Updated analysis prompt with better criteria for native speakers
     const analysisPrompt = `
-You are an expert recruiter evaluating voice recordings for US-based healthcare appointment setters. Your goal is to identify candidates who sound like native English speakers and are genuinely motivated for the role.
+You are an expert speech analyst specializing in identifying native English speakers for US healthcare roles. You have extensive experience with American, Canadian, British, Australian, and other native English speaking accents and speech patterns.
 
-CRITICAL REQUIREMENTS:
-- Must sound like they could be from the US (no detectable foreign accent)
-- Natural, conversational English that flows smoothly
-- Genuine enthusiasm and motivation (not scripted or robotic)
-- Professional but warm communication style suitable for healthcare
+CRITICAL ASSESSMENT GUIDELINES:
 
-The candidate's voice recording transcription is:
+**NATIVE ENGLISH SPEAKER IDENTIFICATION:**
+- Focus on natural speech flow, rhythm, and intonation patterns typical of native speakers
+- Look for comfortable use of contractions, natural filler words ("um", "like", "you know" when used naturally)
+- Assess if stress patterns, syllable emphasis, and sentence rhythm sound native
+- Consider regional accents (Southern, Midwest, Boston, etc.) as fully native
+- Rate 8-10 for any clearly native speaker, regardless of regional accent
+- Rate 6-7 only for very fluent non-native speakers with minimal accent
+- Rate 1-5 for obvious non-native accents or unnatural speech patterns
+
+**FRIENDLY & PERSONABLE COMMUNICATION:**
+- Value warmth, enthusiasm, and genuine personality in speech
+- Recognize that casual, friendly tone is POSITIVE for healthcare patient interaction
+- Look for natural conversational style that would put patients at ease
+- Don't penalize informal language if it sounds genuine and warm
+
+The candidate's transcription is:
 "${transcription}"
 
-Evaluate them on these enhanced criteria:
+Evaluate on these criteria:
 
-1. **English Fluency & Naturalness** (1-10): Do they sound like a native English speaker? Is their speech natural and conversational without foreign accent markers? Rate 1-3 for obvious non-native accents, 4-6 for slight accents, 7-8 for very good fluency, 9-10 for native-level naturalness.
+1. **English Fluency & Naturalness** (1-10): Does this sound like a native English speaker? Consider natural rhythm, intonation, stress patterns, and comfortable use of language. Regional accents are fully acceptable.
 
-2. **Speech Clarity & Articulation** (1-10): How clearly do they speak? Are words properly pronounced? Can you understand them easily without strain?
+2. **Speech Clarity & Articulation** (1-10): How clearly do they speak? Can patients easily understand them?
 
-3. **Motivation & Enthusiasm** (1-10): Do they sound genuinely excited about the opportunity? Is there authentic energy in their voice, or do they sound disinterested/going through the motions?
+3. **Motivation & Enthusiasm** (1-10): Do they sound genuinely interested and motivated? Look for authentic energy and positivity.
 
-4. **Conversational Flow** (1-10): Do they speak naturally like in normal conversation? Avoid robotic, scripted delivery. Look for natural pauses, inflection, and rhythm.
+4. **Conversational Flow** (1-10): Do they speak naturally and comfortably? Natural speech patterns and casual tone are positive.
 
-5. **Professional Communication** (1-10): Do they maintain appropriate professionalism while still sounding personable? Would clients feel comfortable speaking with them?
+5. **Professional Communication** (1-10): Would patients feel comfortable speaking with them? Friendly, warm communication is preferred for healthcare.
 
-6. **Confidence & Composure** (1-10): Do they sound confident without being arrogant? Minimal hesitation, filler words, or nervous energy?
+6. **Confidence & Composure** (1-10): Do they sound confident and at ease? Natural, comfortable delivery is key.
 
-SCORING GUIDELINES:
-- Candidates with detectable foreign accents should score 4 or below on English Fluency
-- Lack of genuine enthusiasm should result in low Motivation scores
-- Robotic or heavily scripted delivery should score poorly on Conversational Flow
-- Only candidates scoring 7+ on English Fluency should be considered for US healthcare roles
+**SCORING PHILOSOPHY:**
+- Native speakers with regional accents should score 8-10 on fluency
+- Friendly, casual speech is POSITIVE for patient communication
+- Natural conversation style beats overly formal delivery
+- Genuine personality and warmth are highly valued
+- Only mark down for obvious non-native patterns or poor communication
 
-Provide:
-- Individual scores for each trait (1-10)
-- An overall average score
-- A brief assessment of accent/origin (if detectable)
-- Specific feedback on motivation level
-- Clear recommendation: RECOMMEND, MAYBE, or REJECT
-
-Format your response as JSON:
+Provide your assessment as JSON:
 {
   "english_fluency_score": <number 1-10>,
   "speech_clarity_score": <number 1-10>,
@@ -119,10 +124,10 @@ Format your response as JSON:
   "professional_communication_score": <number 1-10>,
   "confidence_score": <number 1-10>,
   "overall_score": <number 1-10>,
-  "accent_assessment": "<brief assessment of accent/naturalness>",
-  "motivation_assessment": "<assessment of genuine enthusiasm>",
+  "accent_assessment": "<assessment of native vs non-native speech patterns>",
+  "motivation_assessment": "<assessment of genuine enthusiasm and personality>",
   "recommendation": "<RECOMMEND|MAYBE|REJECT>",
-  "detailed_feedback": "<comprehensive feedback focusing on fit for US healthcare role>"
+  "detailed_feedback": "<comprehensive feedback focusing on communication strengths and patient interaction suitability>"
 }
 `;
 
@@ -137,7 +142,7 @@ Format your response as JSON:
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert HR recruiter specializing in identifying native English speakers and motivated candidates for US healthcare roles. You have extensive experience detecting accents and assessing genuine motivation. Respond only with valid JSON.' 
+            content: 'You are an expert speech analyst who specializes in identifying native English speakers and assessing communication skills for healthcare roles. You understand that friendly, casual communication is often better for patient interaction than overly formal speech. You recognize all native English accents including regional American, British, Australian, and Canadian variants as fully native. Respond only with valid JSON.' 
           },
           { role: 'user', content: analysisPrompt }
         ],
