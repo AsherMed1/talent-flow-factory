@@ -138,4 +138,3 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 );
 
 LocationInput.displayName = "LocationInput";
-```
