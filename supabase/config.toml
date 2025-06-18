@@ -1,1 +1,16 @@
+
 project_id = "haqlsgqjymlvshhcbmip"
+
+[functions.ghl-appointment-webhook]
+verify_jwt = false
+
+[functions.gohighlevel-integration]
+
+[functions.send-email]
+
+[functions.trigger-webhook]
+
+[functions.analyze-voice]
+
+[functions.zoom-webhook]
+verify_jwt = false
