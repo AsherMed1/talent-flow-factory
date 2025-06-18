@@ -45,15 +45,18 @@ interface ZoomChallengePayload {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('Zoom webhook request received:', req.method, req.url);
-  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  console.log('=== Zoom Webhook Handler Started ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Handle HEAD requests for URL validation (Zoom uses this to validate webhook URLs)
+  // Handle HEAD requests for URL validation
   if (req.method === 'HEAD') {
     console.log('HEAD request for URL validation');
     return new Response(null, { 
@@ -62,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  // Handle GET requests for URL validation (some services use this)
+  // Handle GET requests for URL validation
   if (req.method === 'GET') {
     console.log('GET request for URL validation');
     return new Response('Zoom webhook endpoint is active', { 
@@ -87,11 +90,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Processing POST webhook request');
     
     const payload = await req.json();
-    console.log('Webhook payload:', JSON.stringify(payload, null, 2));
+    console.log('Webhook payload received:', JSON.stringify(payload, null, 2));
 
     // Handle Zoom's endpoint URL validation challenge
     if (payload.event === 'endpoint.url_validation') {
-      console.log('Handling URL validation challenge');
+      console.log('=== URL Validation Challenge ===');
       const challengePayload = payload as ZoomChallengePayload;
       const plainToken = challengePayload.payload.plainToken;
       
@@ -99,33 +102,42 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Get the secret token from environment
       const secretToken = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
+      console.log('Secret token configured:', !!secretToken);
       
       if (!secretToken) {
         console.error('ZOOM_WEBHOOK_SECRET_TOKEN not configured');
-        return new Response('Server configuration error', { 
+        return new Response(JSON.stringify({ 
+          error: 'Server configuration error - secret token not set' 
+        }), { 
           status: 500, 
-          headers: corsHeaders 
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders 
+          }
         });
       }
       
       // Create the encrypted token by hashing plainToken + secretToken
       const message = plainToken + secretToken;
+      console.log('Message to hash:', message);
+      console.log('Message length:', message.length);
+      
       const encoder = new TextEncoder();
       const data = encoder.encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const encryptedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       
-      console.log('Secret token length:', secretToken.length);
-      console.log('Message to hash:', message);
-      console.log('Encrypted token:', encryptedToken);
+      console.log('Generated encrypted token:', encryptedToken);
+      console.log('Encrypted token length:', encryptedToken.length);
       
       const response = {
         plainToken: plainToken,
         encryptedToken: encryptedToken
       };
       
-      console.log('Returning validation response:', response);
+      console.log('=== Sending validation response ===');
+      console.log('Response:', JSON.stringify(response, null, 2));
       
       return new Response(
         JSON.stringify(response),
@@ -142,25 +154,36 @@ const handler = async (req: Request): Promise<Response> => {
     // Verify webhook authenticity using secret token for non-validation events
     const webhookSecret = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
     if (webhookSecret && payload.event !== 'endpoint.url_validation') {
-      // Get the authorization header
+      console.log('Verifying webhook authenticity');
       const authHeader = req.headers.get('authorization');
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         console.error('Missing or invalid authorization header');
-        return new Response('Unauthorized', { status: 401 });
+        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
       }
 
       const token = authHeader.substring(7);
       if (token !== webhookSecret) {
         console.error('Invalid webhook secret token');
-        return new Response('Unauthorized', { status: 401 });
+        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
       }
     }
 
     // Only process recording.completed events
     if (payload.event !== 'recording.completed') {
       console.log('Ignoring non-recording event:', payload.event);
-      return new Response('Event ignored', { status: 200, headers: corsHeaders });
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Event ignored - not a recording completion' 
+      }), { 
+        status: 200, 
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        }
+      });
     }
+
+    console.log('=== Processing recording.completed event ===');
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -184,7 +207,6 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Processing meeting:', meetingData.topic, 'with', recordingUrls.length, 'recordings');
 
     // Try to find the application by matching the meeting topic with candidate name or interview details
-    // This assumes the Zoom meeting topic contains the candidate's name or some identifier
     const { data: applications, error: searchError } = await supabase
       .from('applications')
       .select(`
@@ -272,9 +294,14 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
-    console.error('Error in zoom-webhook function:', error);
+    console.error('=== Error in zoom-webhook function ===');
+    console.error('Error:', error);
+    console.error('Stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
