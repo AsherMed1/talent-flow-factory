@@ -61,7 +61,7 @@ export const InterviewNotes = () => {
 
       toast({
         title: "Notes Saved",
-        description: "Interview notes and recording link have been updated successfully.",
+        description: "Interview notes have been updated successfully.",
       });
     } catch (error) {
       console.error('Error saving notes:', error);

@@ -56,6 +56,57 @@ export const InterviewNotesContent = ({
     selectedApplication?.job_role_id || ''
   );
 
+  const generateInterviewSummary = async () => {
+    if (!guide?.stepNotes || !selectedApplication) return '';
+
+    // Check if there are any notes to summarize
+    const hasNotes = Object.values(guide.stepNotes).some(note => note && note.trim().length > 0);
+    if (!hasNotes) return '';
+
+    try {
+      const response = await fetch('/api/generate-interview-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          stepNotes: guide.stepNotes,
+          candidateName: selectedApplication.candidates.name,
+          jobRole: selectedApplication.job_roles?.name || 'Position'
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate summary');
+
+      const data = await response.json();
+      return data.summary || '';
+    } catch (error) {
+      console.error('Error generating interview summary:', error);
+      toast({
+        title: "Summary Generation Failed",
+        description: "Could not generate AI summary. Notes will be saved without summary.",
+        variant: "destructive",
+      });
+      return '';
+    }
+  };
+
+  const handleSaveNotesWithSummary = async () => {
+    // Generate AI summary from interview guide notes
+    const aiSummary = await generateInterviewSummary();
+    
+    // Combine existing notes with AI summary
+    let finalNotes = notes;
+    if (aiSummary) {
+      const summarySection = `\n\n--- AI Interview Summary ---\n${aiSummary}\n--- End Summary ---`;
+      finalNotes = notes + summarySection;
+      onNotesChange(finalNotes);
+    }
+
+    // Call the original save function
+    onSaveNotes();
+  };
+
   const handleRecordingLinkSave = async () => {
     if (!selectedApplication || !interviewRecordingLink) return;
     
@@ -244,7 +295,7 @@ export const InterviewNotesContent = ({
           <div className="text-sm text-gray-500">
             {selectedApplication.notes ? 'Last updated: ' + new Date(selectedApplication.updated_at || '').toLocaleString() : 'No previous notes'}
           </div>
-          <Button onClick={onSaveNotes} disabled={isSaving}>
+          <Button onClick={handleSaveNotesWithSummary} disabled={isSaving}>
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? 'Saving...' : 'Save Notes'}
           </Button>
