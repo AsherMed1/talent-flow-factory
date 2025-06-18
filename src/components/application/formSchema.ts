@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const applicationFormSchema = z.object({
@@ -5,7 +6,7 @@ export const applicationFormSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   location: z.string().min(1, 'Location is required'),
-  weekendAvailability: z.enum(['yes', 'no'], {
+  weekendAvailability: z.enum(['yes', 'no', 'on-occasion'], {
     required_error: 'Please select your weekend availability'
   }),
   

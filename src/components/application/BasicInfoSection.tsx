@@ -1,9 +1,9 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LocationInput } from '@/components/ui/location-input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ApplicationFormData } from './formSchema';
 
 interface BasicInfoSectionProps {
@@ -77,16 +77,28 @@ export const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
         )}
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="weekendAvailability" className="text-sm font-medium text-gray-800">
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-800">
           Are You Available To Work Weekends? (Saturday /Sunday)
         </Label>
-        <Textarea
-          id="weekendAvailability"
-          {...form.register('weekendAvailability')}
-          placeholder="Please describe your weekend availability"
-          className="min-h-[100px] resize-none"
-        />
+        <RadioGroup
+          value={form.watch('weekendAvailability')}
+          onValueChange={(value) => form.setValue('weekendAvailability', value as 'yes' | 'no' | 'on-occasion')}
+          className="flex flex-col space-y-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="yes" id="weekend-yes" />
+            <Label htmlFor="weekend-yes" className="text-sm font-normal cursor-pointer">Yes</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="no" id="weekend-no" />
+            <Label htmlFor="weekend-no" className="text-sm font-normal cursor-pointer">No</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="on-occasion" id="weekend-occasion" />
+            <Label htmlFor="weekend-occasion" className="text-sm font-normal cursor-pointer">On Occasion</Label>
+          </div>
+        </RadioGroup>
         {form.formState.errors.weekendAvailability && (
           <p className="text-sm text-red-600 mt-1">{form.formState.errors.weekendAvailability.message}</p>
         )}
