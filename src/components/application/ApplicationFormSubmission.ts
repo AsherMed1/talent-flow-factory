@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApplicationFormData } from './formSchema';
 import { clearSavedData } from './formStorage';
+import { scorePreScreeningResponses } from '@/services/preScreeningScorer';
 
 export interface SubmissionResult {
   success: boolean;
@@ -71,7 +71,7 @@ export const submitApplication = async (
       .eq('job_role_id', roleId)
       .single();
 
-    // Prepare form data with voice recordings and uploaded files
+    // Prepare form data with pre-screening responses
     const formData = {
       basicInfo: {
         firstName: data.firstName,
@@ -81,6 +81,11 @@ export const submitApplication = async (
       },
       availability: {
         weekendAvailability: data.weekendAvailability,
+      },
+      preScreening: {
+        motivationResponse: data.motivationResponse,
+        experienceResponse: data.experienceResponse,
+        availabilityResponse: data.availabilityResponse,
       },
       voiceRecordings: {
         hasIntroduction: !!data.introductionRecording,
@@ -114,7 +119,7 @@ export const submitApplication = async (
           status: 'applied',
           form_data: formData,
           has_voice_recording: hasVoiceRecording,
-          notes: `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
+          notes: `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingApplication.id);
@@ -131,13 +136,45 @@ export const submitApplication = async (
           status: 'applied',
           form_data: formData,
           has_voice_recording: hasVoiceRecording,
-          notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Listening test completed.`,
+          notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
         })
         .select('id')
         .single();
 
       if (applicationError) throw applicationError;
       applicationId = newApplication.id;
+    }
+
+    // Score the pre-screening responses
+    if (data.motivationResponse && data.experienceResponse && data.availabilityResponse) {
+      try {
+        const scores = await scorePreScreeningResponses(
+          data.motivationResponse,
+          data.experienceResponse,
+          data.availabilityResponse
+        );
+
+        // Save pre-screening scores
+        await supabase
+          .from('pre_screening_responses')
+          .upsert({
+            application_id: applicationId,
+            motivation_response: data.motivationResponse,
+            motivation_score: scores.motivationScore,
+            experience_response: data.experienceResponse,
+            experience_score: scores.experienceScore,
+            availability_response: data.availabilityResponse,
+            availability_score: scores.availabilityScore,
+            communication_score: scores.communicationScore,
+            overall_prescreening_score: scores.overallScore,
+            scored_at: new Date().toISOString(),
+          });
+
+        console.log('Pre-screening scores saved:', scores);
+      } catch (scoringError) {
+        console.error('Error scoring pre-screening responses:', scoringError);
+        // Don't fail the whole submission if scoring fails
+      }
     }
 
     // Update candidate tags
@@ -193,7 +230,7 @@ const updateCandidateTags = async (candidateId: string, data: ApplicationFormDat
     .delete()
     .eq('candidate_id', candidateId);
 
-  const tags = ['Remote Worker', 'Weekend Available'];
+  const tags = ['Remote Worker', 'Weekend Available', 'Pre-Screened'];
   if (data.introductionRecording && data.scriptRecording) tags.push('Voice Submitted');
   
   for (const tag of tags) {

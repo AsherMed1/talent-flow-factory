@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { BasicInfoSection } from './application/BasicInfoSection';
 import { VoiceRecordingSection } from './application/VoiceRecordingSection';
 import { FileUploadSection } from './application/FileUploadSection';
 import { ListeningTestSection } from './application/ListeningTestSection';
+import { PreScreeningSection } from './application/PreScreeningSection';
 import { TermsSection } from './application/TermsSection';
 import { ProgressIndicator } from './application/ProgressIndicator';
 import { AutoSaveIndicator } from './application/AutoSaveIndicator';
@@ -24,6 +24,7 @@ interface ApplicationFormProps {
 
 const FORM_STEPS = [
   { id: 'basic', title: 'Basic Information', estimatedTime: '3 min', completed: false },
+  { id: 'prescreening', title: 'Pre-Screening Questions', estimatedTime: '5 min', completed: false },
   { id: 'voice', title: 'Voice Recordings', estimatedTime: '8 min', completed: false },
   { id: 'files', title: 'File Uploads', estimatedTime: '5 min', completed: false },
   { id: 'listening', title: 'Listening Test', estimatedTime: '4 min', completed: false },
@@ -49,6 +50,9 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
       switch (step.id) {
         case 'basic':
           completed = !!(values.firstName && values.lastName && values.email);
+          break;
+        case 'prescreening':
+          completed = !!(values.motivationResponse && values.experienceResponse && values.availabilityResponse);
           break;
         case 'voice':
           completed = !!(values.introductionRecording || values.scriptRecording);
@@ -128,6 +132,7 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
         <CardContent className="p-4 md:p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <BasicInfoSection form={form} />
+            <PreScreeningSection form={form} />
             <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
             <FileUploadSection form={form} />
             <ListeningTestSection form={form} />

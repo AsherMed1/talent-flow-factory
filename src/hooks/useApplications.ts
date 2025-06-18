@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -30,6 +29,16 @@ export interface Application {
   zoom_recording_url: string | null;
   zoom_recording_files: any | null;
   ghl_appointment_data: any | null;
+  pre_screening_responses?: Array<{
+    motivation_response: string;
+    motivation_score: number;
+    experience_response: string;
+    experience_score: number;
+    availability_response: string;
+    availability_score: number;
+    communication_score: number;
+    overall_prescreening_score: number;
+  }>;
   candidates: {
     name: string;
     email: string;
@@ -78,6 +87,16 @@ export const useApplications = () => {
           zoom_recording_url,
           zoom_recording_files,
           ghl_appointment_data,
+          pre_screening_responses (
+            motivation_response,
+            motivation_score,
+            experience_response,
+            experience_score,
+            availability_response,
+            availability_score,
+            communication_score,
+            overall_prescreening_score
+          ),
           candidates (
             name, 
             email, 
@@ -101,6 +120,7 @@ export const useApplications = () => {
         return (
           formData.basicInfo || 
           formData.availability || 
+          formData.preScreening ||
           formData.voiceRecordings || 
           formData.listeningComprehension || 
           formData.uploads
@@ -131,6 +151,7 @@ export const useApplicationStats = () => {
         return (
           formData.basicInfo || 
           formData.availability || 
+          formData.preScreening ||
           formData.voiceRecordings || 
           formData.listeningComprehension || 
           formData.uploads

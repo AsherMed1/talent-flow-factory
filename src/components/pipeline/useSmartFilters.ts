@@ -46,10 +46,14 @@ export const useSmartFilters = (applications: Application[], filters: SmartFilte
 
     // Apply top percentage filter
     if (filters.topPercentOnly && filtered.length > 0) {
-      // Sort by overall score descending
+      // Sort by overall score descending (prefer voice analysis, fallback to pre-screening)
       const sortedByScore = filtered
-        .filter(app => app.voice_analysis_score) // Only include analyzed candidates
-        .sort((a, b) => (b.voice_analysis_score || 0) - (a.voice_analysis_score || 0));
+        .filter(app => app.voice_analysis_score || app.pre_screening_responses?.[0]?.overall_prescreening_score)
+        .sort((a, b) => {
+          const aScore = a.voice_analysis_score || a.pre_screening_responses?.[0]?.overall_prescreening_score || 0;
+          const bScore = b.voice_analysis_score || b.pre_screening_responses?.[0]?.overall_prescreening_score || 0;
+          return bScore - aScore;
+        });
       
       const topCount = Math.ceil((sortedByScore.length * filters.topPercentOnly) / 100);
       filtered = sortedByScore.slice(0, topCount);
@@ -62,13 +66,23 @@ export const useSmartFilters = (applications: Application[], filters: SmartFilte
     if (!applications?.length) return null;
 
     const analyzed = applications.filter(app => app.voice_analysis_score);
-    const highScoring = analyzed.filter(app => (app.voice_analysis_score || 0) >= 8);
-    const nativeLevel = analyzed.filter(app => (app.voice_clarity_score || 0) >= 9);
-    const motivated = analyzed.filter(app => (app.voice_energy_score || 0) >= 8);
+    const preScreened = applications.filter(app => app.pre_screening_responses?.[0]?.overall_prescreening_score);
+    const highScoring = applications.filter(app => {
+      const voiceScore = app.voice_analysis_score || 0;
+      const preScreenScore = app.pre_screening_responses?.[0]?.overall_prescreening_score || 0;
+      return Math.max(voiceScore, preScreenScore) >= 80;
+    });
+    const nativeLevel = applications.filter(app => (app.voice_clarity_score || 0) >= 90);
+    const motivated = applications.filter(app => {
+      const voiceEnergy = app.voice_energy_score || 0;
+      const motivationScore = app.pre_screening_responses?.[0]?.motivation_score || 0;
+      return Math.max(voiceEnergy, motivationScore) >= 80;
+    });
 
     return {
       total: applications.length,
       analyzed: analyzed.length,
+      preScreened: preScreened.length,
       highScoring: highScoring.length,
       nativeLevel: nativeLevel.length,
       motivated: motivated.length,

@@ -1,35 +1,36 @@
+import { z } from 'zod';
 
-import * as z from 'zod';
-
-export const applicationSchema = z.object({
-  // Basic Information
+export const applicationFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Valid email is required'),
+  email: z.string().email('Please enter a valid email address'),
   location: z.string().min(1, 'Location is required'),
+  weekendAvailability: z.enum(['yes', 'no'], {
+    required_error: 'Please select your weekend availability'
+  }),
   
-  // Availability
-  weekendAvailability: z.string().min(1, 'Weekend availability is required'),
-  
-  // Voice Recordings
+  // Voice recordings
   introductionRecording: z.string().optional(),
   scriptRecording: z.string().optional(),
   
-  // File Uploads
-  downloadSpeedScreenshot: z.any().optional(),
-  uploadSpeedScreenshot: z.any().optional(),
-  workstationPhoto: z.any().optional(),
+  // File uploads
+  downloadSpeedScreenshot: z.string().optional(),
+  uploadSpeedScreenshot: z.string().optional(),
+  workstationPhoto: z.string().optional(),
   
-  // Listening Comprehension
-  husbandName: z.enum(['Mark', 'Steve', 'Joesph', 'Bob'], {
-    required_error: 'Please select an answer',
-  }),
-  treatmentNotDone: z.enum(['Shots', 'Knee Replacement Surgery', 'Physical Therapy'], {
-    required_error: 'Please select an answer',
-  }),
+  // Listening test
+  husbandName: z.string().min(1, 'This field is required'),
+  treatmentNotDone: z.string().min(1, 'This field is required'),
   
-  // Agreement
-  agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms'),
+  // Pre-screening questions
+  motivationResponse: z.string().min(50, 'Please provide at least 50 characters explaining your motivation'),
+  experienceResponse: z.string().min(30, 'Please provide at least 30 characters about your experience'),
+  availabilityResponse: z.string().min(1, 'Please select your availability'),
+  
+  // Terms
+  agreeToTerms: z.boolean().refine(val => val === true, {
+    message: 'You must agree to the terms and conditions'
+  })
 });
 
-export type ApplicationFormData = z.infer<typeof applicationSchema>;
+export type ApplicationFormData = z.infer<typeof applicationFormSchema>;

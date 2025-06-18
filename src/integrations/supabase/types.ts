@@ -217,6 +217,62 @@ export type Database = {
           },
         ]
       }
+      pre_screening_responses: {
+        Row: {
+          application_id: string | null
+          availability_response: string | null
+          availability_score: number | null
+          communication_score: number | null
+          created_at: string
+          experience_response: string | null
+          experience_score: number | null
+          id: string
+          motivation_response: string | null
+          motivation_score: number | null
+          overall_prescreening_score: number | null
+          scored_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          availability_response?: string | null
+          availability_score?: number | null
+          communication_score?: number | null
+          created_at?: string
+          experience_response?: string | null
+          experience_score?: number | null
+          id?: string
+          motivation_response?: string | null
+          motivation_score?: number | null
+          overall_prescreening_score?: number | null
+          scored_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          availability_response?: string | null
+          availability_score?: number | null
+          communication_score?: number | null
+          created_at?: string
+          experience_response?: string | null
+          experience_score?: number | null
+          id?: string
+          motivation_response?: string | null
+          motivation_score?: number | null
+          overall_prescreening_score?: number | null
+          scored_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_screening_responses_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
