@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
@@ -19,10 +18,12 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-      if (ref && typeof ref === 'function') {
-        ref(inputRef.current);
-      } else if (ref) {
-        ref.current = inputRef.current;
+      if (ref) {
+        if (typeof ref === 'function') {
+          ref(inputRef.current);
+        } else {
+          ref.current = inputRef.current;
+        }
       }
     }, [ref]);
 
