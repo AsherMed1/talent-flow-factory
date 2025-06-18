@@ -61,42 +61,74 @@ export const useUpdateJobRole = () => {
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
-      // Build the update object with explicit field handling
-      const updateData: any = {
-        updated_at: new Date().toISOString()
-      };
-      
-      // Handle each field explicitly to ensure proper updates
-      if (updates.name !== undefined) {
-        updateData.name = updates.name;
+      try {
+        // First, verify the role exists
+        const { data: existingRole, error: checkError } = await supabase
+          .from('job_roles')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (checkError) {
+          console.error('Role check error:', checkError);
+          throw new Error(`Role not found: ${checkError.message}`);
+        }
+        
+        console.log('Existing role found:', existingRole);
+        
+        // Build the update object with only the fields that are being updated
+        const updateData: any = {
+          updated_at: new Date().toISOString()
+        };
+        
+        if (updates.name !== undefined) {
+          updateData.name = updates.name;
+        }
+        if (updates.description !== undefined) {
+          updateData.description = updates.description;
+        }
+        if (updates.booking_link !== undefined) {
+          // Handle booking_link properly - empty string becomes null
+          updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
+        }
+        
+        console.log('Update data being sent to Supabase:', updateData);
+        
+        const { data, error } = await supabase
+          .from('job_roles')
+          .update(updateData)
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Supabase update error:', error);
+          throw new Error(`Database update failed: ${error.message}`);
+        }
+        
+        if (!data) {
+          throw new Error('No data returned from update operation');
+        }
+        
+        console.log('Update successful, returned data:', data);
+        return data;
+        
+      } catch (error) {
+        console.error('Full update error:', error);
+        // Re-throw with more context
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          throw new Error('Unknown error occurred during update');
+        }
       }
-      if (updates.description !== undefined) {
-        updateData.description = updates.description;
-      }
-      if (updates.booking_link !== undefined) {
-        // Explicitly handle booking_link - convert empty string to null
-        updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
-      }
-      
-      console.log('Update data being sent:', updateData);
-      
-      const { data, error } = await supabase
-        .from('job_roles')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
-      
-      console.log('Update successful:', data);
-      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update mutation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['job-roles'] });
+    },
+    onError: (error) => {
+      console.error('Update mutation failed:', error);
     }
   });
 };
