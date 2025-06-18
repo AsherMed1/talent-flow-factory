@@ -1,425 +1,240 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, CheckCircle, XCircle, Send, Briefcase } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useGmailSender } from '@/hooks/useGmailSender';
+import { Mail, Users, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { useEmailSender } from '@/hooks/emailTemplates/emailSender';
 
 interface BulkCandidateProcessorProps {
   candidates: any[];
-  selectedJobRole?: any;
+  selectedJobRole: any;
   onProcessComplete: () => void;
 }
 
-interface ProcessedCandidate {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  jobRole: string;
-  selected: boolean;
-  emailSent: boolean;
-  created: boolean;
-  error?: string;
-}
-
-export const BulkCandidateProcessor = ({ candidates, selectedJobRole, onProcessComplete }: BulkCandidateProcessorProps) => {
-  const [processedCandidates, setProcessedCandidates] = useState<ProcessedCandidate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [jobRoleOverride, setJobRoleOverride] = useState('');
+export const BulkCandidateProcessor = ({ 
+  candidates, 
+  selectedJobRole, 
+  onProcessComplete 
+}: BulkCandidateProcessorProps) => {
+  const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const { toast } = useToast();
-  const { sendEmail: sendGmailEmail, isConnected: isGmailConnected } = useGmailSender();
+  const { sendTemplateEmail, isConnected } = useEmailSender();
 
-  useEffect(() => {
-    // Convert imported candidates to processed format
-    const processed = candidates.map((candidate, index) => ({
-      id: `temp-${index}`,
-      firstName: candidate.firstName,
-      lastName: candidate.lastName,
-      email: candidate.email,
-      phone: candidate.phone || '',
-      jobRole: selectedJobRole?.name || candidate.jobRole || '',
-      selected: true,
-      emailSent: false,
-      created: false
-    }));
-    setProcessedCandidates(processed);
-
-    // Load email templates
-    const saved = localStorage.getItem('emailTemplates');
-    if (saved) {
-      setEmailTemplates(JSON.parse(saved));
+  const handleSelectAll = () => {
+    if (selectedCandidates.length === candidates.length) {
+      setSelectedCandidates([]);
+    } else {
+      setSelectedCandidates(candidates.map((_, index) => index));
     }
-  }, [candidates, selectedJobRole]);
+  };
 
-  const toggleSelection = (id: string) => {
-    setProcessedCandidates(prev =>
-      prev.map(candidate =>
-        candidate.id === id
-          ? { ...candidate, selected: !candidate.selected }
-          : candidate
-      )
+  const handleToggleCandidate = (index: number) => {
+    setSelectedCandidates(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
     );
   };
 
-  const toggleAllSelection = () => {
-    const allSelected = processedCandidates.every(c => c.selected);
-    setProcessedCandidates(prev =>
-      prev.map(candidate => ({ ...candidate, selected: !allSelected }))
-    );
-  };
-
-  const createCandidatesInDatabase = async (selectedCandidates: ProcessedCandidate[]) => {
-    const results = [];
-    
-    for (const candidate of selectedCandidates) {
-      try {
-        // First, check if candidate already exists
-        const { data: existingCandidate } = await supabase
-          .from('candidates')
-          .select('id')
-          .eq('email', candidate.email)
-          .single();
-
-        if (existingCandidate) {
-          results.push({ ...candidate, created: true, error: 'Already exists' });
-          continue;
-        }
-
-        // Create new candidate
-        const { data: newCandidate, error } = await supabase
-          .from('candidates')
-          .insert({
-            name: `${candidate.firstName} ${candidate.lastName}`,
-            email: candidate.email,
-            phone: candidate.phone || null
-          })
-          .select()
-          .single();
-
-        if (error) {
-          results.push({ ...candidate, created: false, error: error.message });
-        } else {
-          results.push({ ...candidate, id: newCandidate.id, created: true });
-        }
-      } catch (error: any) {
-        results.push({ ...candidate, created: false, error: error.message });
-      }
-    }
-
-    return results;
-  };
-
-  const sendInvitationEmails = async (candidates: ProcessedCandidate[]) => {
-    if (!selectedTemplate) {
+  const handleProcessCandidates = async () => {
+    if (!isConnected) {
       toast({
-        title: "No Template Selected",
-        description: "Please select an email template before sending invitations.",
-        variant: "destructive",
-      });
-      return candidates;
-    }
-
-    const template = emailTemplates.find(t => t.id === selectedTemplate);
-    if (!template) {
-      toast({
-        title: "Template Not Found",
-        description: "Selected email template could not be found.",
-        variant: "destructive",
-      });
-      return candidates;
-    }
-
-    const results = [];
-    
-    for (const candidate of candidates) {
-      try {
-        // Use the selected job role for the application link
-        const jobRoleParam = selectedJobRole?.id ? `&jobRole=${encodeURIComponent(selectedJobRole.id)}` : '';
-        const applicationLink = `${window.location.origin}/apply?email=${encodeURIComponent(candidate.email)}${jobRoleParam}`;
-        
-        // Use job role override if provided, otherwise use selected job role or candidate's original role
-        const currentJobRole = jobRoleOverride || selectedJobRole?.name || candidate.jobRole || 'Position';
-        
-        const personalizedSubject = template.subject
-          .replace(/\{\{firstName\}\}/g, candidate.firstName)
-          .replace(/\{\{lastName\}\}/g, candidate.lastName)
-          .replace(/\{\{jobRole\}\}/g, currentJobRole);
-
-        const personalizedContent = template.content
-          .replace(/\{\{firstName\}\}/g, candidate.firstName)
-          .replace(/\{\{lastName\}\}/g, candidate.lastName)
-          .replace(/\{\{email\}\}/g, candidate.email)
-          .replace(/\{\{jobRole\}\}/g, currentJobRole)
-          .replace(/\{\{applicationLink\}\}/g, applicationLink);
-
-        // Send email via Gmail if connected, otherwise simulate
-        let emailSent = false;
-        if (isGmailConnected) {
-          emailSent = await sendGmailEmail({
-            to: candidate.email,
-            subject: personalizedSubject,
-            htmlContent: personalizedContent
-          });
-        } else {
-          // Simulate email sending for demo purposes
-          console.log('Simulating email send to:', candidate.email);
-          console.log('Subject:', personalizedSubject);
-          console.log('Content:', personalizedContent);
-          emailSent = true;
-        }
-
-        results.push({ ...candidate, emailSent });
-      } catch (error) {
-        console.error('Error sending email to', candidate.email, error);
-        results.push({ ...candidate, emailSent: false, error: 'Failed to send email' });
-      }
-    }
-
-    return results;
-  };
-
-  const processCandidates = async () => {
-    const selectedCandidates = processedCandidates.filter(c => c.selected);
-    
-    if (selectedCandidates.length === 0) {
-      toast({
-        title: "No Candidates Selected",
-        description: "Please select at least one candidate to process.",
+        title: "Email Not Configured",
+        description: "Please configure your email settings in Settings > Email Integration before processing candidates.",
         variant: "destructive",
       });
       return;
     }
 
     setIsProcessing(true);
+    let successCount = 0;
+    let failureCount = 0;
 
-    try {
-      // Step 1: Create candidates in database
-      const candidatesWithIds = await createCandidatesInDatabase(selectedCandidates);
-      setProcessedCandidates(prev =>
-        prev.map(candidate => {
-          const updated = candidatesWithIds.find(c => c.email === candidate.email);
-          return updated || candidate;
-        })
-      );
+    const candidatesToProcess = selectedCandidates.map(index => candidates[index]);
 
-      // Step 2: Send invitation emails
-      const candidatesWithEmails = await sendInvitationEmails(
-        candidatesWithIds.filter(c => c.created && !c.error)
-      );
-      
-      setProcessedCandidates(prev =>
-        prev.map(candidate => {
-          const updated = candidatesWithEmails.find(c => c.email === candidate.email);
-          return updated || candidate;
-        })
-      );
+    for (const candidate of candidatesToProcess) {
+      try {
+        const success = await sendTemplateEmail({
+          templateType: 'interview',
+          candidateName: `${candidate.firstName} ${candidate.lastName}`,
+          candidateEmail: candidate.email,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          jobRole: selectedJobRole?.name || 'General',
+          bookingLink: selectedJobRole?.booking_link
+        });
 
-      const successCount = candidatesWithEmails.filter(c => c.emailSent).length;
+        if (success) {
+          successCount++;
+        } else {
+          failureCount++;
+        }
+
+        // Small delay between emails
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Failed to send email to ${candidate.email}:`, error);
+        failureCount++;
+      }
+    }
+
+    setIsProcessing(false);
+
+    if (successCount > 0) {
       toast({
-        title: "Processing Complete",
-        description: `Successfully processed ${successCount} candidates. Invitation emails sent!`,
+        title: "Emails Sent Successfully",
+        description: `Successfully sent ${successCount} emails${failureCount > 0 ? `. ${failureCount} failed to send.` : '.'}`,
       });
+    }
 
-    } catch (error) {
+    if (failureCount > 0 && successCount === 0) {
       toast({
-        title: "Processing Error",
-        description: "An error occurred while processing candidates.",
+        title: "Email Send Failed",
+        description: `Failed to send ${failureCount} emails. Please check your email configuration.`,
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
     }
+
+    onProcessComplete();
   };
 
-  const selectedCount = processedCandidates.filter(c => c.selected).length;
-  const createdCount = processedCandidates.filter(c => c.created).length;
-  const emailsSentCount = processedCandidates.filter(c => c.emailSent).length;
+  if (candidates.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Candidates to Process</h3>
+          <p className="text-gray-600">Import candidates using the CSV Import tab to get started.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {selectedJobRole && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Briefcase className="w-6 h-6 text-blue-500" />
+      {/* Email Configuration Status */}
+      {!isConnected ? (
+        <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Mail className="w-6 h-6 text-red-600" />
+              </div>
               <div>
-                <h3 className="font-semibold text-lg">{selectedJobRole.name}</h3>
-                <p className="text-sm text-gray-600">{selectedJobRole.description}</p>
-                <Badge variant="outline" className="mt-1">
-                  {selectedJobRole.status}
-                </Badge>
+                <h3 className="text-lg font-bold text-red-900">Email Configuration Required</h3>
+                <p className="text-red-700">
+                  Please configure your email settings to send application emails to candidates.
+                </p>
+                <p className="text-sm text-red-600 mt-1">
+                  Go to Settings &gt; Email Integration to set up your email provider
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-green-900">Email Ready</h3>
+                <p className="text-green-700">
+                  Your email provider is configured and ready to send application emails.
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Job Role Info */}
+      {selectedJobRole && (
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Candidates</p>
-                <p className="text-2xl font-bold">{processedCandidates.length}</p>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Users className="w-6 h-6 text-blue-600" />
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <div>
+                <h3 className="text-lg font-bold text-blue-900">Processing for: {selectedJobRole.name}</h3>
+                <p className="text-blue-700">
+                  Candidates will receive application emails for this role
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Created in DB</p>
-                <p className="text-2xl font-bold">{createdCount}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Emails Sent</p>
-                <p className="text-2xl font-bold">{emailsSentCount}</p>
-              </div>
-              <Mail className="w-8 h-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Configuration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!isGmailConnected && (
-            <div className="bg-amber-50 p-3 rounded-lg">
-              <p className="text-sm text-amber-800">
-                <strong>Note:</strong> Gmail is not connected. Emails will be simulated. 
-                Go to <span className="font-medium">Settings → Email Integration</span> to connect your Gmail account for real email sending.
-              </p>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="email-template">Email Template</Label>
-              <select
-                id="email-template"
-                value={selectedTemplate}
-                onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select template...</option>
-                {emailTemplates.map(template => (
-                  <option key={template.id} value={template.id}>
-                    {template.name} ({template.jobRole || 'General'})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="job-role-override">Job Role Override (Optional)</Label>
-              <Input
-                id="job-role-override"
-                value={jobRoleOverride}
-                onChange={(e) => setJobRoleOverride(e.target.value)}
-                placeholder="Override job role for all candidates"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* Candidates List */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Candidates ({selectedCount} selected)</CardTitle>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={processedCandidates.every(c => c.selected)}
-                onCheckedChange={toggleAllSelection}
-              />
-              <span className="text-sm">Select All</span>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Candidates ({selectedCandidates.length} selected)
+            </CardTitle>
+            <Button variant="outline" onClick={handleSelectAll}>
+              {selectedCandidates.length === candidates.length ? 'Deselect All' : 'Select All'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {processedCandidates.map((candidate) => (
+          <div className="space-y-3">
+            {candidates.map((candidate, index) => (
               <div
-                key={candidate.id}
-                className={`flex items-center justify-between p-3 border rounded-lg ${
-                  candidate.selected ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+                key={index}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  selectedCandidates.includes(index)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
+                onClick={() => handleToggleCandidate(index)}
               >
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={candidate.selected}
-                    onCheckedChange={() => toggleSelection(candidate.id)}
-                  />
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">
+                    <h4 className="font-medium text-gray-900">
                       {candidate.firstName} {candidate.lastName}
-                    </p>
+                    </h4>
                     <p className="text-sm text-gray-600">{candidate.email}</p>
-                    {candidate.jobRole && (
-                      <p className="text-xs text-gray-500">{candidate.jobRole}</p>
+                    {candidate.phone && (
+                      <p className="text-xs text-gray-500">{candidate.phone}</p>
                     )}
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {candidate.created && (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      Created
-                    </Badge>
-                  )}
-                  {candidate.emailSent && (
-                    <Badge variant="outline" className="text-blue-600 border-blue-600">
-                      Email Sent
-                    </Badge>
-                  )}
-                  {candidate.error && (
-                    <Badge variant="outline" className="text-red-600 border-red-600">
-                      Error
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {candidate.jobRole && (
+                      <Badge variant="secondary">{candidate.jobRole}</Badge>
+                    )}
+                    <input
+                      type="checkbox"
+                      checked={selectedCandidates.includes(index)}
+                      onChange={() => handleToggleCandidate(index)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 flex justify-between items-center">
-            <Button variant="outline" onClick={onProcessComplete}>
+          <div className="mt-6 flex items-center justify-between">
+            <Button variant="outline" onClick={() => onProcessComplete()}>
               Clear Import
             </Button>
             
             <Button
-              onClick={processCandidates}
-              disabled={selectedCount === 0 || isProcessing}
+              onClick={handleProcessCandidates}
+              disabled={selectedCandidates.length === 0 || !isConnected || isProcessing}
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
             >
               <Send className="w-4 h-4 mr-2" />
-              {isProcessing 
-                ? 'Processing...' 
-                : `Process ${selectedCount} Candidate${selectedCount !== 1 ? 's' : ''}`
-              }
+              {isProcessing ? 'Sending...' : `Process ${selectedCandidates.length} Candidates`}
             </Button>
           </div>
         </CardContent>
