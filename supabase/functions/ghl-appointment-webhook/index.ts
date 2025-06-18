@@ -8,16 +8,21 @@ const corsHeaders = {
 };
 
 interface GHLAppointmentData {
+  email?: string;
   contact?: {
     email?: string;
     firstName?: string;
     lastName?: string;
   };
-  appointment?: {
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  calendar?: {
     startTime?: string;
     endTime?: string;
     calendarId?: string;
     status?: string;
+    appointmentId?: string;
   };
   eventType?: string;
 }
@@ -37,8 +42,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Extract contact email from the payload
-    const contactEmail = payload.contact?.email;
+    // Extract contact email from multiple possible locations in the payload
+    const contactEmail = payload.email || payload.contact?.email;
     
     if (!contactEmail) {
       console.log('No contact email found in webhook payload');
@@ -96,7 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Found application:', application);
 
     // Update application status to interview_scheduled
-    const interviewDate = payload.appointment?.startTime ? new Date(payload.appointment.startTime).toISOString() : new Date().toISOString();
+    const interviewDate = payload.calendar?.startTime ? new Date(payload.calendar.startTime).toISOString() : new Date().toISOString();
     
     console.log('Updating application status to interview_scheduled with interview date:', interviewDate);
 
@@ -136,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
               name: candidate.name,
               email: contactEmail,
             },
-            appointment: payload.appointment,
+            appointment: payload.calendar,
             timestamp: new Date().toISOString(),
           }
         }
