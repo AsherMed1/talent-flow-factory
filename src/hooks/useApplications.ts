@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,6 +30,8 @@ export interface Application {
   zoom_recording_url: string | null;
   zoom_recording_files: any | null;
   ghl_appointment_data: any | null;
+  video_analysis_results: string | null;
+  video_analysis_timestamp: string | null;
   pre_screening_responses?: Array<{
     motivation_response: string;
     motivation_score: number;
@@ -87,6 +90,8 @@ export const useApplications = () => {
           zoom_recording_url,
           zoom_recording_files,
           ghl_appointment_data,
+          video_analysis_results,
+          video_analysis_timestamp,
           pre_screening_responses (
             motivation_response,
             motivation_score,
