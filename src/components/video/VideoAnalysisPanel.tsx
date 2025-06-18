@@ -70,13 +70,13 @@ export const VideoAnalysisPanel = ({ application, onAnalysisComplete }: VideoAna
       const results: VideoAnalysisResults = data;
       setAnalysisResults(results);
 
-      // Save results to database
+      // Save results to database - using type assertion for the new columns
       const { error: updateError } = await supabase
         .from('applications')
         .update({
           video_analysis_results: JSON.stringify(results),
           video_analysis_timestamp: new Date().toISOString()
-        })
+        } as any)
         .eq('id', application.id);
 
       if (updateError) throw updateError;

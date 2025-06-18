@@ -28,6 +28,8 @@ export type Database = {
           rating: number | null
           status: Database["public"]["Enums"]["application_status"] | null
           updated_at: string | null
+          video_analysis_results: string | null
+          video_analysis_timestamp: string | null
           voice_analysis_completed_at: string | null
           voice_analysis_feedback: string | null
           voice_analysis_score: number | null
@@ -58,6 +60,8 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          video_analysis_results?: string | null
+          video_analysis_timestamp?: string | null
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
           voice_analysis_score?: number | null
@@ -88,6 +92,8 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          video_analysis_results?: string | null
+          video_analysis_timestamp?: string | null
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
           voice_analysis_score?: number | null
