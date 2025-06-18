@@ -1,83 +1,115 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, MessageSquare, Clock, Target } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { ApplicationFormData } from './formSchema';
 
 interface PreScreeningSectionProps {
   form: UseFormReturn<ApplicationFormData>;
+  roleName?: string;
 }
 
-export const PreScreeningSection = ({ form }: PreScreeningSectionProps) => {
+export const PreScreeningSection = ({ form, roleName }: PreScreeningSectionProps) => {
+  // Determine role type for customized questions
+  const isVideoEditor = roleName?.toLowerCase().includes('video editor') || 
+                        roleName?.toLowerCase().includes('ai video');
+  const isAppointmentSetter = roleName?.toLowerCase().includes('appointment') || 
+                              roleName?.toLowerCase().includes('setter') ||
+                              !roleName; // Default
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <MessageCircle className="w-5 h-5" />
           Pre-Screening Questions
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="motivationResponse" className="flex items-center gap-2 text-sm font-medium text-gray-800">
-            <Target className="w-4 h-4 text-orange-500" />
-            Why do you want this appointment setter role? What motivates you to work in sales/customer outreach?
-          </Label>
-          <Textarea
-            id="motivationResponse"
-            {...form.register('motivationResponse')}
-            placeholder="Tell us about your motivation, drive, and what excites you about this opportunity..."
-            className="min-h-[100px]"
-          />
-          {form.formState.errors.motivationResponse && (
-            <p className="text-sm text-red-600 mt-1">{form.formState.errors.motivationResponse.message}</p>
+        <FormField
+          control={form.control}
+          name="motivationResponse"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <span className="text-orange-600">🎯</span>
+                {isVideoEditor 
+                  ? "Why do you want this AI video editor role? What motivates you to work in creative video production?"
+                  : "Why do you want this appointment setter role? What motivates you to work in sales/customer outreach?"
+                }
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={isVideoEditor 
+                    ? "Tell us about your passion for video editing, creativity, and what excites you about working with AI tools..."
+                    : "Tell us about your motivation, drive, and what excites you about this opportunity..."
+                  }
+                  className="min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="experienceResponse" className="flex items-center gap-2 text-sm font-medium text-gray-800">
-            <MessageSquare className="w-4 h-4 text-blue-500" />
-            Describe your relevant experience in customer service, sales, or phone-based roles
-          </Label>
-          <Textarea
-            id="experienceResponse"
-            {...form.register('experienceResponse')}
-            placeholder="Share your experience with customer interactions, sales, phone work, or any relevant background..."
-            className="min-h-[100px]"
-          />
-          {form.formState.errors.experienceResponse && (
-            <p className="text-sm text-red-600 mt-1">{form.formState.errors.experienceResponse.message}</p>
+        <FormField
+          control={form.control}
+          name="experienceResponse"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <span className="text-blue-600">💼</span>
+                {isVideoEditor
+                  ? "Describe your relevant experience in video editing, creative projects, or content creation"
+                  : "Describe your relevant experience in customer service, sales, or phone-based roles"
+                }
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={isVideoEditor
+                    ? "Share your experience with video projects, creative work, client collaboration, or any relevant background..."
+                    : "Share your experience with customer interactions, sales, phone work, or any relevant background..."
+                  }
+                  className="min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="availabilityResponse" className="flex items-center gap-2 text-sm font-medium text-gray-800">
-            <Clock className="w-4 h-4 text-green-500" />
-            What is your availability? Can you work flexible hours, evenings, or weekends if needed?
-          </Label>
-          <Select 
-            value={form.watch('availabilityResponse')} 
-            onValueChange={(value) => form.setValue('availabilityResponse', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select your availability" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full-time-flexible">Full-time with flexible hours (evenings/weekends OK)</SelectItem>
-              <SelectItem value="full-time-standard">Full-time standard business hours only</SelectItem>
-              <SelectItem value="part-time-flexible">Part-time with flexible hours (evenings/weekends OK)</SelectItem>
-              <SelectItem value="part-time-standard">Part-time standard business hours only</SelectItem>
-              <SelectItem value="weekends-only">Weekends only</SelectItem>
-              <SelectItem value="evenings-only">Evenings only</SelectItem>
-            </SelectContent>
-          </Select>
-          {form.formState.errors.availabilityResponse && (
-            <p className="text-sm text-red-600 mt-1">{form.formState.errors.availabilityResponse.message}</p>
+        <FormField
+          control={form.control}
+          name="availabilityResponse"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <span className="text-green-600">⏰</span>
+                What is your availability? Can you work flexible hours, evenings, or weekends if needed?
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your availability" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="full-time-flexible">Full-time with flexible schedule</SelectItem>
+                  <SelectItem value="part-time-flexible">Part-time with flexible schedule</SelectItem>
+                  <SelectItem value="weekdays-only">Weekdays only (9-5)</SelectItem>
+                  <SelectItem value="evenings-weekends">Evenings and weekends preferred</SelectItem>
+                  <SelectItem value="specific-hours">Specific hours (will discuss)</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
       </CardContent>
     </Card>
   );

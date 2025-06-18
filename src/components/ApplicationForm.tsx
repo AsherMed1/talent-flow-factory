@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { VoiceRecordingSection } from './application/VoiceRecordingSection';
 import { FileUploadSection } from './application/FileUploadSection';
 import { ListeningTestSection } from './application/ListeningTestSection';
 import { PreScreeningSection } from './application/PreScreeningSection';
+import { RoleSpecificSections } from './application/RoleSpecificSections';
 import { TermsSection } from './application/TermsSection';
 import { AutoSaveIndicator } from './application/AutoSaveIndicator';
 import { ApplicationFormData } from './application/formSchema';
@@ -71,6 +71,15 @@ export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormP
     }
   };
 
+  // Determine if this is an appointment setter role
+  const isAppointmentSetter = role?.name?.toLowerCase().includes('appointment') || 
+                              role?.name?.toLowerCase().includes('setter') ||
+                              !role?.name; // Default to appointment setter if no role specified
+
+  // Determine if this is a video editor role
+  const isVideoEditor = role?.name?.toLowerCase().includes('video editor') || 
+                        role?.name?.toLowerCase().includes('ai video');
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <ApplicationFormHeader 
@@ -89,10 +98,20 @@ export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormP
         <CardContent className="p-4 md:p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <BasicInfoSection form={form} />
-            <PreScreeningSection form={form} />
-            <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
-            <FileUploadSection form={form} />
-            <ListeningTestSection form={form} />
+            <PreScreeningSection form={form} roleName={role?.name} />
+            
+            {/* Role-specific sections */}
+            <RoleSpecificSections form={form} roleName={role?.name} />
+            
+            {/* Appointment Setter specific sections */}
+            {isAppointmentSetter && (
+              <>
+                <VoiceRecordingSection isSubmitting={isSubmitting} form={form} />
+                <FileUploadSection form={form} />
+                <ListeningTestSection form={form} />
+              </>
+            )}
+            
             <TermsSection form={form} />
 
             {/* Submit Button */}

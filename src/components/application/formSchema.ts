@@ -10,28 +10,51 @@ export const applicationFormSchema = z.object({
     required_error: 'Please select your weekend availability'
   }),
   
-  // Voice recordings
+  // Voice recordings (mainly for appointment setter)
   introductionRecording: z.string().optional(),
   scriptRecording: z.string().optional(),
   
-  // File uploads
+  // File uploads (mainly for appointment setter)
   downloadSpeedScreenshot: z.string().optional(),
   uploadSpeedScreenshot: z.string().optional(),
   workstationPhoto: z.string().optional(),
   
-  // Listening test
-  husbandName: z.string().min(1, 'This field is required'),
-  treatmentNotDone: z.string().min(1, 'This field is required'),
+  // Listening test (mainly for appointment setter)
+  husbandName: z.string().optional(),
+  treatmentNotDone: z.string().optional(),
   
-  // Pre-screening questions
+  // Pre-screening questions (generic)
   motivationResponse: z.string().min(50, 'Please provide at least 50 characters explaining your motivation'),
   experienceResponse: z.string().min(30, 'Please provide at least 30 characters about your experience'),
   availabilityResponse: z.string().min(1, 'Please select your availability'),
+  
+  // Video Editor specific fields
+  portfolioUrl: z.string().optional(),
+  videoEditingExperience: z.string().optional(),
+  aiToolsExperience: z.string().optional(),
+  softwareSkills: z.string().optional(),
+  creativeProcess: z.string().optional(),
+  recentProjects: z.string().optional(),
   
   // Terms
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and conditions'
   })
+}).refine((data) => {
+  // Custom validation: if certain fields are present, make some video editor fields required
+  const isVideoEditor = data.portfolioUrl !== undefined || data.videoEditingExperience !== undefined;
+  
+  if (isVideoEditor) {
+    return data.portfolioUrl && data.portfolioUrl.length > 0 && 
+           data.videoEditingExperience && data.videoEditingExperience.length >= 50 &&
+           data.softwareSkills && data.softwareSkills.length > 0 &&
+           data.recentProjects && data.recentProjects.length >= 100;
+  }
+  
+  return true;
+}, {
+  message: "Please complete all required video editor fields",
+  path: ["portfolioUrl"]
 });
 
 export type ApplicationFormData = z.infer<typeof applicationFormSchema>;
