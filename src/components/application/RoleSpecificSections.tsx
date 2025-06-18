@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Portfolio, Code, Palette } from 'lucide-react';
+import { Upload, Briefcase, Code, Palette } from 'lucide-react';
 import { ApplicationFormData } from './formSchema';
 
 interface RoleSpecificSectionsProps {
@@ -23,7 +23,7 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Portfolio className="w-5 h-5" />
+              <Briefcase className="w-5 h-5" />
               Portfolio & Experience
             </CardTitle>
           </CardHeader>
