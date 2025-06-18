@@ -1,7 +1,10 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Plus, Copy, Edit, Eye } from 'lucide-react';
 import { JobRole, useUpdateJobRole } from '@/hooks/useJobRoles';
 import { useToast } from '@/hooks/use-toast';
@@ -86,6 +89,29 @@ export const RoleCard = ({ role }: RoleCardProps) => {
     }
   };
 
+  const handleStatusToggle = async (checked: boolean) => {
+    const newStatus = checked ? 'active' : 'draft';
+    
+    try {
+      await updateRoleMutation.mutateAsync({
+        id: role.id,
+        status: newStatus
+      });
+      
+      toast({
+        title: "Success",
+        description: `Role ${newStatus === 'active' ? 'activated' : 'set to draft'}`,
+      });
+    } catch (error) {
+      console.error('Status update error:', error);
+      toast({
+        title: "Error",
+        description: `Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handlePreview = () => {
     const previewUrl = `/apply/${role.id}`;
     console.log('Opening preview for role:', role.name, 'with ID:', role.id);
@@ -114,12 +140,25 @@ export const RoleCard = ({ role }: RoleCardProps) => {
             )}
           </CardTitle>
           {!isEditing && (
-            <Badge 
-              variant={role.status === 'active' ? 'default' : 'secondary'}
-              className={role.status === 'active' ? 'bg-green-100 text-green-800' : ''}
-            >
-              {role.status}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id={`status-${role.id}`}
+                  checked={role.status === 'active'}
+                  onCheckedChange={handleStatusToggle}
+                  disabled={updateRoleMutation.isPending}
+                />
+                <Label htmlFor={`status-${role.id}`} className="text-sm font-medium">
+                  {role.status === 'active' ? 'Live' : 'Draft'}
+                </Label>
+              </div>
+              <Badge 
+                variant={role.status === 'active' ? 'default' : 'secondary'}
+                className={role.status === 'active' ? 'bg-green-100 text-green-800' : ''}
+              >
+                {role.status}
+              </Badge>
+            </div>
           )}
         </div>
         {!isEditing && (
