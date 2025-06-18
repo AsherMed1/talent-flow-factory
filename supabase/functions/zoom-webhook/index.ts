@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  // Handle GET requests for URL validation
+  // Handle GET requests for URL validation (browser access)
   if (req.method === 'GET') {
     console.log('GET request for URL validation');
     return new Response('Zoom webhook endpoint is active', { 
@@ -195,13 +195,12 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // For non-validation events, verify webhook authenticity
-    // This supports both Authorization header and custom authentication methods
+    // For actual webhook events (non-validation), verify authentication
     const secretToken = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
-    if (secretToken && payload.event !== 'endpoint.url_validation') {
+    if (secretToken) {
       console.log('Verifying webhook authenticity for event:', payload.event);
       
-      // Check for Authorization header first (custom authentication header method)
+      // Check for Authorization header (custom authentication header method)
       const authHeader = req.headers.get('authorization');
       if (authHeader) {
         console.log('Authorization header found:', authHeader.substring(0, 20) + '...');
