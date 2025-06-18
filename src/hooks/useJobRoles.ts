@@ -62,20 +62,6 @@ export const useUpdateJobRole = () => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
       try {
-        // First, verify the role exists
-        const { data: existingRole, error: checkError } = await supabase
-          .from('job_roles')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (checkError) {
-          console.error('Role check error:', checkError);
-          throw new Error(`Role not found: ${checkError.message}`);
-        }
-        
-        console.log('Existing role found:', existingRole);
-        
         // Build the update object with only the fields that are being updated
         const updateData: any = {
           updated_at: new Date().toISOString()
@@ -99,7 +85,7 @@ export const useUpdateJobRole = () => {
           .update(updateData)
           .eq('id', id)
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Supabase update error:', error);
@@ -107,7 +93,8 @@ export const useUpdateJobRole = () => {
         }
         
         if (!data) {
-          throw new Error('No data returned from update operation');
+          console.error('No data returned - role may not exist with ID:', id);
+          throw new Error('Role not found or update failed');
         }
         
         console.log('Update successful, returned data:', data);
