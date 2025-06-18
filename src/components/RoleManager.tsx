@@ -122,7 +122,7 @@ export const RoleManager = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Role Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Role Name *</label>
               <Input
                 placeholder="e.g., Customer Success Manager"
                 value={newRole.name}
@@ -138,9 +138,12 @@ export const RoleManager = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Booking Link</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Custom Booking Link
+                <span className="text-xs text-gray-500 block">Used for interview scheduling emails for this role</span>
+              </label>
               <Input
-                placeholder="e.g., https://link.patientpromarketing.com/widget/bookings/schedulerinterview"
+                placeholder="e.g., https://calendly.com/yourname/interview"
                 value={newRole.booking_link}
                 onChange={(e) => setNewRole({ ...newRole, booking_link: e.target.value })}
               />
@@ -171,11 +174,14 @@ export const RoleManager = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">
                     {isEditing ? (
-                      <Input
-                        value={editRole.name}
-                        onChange={(e) => setEditRole({ ...editRole, name: e.target.value })}
-                        className="text-lg font-semibold"
-                      />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Role Name *</label>
+                        <Input
+                          value={editRole.name}
+                          onChange={(e) => setEditRole({ ...editRole, name: e.target.value })}
+                          className="text-lg font-semibold"
+                        />
+                      </div>
                     ) : (
                       role.name
                     )}
@@ -189,11 +195,14 @@ export const RoleManager = () => {
                 </div>
                 <div className="text-sm text-gray-600">
                   {isEditing ? (
-                    <Input
-                      value={editRole.description}
-                      onChange={(e) => setEditRole({ ...editRole, description: e.target.value })}
-                      placeholder="Description"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <Input
+                        value={editRole.description}
+                        onChange={(e) => setEditRole({ ...editRole, description: e.target.value })}
+                        placeholder="Description"
+                      />
+                    </div>
                   ) : (
                     role.description
                   )}
@@ -211,32 +220,38 @@ export const RoleManager = () => {
                   </div>
                 </div>
                 
-                {role.booking_link && (
-                  <div>
-                    <span className="font-medium text-gray-500 text-sm">Booking Link:</span>
-                    {isEditing ? (
+                <div>
+                  <span className="font-medium text-gray-500 text-sm">Custom Booking Link:</span>
+                  {isEditing ? (
+                    <div className="mt-1">
                       <Input
                         value={editRole.booking_link}
                         onChange={(e) => setEditRole({ ...editRole, booking_link: e.target.value })}
-                        placeholder="Booking link URL"
-                        className="mt-1"
+                        placeholder="e.g., https://calendly.com/yourname/interview"
                       />
-                    ) : (
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded flex-1 truncate">
-                          {role.booking_link}
+                      <p className="text-xs text-gray-500 mt-1">This link will be used in interview emails for this role</p>
+                    </div>
+                  ) : (
+                    <div className="mt-1">
+                      {role.booking_link ? (
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded flex-1 truncate">
+                            {role.booking_link}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(role.booking_link, '_blank')}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(role.booking_link, '_blank')}
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      ) : (
+                        <div className="text-xs text-gray-400 italic">No custom booking link set</div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 
                 <div>
                   <span className="font-medium text-gray-500 text-sm">Form Fields:</span>
