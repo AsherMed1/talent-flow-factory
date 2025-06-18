@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Wand2, Loader2 } from 'lucide-react';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InterviewStep {
   id: string;
@@ -28,6 +28,8 @@ export const InterviewGuideManager = () => {
   const [guides, setGuides] = useState<InterviewGuideTemplate[]>([]);
   const [editingGuide, setEditingGuide] = useState<InterviewGuideTemplate | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const { data: jobRoles } = useJobRoles();
   const { toast } = useToast();
 
@@ -46,6 +48,53 @@ export const InterviewGuideManager = () => {
       jobRoleName: '',
       steps: [createNewStep()]
     });
+    setAiPrompt('');
+  };
+
+  const generateWithAI = async () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a prompt for AI generation",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-interview-guide', {
+        body: { prompt: aiPrompt }
+      });
+
+      if (error) throw error;
+
+      const generatedSteps = data.steps.map((step: any, index: number) => ({
+        id: `step-${Date.now()}-${index}`,
+        title: step.title,
+        content: step.content,
+        type: step.type
+      }));
+
+      setEditingGuide(prev => prev ? {
+        ...prev,
+        steps: generatedSteps
+      } : null);
+
+      toast({
+        title: "Success",
+        description: "Interview guide generated successfully! You can now customize the steps.",
+      });
+    } catch (error) {
+      console.error('Error generating interview guide:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate interview guide. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSave = () => {
@@ -176,6 +225,43 @@ export const InterviewGuideManager = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {isCreating && (
+              <div className="space-y-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-medium text-gray-900">AI Interview Guide Generation</h3>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Describe the role or paste job description for AI to generate interview steps
+                  </label>
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g., 'Senior Sales Representative position requiring 3+ years B2B experience, cold calling skills, and CRM knowledge' or paste full job description..."
+                    className="min-h-24"
+                  />
+                </div>
+                <Button 
+                  onClick={generateWithAI} 
+                  disabled={isGenerating || !aiPrompt.trim()}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Generate Interview Steps
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between mb-4">
