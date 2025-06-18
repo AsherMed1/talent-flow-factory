@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,10 +27,11 @@ interface VideoAnalysisResults {
 
 interface VideoAnalysisPanelProps {
   application: Application;
+  autoAnalyze?: boolean;
   onAnalysisComplete?: (results: VideoAnalysisResults) => void;
 }
 
-export const VideoAnalysisPanel = ({ application, onAnalysisComplete }: VideoAnalysisPanelProps) => {
+export const VideoAnalysisPanel = ({ application, autoAnalyze = false, onAnalysisComplete }: VideoAnalysisPanelProps) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<VideoAnalysisResults | null>(
     application.video_analysis_results ? JSON.parse(application.video_analysis_results) : null
@@ -101,6 +102,14 @@ export const VideoAnalysisPanel = ({ application, onAnalysisComplete }: VideoAna
     }
   };
 
+  // Auto-analyze when recording URL becomes available
+  useEffect(() => {
+    if (autoAnalyze && getRecordingUrl() && !analysisResults && !isAnalyzing) {
+      console.log('Auto-triggering video analysis for:', application.candidates.name);
+      analyzeVideo();
+    }
+  }, [application.interview_recording_link, application.zoom_recording_url, autoAnalyze]);
+
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case 'positive': return 'text-green-600 bg-green-100';
@@ -131,7 +140,7 @@ export const VideoAnalysisPanel = ({ application, onAnalysisComplete }: VideoAna
 
   return (
     <div className="space-y-6">
-      {/* Analysis Trigger */}
+      {/* Analysis Status */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -143,12 +152,14 @@ export const VideoAnalysisPanel = ({ application, onAnalysisComplete }: VideoAna
           {!analysisResults && !isAnalyzing && (
             <div className="text-center py-4">
               <p className="text-gray-600 mb-4">
-                Analyze this interview video to get insights on speaking patterns, engagement, and sentiment.
+                {autoAnalyze ? 'Analysis will start automatically when a recording link is added.' : 'Analyze this interview video to get insights on speaking patterns, engagement, and sentiment.'}
               </p>
-              <Button onClick={analyzeVideo} className="bg-purple-600 hover:bg-purple-700">
-                <Brain className="w-4 h-4 mr-2" />
-                Start AI Analysis
-              </Button>
+              {!autoAnalyze && (
+                <Button onClick={analyzeVideo} className="bg-purple-600 hover:bg-purple-700">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Start AI Analysis
+                </Button>
+              )}
             </div>
           )}
 

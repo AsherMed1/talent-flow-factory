@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { InterviewRecordings } from './InterviewRecordings';
 import { InterviewStatusSection } from './InterviewStatusSection';
 import { VideoAnalysisPanel } from '../video/VideoAnalysisPanel';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface InterviewNotesContentProps {
   selectedApplication: any;
@@ -44,6 +47,40 @@ export const InterviewNotesContent = ({
   formatInterviewTime,
   getMeetingLink
 }: InterviewNotesContentProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleRecordingLinkSave = async () => {
+    if (!selectedApplication || !interviewRecordingLink) return;
+    
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({
+          interview_recording_link: interviewRecordingLink,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedApplication.id);
+
+      if (error) throw error;
+
+      // Refresh the data to trigger auto-analysis
+      await queryClient.invalidateQueries({ queryKey: ['applications'] });
+
+      toast({
+        title: "Recording Link Saved",
+        description: "Video analysis will start automatically.",
+      });
+    } catch (error) {
+      console.error('Error saving recording link:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save recording link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!selectedApplication) {
     return (
       <Card className="h-96 flex items-center justify-center">
@@ -130,7 +167,7 @@ export const InterviewNotesContent = ({
                 className="mt-2"
               />
               {interviewRecordingLink && (
-                <div className="mt-3">
+                <div className="mt-3 flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -138,6 +175,14 @@ export const InterviewNotesContent = ({
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Test Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleRecordingLinkSave}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save & Analyze
                   </Button>
                 </div>
               )}
@@ -158,7 +203,10 @@ export const InterviewNotesContent = ({
           </TabsContent>
 
           <TabsContent value="analysis" className="space-y-4">
-            <VideoAnalysisPanel application={selectedApplication} />
+            <VideoAnalysisPanel 
+              application={selectedApplication} 
+              autoAnalyze={true}
+            />
           </TabsContent>
         </Tabs>
 
