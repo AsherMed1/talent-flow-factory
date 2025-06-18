@@ -61,62 +61,38 @@ export const useUpdateJobRole = () => {
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
-      // Build update object more carefully
+      // Build the update object with explicit field handling
       const updateData: any = {
         updated_at: new Date().toISOString()
       };
       
-      // Only include fields that are actually being updated
-      if (updates.name !== undefined && updates.name !== null) {
+      // Handle each field explicitly to ensure proper updates
+      if (updates.name !== undefined) {
         updateData.name = updates.name;
       }
       if (updates.description !== undefined) {
-        updateData.description = updates.description || '';
+        updateData.description = updates.description;
       }
       if (updates.booking_link !== undefined) {
-        updateData.booking_link = updates.booking_link || null;
+        // Explicitly handle booking_link - convert empty string to null
+        updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
       }
       
       console.log('Update data being sent:', updateData);
       
-      // Use upsert approach to ensure the update works
       const { data, error } = await supabase
         .from('job_roles')
         .update(updateData)
         .eq('id', id)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Supabase update error:', error);
         throw error;
       }
       
-      console.log('Update response:', data);
-      
-      if (!data) {
-        // If no data returned, verify the role exists
-        const { data: existingRole, error: checkError } = await supabase
-          .from('job_roles')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-        
-        console.log('Role existence check:', { existingRole, checkError });
-        
-        if (checkError) {
-          throw checkError;
-        }
-        
-        if (!existingRole) {
-          throw new Error('Role not found');
-        }
-        
-        // Role exists but wasn't updated - this might be because no actual changes were detected
-        // Return the existing role data
-        return existingRole;
-      }
-      
+      console.log('Update successful:', data);
       return data;
     },
     onSuccess: () => {
