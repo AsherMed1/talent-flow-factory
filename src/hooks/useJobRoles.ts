@@ -59,15 +59,24 @@ export const useUpdateJobRole = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
+      console.log('Updating job role with ID:', id, 'and updates:', updates);
+      
       const { data, error } = await supabase
         .from('job_roles')
         .update(updates)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error('No role found with the specified ID');
+      }
+      
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-roles'] });
