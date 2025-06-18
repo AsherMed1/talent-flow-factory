@@ -37,6 +37,13 @@ interface ZoomWebhookPayload {
   };
 }
 
+interface ZoomChallengePayload {
+  event: string;
+  payload: {
+    plainToken: string;
+  };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   console.log('Zoom webhook request received:', req.method, req.url);
 
@@ -78,28 +85,54 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('Processing POST webhook request');
     
-    // Verify webhook authenticity using secret token
-    const webhookSecret = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
-    if (!webhookSecret) {
-      console.error('ZOOM_WEBHOOK_SECRET_TOKEN not configured');
-      return new Response('Webhook secret not configured', { status: 500 });
-    }
-
-    // Get the authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid authorization header');
-      return new Response('Unauthorized', { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
-    if (token !== webhookSecret) {
-      console.error('Invalid webhook secret token');
-      return new Response('Unauthorized', { status: 401 });
-    }
-
-    const payload: ZoomWebhookPayload = await req.json();
+    const payload = await req.json();
     console.log('Webhook payload:', JSON.stringify(payload, null, 2));
+
+    // Handle Zoom's endpoint URL validation challenge
+    if (payload.event === 'endpoint.url_validation') {
+      console.log('Handling URL validation challenge');
+      const challengePayload = payload as ZoomChallengePayload;
+      
+      // Calculate the hash of the plainToken
+      const encoder = new TextEncoder();
+      const data = encoder.encode(challengePayload.payload.plainToken);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      console.log('Returning validation response with hash:', hashHex);
+      
+      return new Response(
+        JSON.stringify({
+          plainToken: challengePayload.payload.plainToken,
+          encryptedToken: hashHex
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
+    // Verify webhook authenticity using secret token for non-validation events
+    const webhookSecret = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
+    if (webhookSecret && payload.event !== 'endpoint.url_validation') {
+      // Get the authorization header
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.error('Missing or invalid authorization header');
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      const token = authHeader.substring(7);
+      if (token !== webhookSecret) {
+        console.error('Invalid webhook secret token');
+        return new Response('Unauthorized', { status: 401 });
+      }
+    }
 
     // Only process recording.completed events
     if (payload.event !== 'recording.completed') {
@@ -112,7 +145,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const meetingData = payload.payload.object;
+    const webhookPayload = payload as ZoomWebhookPayload;
+    const meetingData = webhookPayload.payload.object;
     
     // Extract recording URLs
     const recordingUrls = meetingData.recording_files
