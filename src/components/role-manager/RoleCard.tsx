@@ -87,6 +87,11 @@ export const RoleCard = ({ role }: RoleCardProps) => {
     }
   };
 
+  const handlePreview = () => {
+    const previewUrl = `/apply/${role.id}`;
+    window.open(previewUrl, '_blank');
+  };
+
   const formFields = Array.isArray(role.form_fields) ? role.form_fields : [];
   const isEditing = editingRole === role.id;
 
@@ -167,7 +172,7 @@ export const RoleCard = ({ role }: RoleCardProps) => {
             </>
           ) : (
             <>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" onClick={handlePreview}>
                 <Eye className="w-4 h-4 mr-1" />
                 Preview
               </Button>
