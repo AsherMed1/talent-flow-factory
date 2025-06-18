@@ -2,13 +2,23 @@
 import { SendTemplateEmailParams } from './types';
 import { getTemplateByType, replaceVariables } from './templateUtils';
 import { useResendSender } from '../useResendSender';
-import { useGoHighLevel } from '../useGoHighLevel';
+import { useSmtpSender } from '../useSmtpSender';
 import { useToast } from '../use-toast';
 
 export const useEmailSender = () => {
-  const { sendEmail, isConnected } = useResendSender();
-  const { getBookingLink } = useGoHighLevel();
+  const resend = useResendSender();
+  const smtp = useSmtpSender();
   const { toast } = useToast();
+
+  // Prioritize Resend if it's connected, otherwise fall back to SMTP
+  const primarySender = resend.isConnected ? resend : smtp;
+  const isConnected = resend.isConnected || smtp.isConnected;
+
+  console.log('Email sender status:', {
+    resendConnected: resend.isConnected,
+    smtpConnected: smtp.isConnected,
+    usingResend: resend.isConnected
+  });
 
   const sendTemplateEmail = async ({
     templateType,
@@ -20,6 +30,7 @@ export const useEmailSender = () => {
     bookingLink
   }: SendTemplateEmailParams): Promise<boolean> => {
     if (!isConnected) {
+      console.error('No email service connected');
       toast({
         title: "Email Not Configured",
         description: "Please configure your email settings before sending emails.",
@@ -28,8 +39,11 @@ export const useEmailSender = () => {
       return false;
     }
 
+    console.log('Sending email via:', resend.isConnected ? 'Resend' : 'SMTP');
+
     const template = getTemplateByType(templateType, jobRole);
     if (!template) {
+      console.error('Template not found:', templateType, jobRole);
       toast({
         title: "Template Not Found",
         description: `No ${templateType.replace('_', ' ')} email template found for ${jobRole}`,
@@ -62,11 +76,30 @@ export const useEmailSender = () => {
     const subject = replaceVariables(template.subject, variables);
     const htmlContent = replaceVariables(template.content, variables);
 
-    return await sendEmail({
+    console.log('Sending email:', {
       to: candidateEmail,
       subject,
-      htmlContent
+      service: resend.isConnected ? 'Resend' : 'SMTP'
     });
+
+    try {
+      const result = await primarySender.sendEmail({
+        to: candidateEmail,
+        subject,
+        htmlContent
+      });
+
+      console.log('Email send result:', result);
+      return result;
+    } catch (error) {
+      console.error('Email send error:', error);
+      toast({
+        title: "Email Send Failed",
+        description: `Failed to send email to ${candidateEmail}`,
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
   return {

@@ -11,6 +11,7 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
   const { sendTemplateEmail, isConnected } = useEmailSender();
 
   const sendApplicationEmails = async (candidates: any[], selectedJobRole: any) => {
+    console.log('=== CSV Email Service Debug ===');
     console.log('Starting email send process...');
     console.log('Email service connected:', isConnected);
     console.log('Candidates to email:', candidates.length);
@@ -43,7 +44,8 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
 
     for (const candidate of candidates) {
       try {
-        console.log(`Sending email to ${candidate.email}...`);
+        console.log(`\n--- Processing candidate: ${candidate.firstName} ${candidate.lastName} ---`);
+        console.log('Candidate email:', candidate.email);
         
         if (!candidate.email) {
           console.error(`No email address for candidate: ${candidate.firstName} ${candidate.lastName}`);
@@ -51,6 +53,16 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
           errors.push(`No email address for ${candidate.firstName} ${candidate.lastName}`);
           continue;
         }
+
+        console.log('Calling sendTemplateEmail with params:', {
+          templateType: 'application_update',
+          candidateName: `${candidate.firstName} ${candidate.lastName}`,
+          candidateEmail: candidate.email,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          jobRole: selectedJobRole?.name || 'General',
+          bookingLink: selectedJobRole?.booking_link
+        });
 
         const success = await sendTemplateEmail({
           templateType: 'application_update',
@@ -63,10 +75,10 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
         });
 
         if (success) {
-          console.log(`Email sent successfully to ${candidate.email}`);
+          console.log(`✅ Email sent successfully to ${candidate.email}`);
           successCount++;
         } else {
-          console.error(`Failed to send email to ${candidate.email}`);
+          console.error(`❌ Failed to send email to ${candidate.email}`);
           failureCount++;
           errors.push(`Failed to send to ${candidate.email}`);
         }
@@ -74,7 +86,7 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
         // Small delay between emails to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`Error sending email to ${candidate.email}:`, error);
+        console.error(`💥 Error sending email to ${candidate.email}:`, error);
         failureCount++;
         errors.push(`Error sending to ${candidate.email}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
@@ -82,7 +94,9 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
 
     onEmailStatusUpdate(false);
 
-    console.log(`Email sending complete. Success: ${successCount}, Failed: ${failureCount}`);
+    console.log(`\n=== Email sending complete ===`);
+    console.log(`Success: ${successCount}, Failed: ${failureCount}`);
+    console.log('Errors:', errors);
 
     if (successCount > 0) {
       toast({
@@ -95,7 +109,7 @@ export const useCSVEmailService = ({ onEmailStatusUpdate }: CSVEmailServiceProps
       console.error('Email failures:', errors);
       toast({
         title: "Email Send Failed",
-        description: `Failed to send ${failureCount} application emails. ${errors.length > 0 ? 'Check console for details.' : 'Please check your email configuration.'}`,
+        description: `Failed to send ${failureCount} application emails. Check console for detailed error logs.`,
         variant: "destructive",
       });
     }
