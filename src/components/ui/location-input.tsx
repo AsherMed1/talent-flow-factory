@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
@@ -15,17 +16,6 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-      if (ref) {
-        if (typeof ref === 'function') {
-          ref(inputRef.current);
-        } else {
-          ref.current = inputRef.current;
-        }
-      }
-    }, [ref]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const query = e.target.value;
@@ -97,7 +87,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       <div ref={containerRef} className="relative">
         <Input
           {...props}
-          ref={inputRef}
+          ref={ref}
           value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
