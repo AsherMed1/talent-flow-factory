@@ -2,12 +2,12 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { applicationSchema, ApplicationFormData } from './formSchema';
+import { applicationFormSchema, ApplicationFormData } from './formSchema';
 import { loadSavedFormData, saveFormData, clearSavedData } from './formStorage';
 
 export const useApplicationForm = () => {
   const form = useForm<ApplicationFormData>({
-    resolver: zodResolver(applicationSchema),
+    resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       agreeToTerms: false,
     },
