@@ -15,6 +15,7 @@ export type Database = {
           candidate_id: string | null
           created_at: string | null
           form_data: Json | null
+          ghl_appointment_data: Json | null
           has_resume: boolean | null
           has_video: boolean | null
           has_voice_recording: boolean | null
@@ -44,6 +45,7 @@ export type Database = {
           candidate_id?: string | null
           created_at?: string | null
           form_data?: Json | null
+          ghl_appointment_data?: Json | null
           has_resume?: boolean | null
           has_video?: boolean | null
           has_voice_recording?: boolean | null
@@ -73,6 +75,7 @@ export type Database = {
           candidate_id?: string | null
           created_at?: string | null
           form_data?: Json | null
+          ghl_appointment_data?: Json | null
           has_resume?: boolean | null
           has_video?: boolean | null
           has_voice_recording?: boolean | null
