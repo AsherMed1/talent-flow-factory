@@ -12,6 +12,8 @@ import { VideoAnalysisPanel } from '../video/VideoAnalysisPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { InterviewGuide } from './InterviewGuide';
+import { useInterviewGuides } from '@/hooks/useInterviewGuides';
 
 interface InterviewNotesContentProps {
   selectedApplication: any;
@@ -48,6 +50,11 @@ export const InterviewNotesContent = ({
 }: InterviewNotesContentProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Add interview guide hook
+  const { guide, loading: guideLoading, toggleStepComplete, updateStepNotes } = useInterviewGuides(
+    selectedApplication?.job_role_id || ''
+  );
 
   const handleRecordingLinkSave = async () => {
     if (!selectedApplication || !interviewRecordingLink) return;
@@ -130,6 +137,7 @@ export const InterviewNotesContent = ({
           <div className="overflow-x-auto pb-2">
             <TabsList className="inline-flex min-w-full w-max">
               <TabsTrigger value="notes" className="whitespace-nowrap">Interview Notes</TabsTrigger>
+              <TabsTrigger value="guide" className="whitespace-nowrap">Interview Guide</TabsTrigger>
               <TabsTrigger value="recording" className="whitespace-nowrap">Recording Link</TabsTrigger>
               <TabsTrigger value="rating" className="whitespace-nowrap">Rating & Status</TabsTrigger>
               <TabsTrigger value="recordings" className="whitespace-nowrap">All Recordings</TabsTrigger>
@@ -150,6 +158,27 @@ export const InterviewNotesContent = ({
                 className="mt-2 min-h-64 resize-none"
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="guide" className="space-y-4">
+            {guideLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-gray-500">Loading interview guide...</div>
+              </div>
+            ) : guide ? (
+              <InterviewGuide
+                jobRole={selectedApplication.job_roles?.name || 'Position'}
+                steps={guide.steps}
+                onStepComplete={toggleStepComplete}
+                onUpdateNotes={updateStepNotes}
+                stepNotes={guide.stepNotes}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-lg font-medium">No Interview Guide Available</div>
+                <div className="text-sm">Interview guides can be configured per job role</div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="recording" className="space-y-4">
