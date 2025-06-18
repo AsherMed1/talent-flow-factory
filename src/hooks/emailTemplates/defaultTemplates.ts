@@ -108,22 +108,11 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
       font-size: 18px;
       font-weight: bold;
     }
-    .video-container {
-      margin: 20px 0;
-    }
-    .video-embed {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .video-embed iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+    .video-thumbnail {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
       border-radius: 8px;
     }
     .cta-button {
@@ -160,11 +149,9 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
       </a>
     </p>
 
-    <div class="video-container">
-      <div class="video-embed">
-        <iframe src="https://www.loom.com/embed/baf2cd9833434d4c80f4b9e9770d01b5?sid=aee09383-ecc2-4144-971d-1b34d01030d8" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-      </div>
-    </div>
+    <a href="https://www.loom.com/share/baf2cd9833434d4c80f4b9e9770d01b5">
+      <img class="video-thumbnail" src="https://cdn.loom.com/sessions/thumbnails/baf2cd9833434d4c80f4b9e9770d01b5-212796318d2031c0-full-play.gif" alt="Interview Video">
+    </a>
 
     <p>
       <a href="{{bookingLink}}" class="cta-button">
