@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,13 @@ import { FieldMappingSection } from './FieldMappingSection';
 import { PreviewSection } from './PreviewSection';
 import { useCSVEmailService } from './CSVEmailService';
 
-export const CSVImportProcessor = () => {
+interface CSVImportProcessorProps {
+  onImportComplete?: (candidates: any[], jobRole?: any) => void;
+}
+
+export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps) => {
   const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [fieldMapping, setFieldMapping] = useState({
     firstName: '',
     lastName: '',
@@ -21,6 +27,7 @@ export const CSVImportProcessor = () => {
     jobRole: ''
   });
   const [previewData, setPreviewData] = useState<any[]>([]);
+  const [selectedJobRoleId, setSelectedJobRoleId] = useState<string>('');
   const [selectedJobRole, setSelectedJobRole] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSendingEmails, setIsSendingEmails] = useState(false);
@@ -31,9 +38,11 @@ export const CSVImportProcessor = () => {
     onEmailStatusUpdate: setIsSendingEmails
   });
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    setCsvFile(file);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -88,13 +97,14 @@ export const CSVImportProcessor = () => {
     }
   };
 
-  const handleJobRoleChange = (value: string) => {
-    const role = jobRoles?.find(r => r.id === value);
+  const handleJobRoleChange = (jobRoleId: string) => {
+    setSelectedJobRoleId(jobRoleId);
+    const role = jobRoles?.find(r => r.id === jobRoleId);
     setSelectedJobRole(role);
   };
 
   const handleImport = async () => {
-    if (!csvData.length) return;
+    if (!csvData.length || !selectedJobRole) return;
 
     setIsProcessing(true);
 
@@ -158,8 +168,14 @@ export const CSVImportProcessor = () => {
         description: `Successfully imported ${candidates.length} candidates and sent application emails.`,
       });
 
+      // Call onImportComplete if provided
+      if (onImportComplete) {
+        onImportComplete(candidates, selectedJobRole);
+      }
+
       // Reset form
       setCsvData([]);
+      setCsvFile(null);
       setPreviewData([]);
       setFieldMapping({
         firstName: '',
@@ -169,6 +185,7 @@ export const CSVImportProcessor = () => {
         jobRole: ''
       });
       setSelectedJobRole(null);
+      setSelectedJobRoleId('');
 
     } catch (error) {
       console.error('Import error:', error);
@@ -194,27 +211,14 @@ export const CSVImportProcessor = () => {
       <EmailConfigurationWarning isConnected={isConnected} />
       <CandidateStatsCard />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <FileUploadSection onFileUpload={handleFileUpload} />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Job Role</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <select
-              value={selectedJobRole?.id || ''}
-              onChange={(e) => handleJobRoleChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select a job role...</option>
-              {jobRoles?.map(role => (
-                <option key={role.id} value={role.id}>{role.name}</option>
-              ))}
-            </select>
-          </CardContent>
-        </Card>
-      </div>
+      <FileUploadSection
+        csvFile={csvFile}
+        selectedJobRoleId={selectedJobRoleId}
+        previewDataLength={previewData.length}
+        isConnected={isConnected}
+        onFileSelect={handleFileSelect}
+        onJobRoleChange={handleJobRoleChange}
+      />
 
       {csvData.length > 0 && (
         <>
