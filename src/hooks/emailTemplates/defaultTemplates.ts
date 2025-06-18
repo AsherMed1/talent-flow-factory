@@ -9,7 +9,7 @@ import { applicationUpdateTemplate } from './templates/applicationUpdateTemplate
 import { postInterviewRejectionTemplate } from './templates/postInterviewRejectionTemplate';
 
 export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[] => {
-  return [
+  const templates = [
     applicationUpdateTemplate,
     rejectionTemplate,
     interviewTemplate,
@@ -18,4 +18,8 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
     welcomeTemplate,
     postInterviewRejectionTemplate
   ];
+  
+  console.log('Loading default templates:', templates.map(t => ({ name: t.name, id: t.id })));
+  
+  return templates;
 };

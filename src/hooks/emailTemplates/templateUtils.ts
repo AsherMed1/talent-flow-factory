@@ -5,7 +5,27 @@ import { getDefaultTemplates } from './defaultTemplates';
 export const getTemplates = (): EmailTemplate[] => {
   const saved = localStorage.getItem('emailTemplates');
   if (saved) {
-    return JSON.parse(saved);
+    try {
+      const parsedTemplates = JSON.parse(saved);
+      // Ensure we have all default templates available
+      const defaultTemplates = getDefaultTemplates('');
+      
+      // Check if saved templates include all template types
+      const savedTemplateTypes = parsedTemplates.map((t: EmailTemplate) => 
+        t.name.toLowerCase().replace(/\s+/g, '_')
+      );
+      
+      // Add any missing default templates
+      const missingDefaults = defaultTemplates.filter(defaultTemplate => {
+        const defaultType = defaultTemplate.name.toLowerCase().replace(/\s+/g, '_');
+        return !savedTemplateTypes.some(savedType => savedType.includes(defaultType.split('_')[0]));
+      });
+      
+      return [...parsedTemplates, ...missingDefaults];
+    } catch (error) {
+      console.error('Error parsing saved templates, using defaults:', error);
+      return getDefaultTemplates('');
+    }
   }
   return getDefaultTemplates('');
 };
@@ -38,7 +58,7 @@ export const getTemplateByType = (
       searchTerm = 'application update';
       break;
     case 'rejection':
-      searchTerm = 'kind rejection after application';
+      searchTerm = 'rejection';
       break;
     case 'interview':
       searchTerm = 'interview';
@@ -53,7 +73,7 @@ export const getTemplateByType = (
       searchTerm = 'thank you';
       break;
     case 'post_interview_rejection':
-      searchTerm = 'final rejection after interview';
+      searchTerm = 'final rejection';
       break;
   }
   
@@ -77,7 +97,20 @@ export const getTemplateByType = (
     return anyMatchingTemplate;
   }
   
+  // Last resort: try partial matches
+  const partialMatch = templates.find(t => {
+    const templateNameLower = t.name.toLowerCase();
+    const searchWords = searchTerm.split(' ');
+    return searchWords.some(word => templateNameLower.includes(word));
+  });
+  
+  if (partialMatch) {
+    console.log('Found partial match template:', partialMatch.name);
+    return partialMatch;
+  }
+  
   console.error('No template found for type:', type, 'with search term:', searchTerm);
+  console.log('Available template names:', templates.map(t => t.name));
   return null;
 };
 
