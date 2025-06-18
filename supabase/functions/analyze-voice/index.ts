@@ -72,25 +72,44 @@ serve(async (req) => {
 
     console.log('Transcription completed:', transcription.substring(0, 100) + '...');
 
-    // Step 2: Analyze the transcription using GPT with detailed trait scoring
+    // Step 2: Analyze the transcription using GPT with role-specific criteria
     const analysisPrompt = `
-You are an expert HR recruiter evaluating a voice recording for an appointment setter position at a healthcare company. 
+You are evaluating a voice recording for a healthcare appointment setter position. This role requires someone who is warm, friendly, empathetic, and naturally conversational - NOT cold, clinical, or overly formal medical professional communication.
+
+The ideal candidate should sound like someone patients would feel comfortable talking to - think of a caring friend or family member who happens to work in healthcare, not a distant medical professional.
 
 The candidate's voice recording transcription is:
 "${transcription}"
 
-Please provide a comprehensive analysis with individual scores for each communication trait:
+Evaluate them on these specific criteria for a warm healthcare appointment setter:
 
-1. **Clarity** (1-10): How clear and understandable is their speech? Consider pronunciation, enunciation, and word choice.
-2. **Pacing** (1-10): Is their speaking speed appropriate? Not too fast or too slow, with good rhythm and pauses.
-3. **Tone** (1-10): How warm, friendly, and professional do they sound? Appropriate for healthcare customer service.
-4. **Energy** (1-10): Do they sound enthusiastic, engaged, and motivated? Not monotone or bored.
-5. **Confidence** (1-10): Do they speak with confidence? Minimal hesitation, filler words (um, uh), or uncertainty.
+1. **Clarity** (1-10): How clear and easy to understand is their natural speaking voice? We want clear communication but not robotic pronunciation.
+
+2. **Pacing** (1-10): Do they speak at a comfortable, conversational pace? Not rushed or too slow, with natural pauses that feel like genuine conversation.
+
+3. **Tone** (1-10): How warm, caring, and approachable do they sound? We want genuine warmth and empathy, not clinical professionalism. Do they sound like someone you'd want to talk to when you're worried about your health?
+
+4. **Energy** (1-10): Do they sound genuinely engaged and caring? We want natural enthusiasm and warmth, not high-energy sales pitch or flat medical delivery.
+
+5. **Confidence** (1-10): Do they sound naturally confident and reassuring without being pushy? We want someone who sounds trustworthy and calming, with minimal hesitation that might make patients worry.
+
+IMPORTANT: We are NOT looking for:
+- Cold, clinical, medical professional tone
+- Overly formal or robotic speech
+- High-pressure sales energy
+- Sterile healthcare communication
+
+We ARE looking for:
+- Warm, genuine human connection
+- Natural conversational flow
+- Empathetic and caring tone
+- Someone who sounds like they genuinely care about helping people
+- Natural English that flows well
 
 Provide:
 - Individual scores for each trait (1-10)
 - An overall average score
-- Detailed feedback (2-3 paragraphs) covering strengths and areas for improvement
+- Detailed feedback (2-3 paragraphs) focusing on their suitability for warm patient communication
 - A concise 2-3 sentence summary for quick review
 
 Format your response as JSON:
@@ -115,7 +134,10 @@ Format your response as JSON:
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are an expert HR recruiter analyzing voice recordings. Respond only with valid JSON.' },
+          { 
+            role: 'system', 
+            content: 'You are an expert HR recruiter specializing in healthcare customer service roles. You understand the difference between warm, empathetic patient communication and cold clinical professionalism. Respond only with valid JSON.' 
+          },
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.3,
