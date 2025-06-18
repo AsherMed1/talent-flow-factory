@@ -89,16 +89,45 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('Processing POST webhook request');
     
-    const payload = await req.json();
-    console.log('Webhook payload received:', JSON.stringify(payload, null, 2));
+    let payload;
+    try {
+      const body = await req.text();
+      console.log('Raw request body:', body);
+      payload = JSON.parse(body);
+      console.log('Parsed webhook payload:', JSON.stringify(payload, null, 2));
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON payload' 
+      }), { 
+        status: 400, 
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        }
+      });
+    }
 
     // Handle Zoom's endpoint URL validation challenge
     if (payload.event === 'endpoint.url_validation') {
       console.log('=== URL Validation Challenge ===');
       const challengePayload = payload as ZoomChallengePayload;
-      const plainToken = challengePayload.payload.plainToken;
+      const plainToken = challengePayload.payload?.plainToken;
       
       console.log('Plain token received:', plainToken);
+      
+      if (!plainToken) {
+        console.error('No plainToken found in validation payload');
+        return new Response(JSON.stringify({ 
+          error: 'No plainToken found in validation payload' 
+        }), { 
+          status: 400, 
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders 
+          }
+        });
+      }
       
       // Get the secret token from environment
       const secretToken = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
@@ -124,33 +153,46 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('Plain token:', plainToken);
       console.log('Secret token (first 10 chars):', secretToken.substring(0, 10) + '...');
       
-      const encoder = new TextEncoder();
-      const data = encoder.encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const encryptedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      
-      console.log('Generated encrypted token:', encryptedToken);
-      console.log('Encrypted token length:', encryptedToken.length);
-      
-      const response = {
-        plainToken: plainToken,
-        encryptedToken: encryptedToken
-      };
-      
-      console.log('=== Sending validation response ===');
-      console.log('Response:', JSON.stringify(response, null, 2));
-      
-      return new Response(
-        JSON.stringify(response),
-        {
-          status: 200,
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const encryptedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        console.log('Generated encrypted token:', encryptedToken);
+        console.log('Encrypted token length:', encryptedToken.length);
+        
+        const response = {
+          plainToken: plainToken,
+          encryptedToken: encryptedToken
+        };
+        
+        console.log('=== Sending validation response ===');
+        console.log('Response:', JSON.stringify(response, null, 2));
+        
+        return new Response(
+          JSON.stringify(response),
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders,
+            },
+          }
+        );
+      } catch (cryptoError) {
+        console.error('Error generating encrypted token:', cryptoError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate encrypted token' 
+        }), { 
+          status: 500, 
           headers: {
             'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        }
-      );
+            ...corsHeaders 
+          }
+        });
+      }
     }
 
     // Verify webhook authenticity using secret token for non-validation events
