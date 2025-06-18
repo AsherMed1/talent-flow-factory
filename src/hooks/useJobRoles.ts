@@ -64,21 +64,6 @@ export const useUpdateJobRole = () => {
       console.log('Updates:', updates);
       
       try {
-        // First verify the role exists with debugging
-        const { data: existingRoles, error: checkError } = await supabase
-          .from('job_roles')
-          .select('*');
-        
-        console.log('All roles in database:', existingRoles?.map(r => ({ id: r.id, name: r.name })));
-        
-        const roleExists = existingRoles?.find(r => r.id === id);
-        console.log('Role exists check:', roleExists ? 'YES' : 'NO');
-        
-        if (!roleExists) {
-          console.error('Role not found in database with ID:', id);
-          throw new Error(`Role with ID ${id} not found in database`);
-        }
-        
         // Build the update object with only the fields that are being updated
         const updateData: any = {
           updated_at: new Date().toISOString()
@@ -97,26 +82,35 @@ export const useUpdateJobRole = () => {
         
         console.log('Final update data being sent to Supabase:', updateData);
         
-        const { data, error } = await supabase
+        // Use a more robust update approach
+        const { data, error, count } = await supabase
           .from('job_roles')
           .update(updateData)
           .eq('id', id)
-          .select()
-          .single();
+          .select('*');
+        
+        console.log('Update response - data:', data, 'error:', error, 'count:', count);
         
         if (error) {
           console.error('Supabase update error:', error);
           throw new Error(`Database update failed: ${error.message}`);
         }
         
-        if (!data) {
-          console.error('No data returned from update');
-          throw new Error('Update operation returned no data');
+        if (!data || data.length === 0) {
+          console.error('Update returned no data - role may not exist');
+          // Let's verify the role exists
+          const { data: checkData } = await supabase
+            .from('job_roles')
+            .select('id, name')
+            .eq('id', id);
+          console.log('Role exists check after failed update:', checkData);
+          throw new Error('Role not found or update failed');
         }
         
-        console.log('Update successful, returned data:', data);
+        const updatedRole = data[0];
+        console.log('Update successful, returned data:', updatedRole);
         console.log('=== UPDATE COMPLETE ===');
-        return data;
+        return updatedRole;
         
       } catch (error) {
         console.error('=== UPDATE FAILED ===');
