@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -45,6 +46,7 @@ interface ZoomChallengePayload {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log('Zoom webhook request received:', req.method, req.url);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -95,11 +97,32 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.log('Plain token received:', plainToken);
       
-      // For URL validation, Zoom expects us to return the plainToken as encryptedToken
-      // According to Zoom docs, during validation we should return the plainToken as-is
+      // Get the secret token from environment
+      const secretToken = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
+      
+      if (!secretToken) {
+        console.error('ZOOM_WEBHOOK_SECRET_TOKEN not configured');
+        return new Response('Server configuration error', { 
+          status: 500, 
+          headers: corsHeaders 
+        });
+      }
+      
+      // Create the encrypted token by hashing plainToken + secretToken
+      const message = plainToken + secretToken;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const encryptedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      console.log('Secret token length:', secretToken.length);
+      console.log('Message to hash:', message);
+      console.log('Encrypted token:', encryptedToken);
+      
       const response = {
         plainToken: plainToken,
-        encryptedToken: plainToken
+        encryptedToken: encryptedToken
       };
       
       console.log('Returning validation response:', response);
