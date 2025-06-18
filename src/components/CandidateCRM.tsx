@@ -21,17 +21,47 @@ export const CandidateCRM = () => {
     setDeletingCandidateId(candidateId);
     
     try {
-      console.log('Starting deletion process for candidate:', candidateId);
+      console.log('Starting deletion process for candidate:', candidateId, 'Name:', candidateName);
       
-      // First delete all applications for this candidate
-      const { error: applicationsError } = await supabase
+      // Check if candidate exists first
+      const { data: candidateCheck, error: checkError } = await supabase
+        .from('candidates')
+        .select('id, name, email')
+        .eq('id', candidateId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking candidate existence:', checkError);
+        throw new Error(`Cannot find candidate: ${checkError.message}`);
+      }
+
+      console.log('Found candidate to delete:', candidateCheck);
+
+      // Get all applications for this candidate first
+      const { data: applications, error: getAppsError } = await supabase
         .from('applications')
-        .delete()
+        .select('id')
         .eq('candidate_id', candidateId);
 
-      if (applicationsError) {
-        console.error('Error deleting applications:', applicationsError);
-        throw applicationsError;
+      if (getAppsError) {
+        console.error('Error getting applications:', getAppsError);
+        throw getAppsError;
+      }
+
+      console.log(`Found ${applications?.length || 0} applications to delete`);
+
+      // Delete applications first
+      if (applications && applications.length > 0) {
+        const { error: applicationsError } = await supabase
+          .from('applications')
+          .delete()
+          .eq('candidate_id', candidateId);
+
+        if (applicationsError) {
+          console.error('Error deleting applications:', applicationsError);
+          throw new Error(`Failed to delete applications: ${applicationsError.message}`);
+        }
+        console.log('Successfully deleted applications');
       }
 
       // Delete candidate tags
@@ -42,8 +72,9 @@ export const CandidateCRM = () => {
 
       if (tagsError) {
         console.error('Error deleting tags:', tagsError);
-        throw tagsError;
+        throw new Error(`Failed to delete tags: ${tagsError.message}`);
       }
+      console.log('Successfully deleted tags');
 
       // Finally delete the candidate
       const { error: candidateError } = await supabase
@@ -53,23 +84,24 @@ export const CandidateCRM = () => {
 
       if (candidateError) {
         console.error('Error deleting candidate:', candidateError);
-        throw candidateError;
+        throw new Error(`Failed to delete candidate: ${candidateError.message}`);
       }
 
       console.log('Successfully deleted candidate:', candidateId);
 
       toast({
         title: "Candidate Deleted",
-        description: `${candidateName} has been removed from the system.`,
+        description: `${candidateName} has been successfully removed from the system.`,
       });
 
       // Force refresh the candidates list
       await refetch();
+      
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      console.error('Detailed error during candidate deletion:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete candidate. Please try again.",
+        title: "Deletion Failed",
+        description: error instanceof Error ? error.message : "Failed to delete candidate. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -221,7 +253,10 @@ export const CandidateCRM = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-lg">{candidate.name}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {candidate.name}
+                        <span className="text-xs text-gray-500 ml-2">ID: {candidate.id.slice(0, 8)}</span>
+                      </CardTitle>
                       {latestApplication?.job_roles?.name && (
                         <p className="text-sm text-gray-600">{latestApplication.job_roles.name}</p>
                       )}
@@ -248,7 +283,7 @@ export const CandidateCRM = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Candidate</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete {candidate.name}? This will permanently remove their profile, all applications, and notes from the system. This action cannot be undone.
+                            Are you sure you want to delete {candidate.name} (ID: {candidate.id.slice(0, 8)})? This will permanently remove their profile, all applications, and notes from the system. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
