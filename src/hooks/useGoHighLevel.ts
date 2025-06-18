@@ -79,11 +79,8 @@ export const useGoHighLevel = () => {
   };
 
   const getBookingLink = (calendarId?: string): string => {
-    const config = getConfig();
-    if (!config?.locationId) return '';
-    
-    const calendar = calendarId || config.calendarId || 'default';
-    return `https://app.gohighlevel.com/widget/booking/${config.locationId}/${calendar}`;
+    // Always return the correct Patient Pro Marketing booking link
+    return 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
   };
 
   return {

@@ -38,8 +38,8 @@ export const useEmailSender = () => {
       return false;
     }
 
-    // Use job-specific booking link or fallback to GoHighLevel or default
-    const finalBookingLink = bookingLink || getBookingLink() || 'https://link.patientpromarketing.com/widget/bookings/schedulerinterview';
+    // Always use the correct Patient Pro Marketing booking link
+    const finalBookingLink = 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
 
     const variables = {
       firstName: firstName || candidateName.split(' ')[0] || 'Candidate',

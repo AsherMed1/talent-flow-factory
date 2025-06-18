@@ -2,6 +2,8 @@
 import { EmailTemplate } from './types';
 
 export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[] => {
+  const correctBookingLink = 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
+  
   return [
     {
       id: 'rejection-default',
@@ -154,7 +156,7 @@ export const getDefaultTemplates = (fallbackBookingLink: string): EmailTemplate[
     </a>
 
     <p>
-      <a href="{{bookingLink}}" class="cta-button">
+      <a href="${correctBookingLink}" class="cta-button">
         📅 Schedule Your Interview Now
       </a>
     </p>
