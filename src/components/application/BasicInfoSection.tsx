@@ -3,6 +3,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { LocationInput } from '@/components/ui/location-input';
 import { ApplicationFormData } from './formSchema';
 
 interface BasicInfoSectionProps {
@@ -59,12 +60,18 @@ export const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
         <Label htmlFor="location" className="text-sm font-medium text-gray-800">
           Where do you live (City, State, Country)
         </Label>
-        <Input
+        <LocationInput
           id="location"
           {...form.register('location')}
-          placeholder="e.g., Miami, FL, USA"
+          placeholder="Start typing your city..."
           className="h-11"
+          onLocationSelect={(location) => {
+            form.setValue('location', location.displayName);
+          }}
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Start typing to see location suggestions from around the world
+        </p>
         {form.formState.errors.location && (
           <p className="text-sm text-red-600 mt-1">{form.formState.errors.location.message}</p>
         )}
