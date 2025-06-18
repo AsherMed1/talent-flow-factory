@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -112,6 +111,26 @@ const appointmentSetterGuide: InterviewStep[] = [
   }
 ];
 
+// Store guides in localStorage for persistence
+const STORAGE_KEY = 'interview_guides';
+
+const getStoredGuides = (): Record<string, InterviewStep[]> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+const setStoredGuides = (guides: Record<string, InterviewStep[]>) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(guides));
+  } catch (error) {
+    console.error('Failed to save interview guides:', error);
+  }
+};
+
 export const useInterviewGuides = (jobRoleId: string) => {
   const [guide, setGuide] = useState<InterviewGuide | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,17 +143,29 @@ export const useInterviewGuides = (jobRoleId: string) => {
     try {
       setLoading(true);
       
-      // For now, return the default appointment setter guide
-      // In the future, this could be loaded from the database based on jobRoleId
-      const defaultGuide: InterviewGuide = {
+      // First try to load from stored guides
+      const storedGuides = getStoredGuides();
+      const customGuide = storedGuides[jobRoleId];
+      
+      let steps: InterviewStep[];
+      
+      if (customGuide && customGuide.length > 0) {
+        // Use custom guide if available
+        steps = customGuide;
+      } else {
+        // Fall back to default appointment setter guide
+        steps = appointmentSetterGuide;
+      }
+      
+      const guideData: InterviewGuide = {
         id: `guide-${jobRoleId}`,
         jobRoleId,
-        steps: appointmentSetterGuide,
+        steps: steps.map(step => ({ ...step, completed: false })),
         stepNotes: {},
         completedSteps: []
       };
       
-      setGuide(defaultGuide);
+      setGuide(guideData);
     } catch (error) {
       console.error('Error loading interview guide:', error);
     } finally {
@@ -178,4 +209,26 @@ export const useInterviewGuides = (jobRoleId: string) => {
     toggleStepComplete,
     updateStepNotes
   };
+};
+
+// Export functions for guide management
+export const saveInterviewGuide = (jobRoleId: string, steps: InterviewStep[]) => {
+  const guides = getStoredGuides();
+  guides[jobRoleId] = steps;
+  setStoredGuides(guides);
+};
+
+export const getInterviewGuide = (jobRoleId: string): InterviewStep[] | null => {
+  const guides = getStoredGuides();
+  return guides[jobRoleId] || null;
+};
+
+export const deleteInterviewGuide = (jobRoleId: string) => {
+  const guides = getStoredGuides();
+  delete guides[jobRoleId];
+  setStoredGuides(guides);
+};
+
+export const getAllInterviewGuides = (): Record<string, InterviewStep[]> => {
+  return getStoredGuides();
 };

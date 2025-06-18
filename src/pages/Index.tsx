@@ -8,6 +8,7 @@ import { InterviewNotes } from '@/components/InterviewNotes';
 import { CandidateImport } from '@/components/CandidateImport';
 import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
+import { InterviewGuideManager } from '@/components/InterviewGuideManager';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
@@ -24,6 +25,8 @@ const Index = () => {
         return <ApplicantPipeline />;
       case 'interview-notes':
         return <InterviewNotes />;
+      case 'interview-guides':
+        return <InterviewGuideManager />;
       case 'import':
         return <CandidateImport />;
       case 'crm':
