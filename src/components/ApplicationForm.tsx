@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +11,6 @@ import { FileUploadSection } from './application/FileUploadSection';
 import { ListeningTestSection } from './application/ListeningTestSection';
 import { PreScreeningSection } from './application/PreScreeningSection';
 import { TermsSection } from './application/TermsSection';
-import { ProgressIndicator } from './application/ProgressIndicator';
 import { AutoSaveIndicator } from './application/AutoSaveIndicator';
 import { ApplicationFormData } from './application/formSchema';
 import { useApplicationForm } from './application/useApplicationForm';
@@ -22,65 +22,13 @@ interface ApplicationFormProps {
   onSuccess?: () => void;
 }
 
-const FORM_STEPS = [
-  { id: 'basic', title: 'Basic Information', estimatedTime: '3 min', completed: false },
-  { id: 'prescreening', title: 'Pre-Screening Questions', estimatedTime: '5 min', completed: false },
-  { id: 'voice', title: 'Voice Recordings', estimatedTime: '8 min', completed: false },
-  { id: 'files', title: 'File Uploads', estimatedTime: '5 min', completed: false },
-  { id: 'listening', title: 'Listening Test', estimatedTime: '4 min', completed: false },
-  { id: 'terms', title: 'Terms & Conditions', estimatedTime: '1 min', completed: false },
-];
-
 export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [steps, setSteps] = useState(FORM_STEPS);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   const { form, handleClearSavedData } = useApplicationForm();
   const { isSaving, lastSaved, hasUnsavedChanges } = useEnhancedAutoSave(form);
-
-  // Update step completion based on form values
-  useEffect(() => {
-    const values = form.getValues();
-    const updatedSteps = steps.map((step, index) => {
-      let completed = false;
-      
-      switch (step.id) {
-        case 'basic':
-          completed = !!(values.firstName && values.lastName && values.email);
-          break;
-        case 'prescreening':
-          completed = !!(values.motivationResponse && values.experienceResponse && values.availabilityResponse);
-          break;
-        case 'voice':
-          completed = !!(values.introductionRecording || values.scriptRecording);
-          break;
-        case 'files':
-          completed = !!(values.downloadSpeedScreenshot || values.uploadSpeedScreenshot || values.workstationPhoto);
-          break;
-        case 'listening':
-          completed = !!(values.husbandName && values.treatmentNotDone);
-          break;
-        case 'terms':
-          completed = !!values.agreeToTerms;
-          break;
-      }
-      
-      return { ...step, completed };
-    });
-    
-    setSteps(updatedSteps);
-    
-    // Update current step based on completion
-    const firstIncompleteStep = updatedSteps.findIndex(step => !step.completed);
-    if (firstIncompleteStep !== -1) {
-      setCurrentStep(firstIncompleteStep);
-    } else {
-      setCurrentStep(updatedSteps.length - 1);
-    }
-  }, [form.watch(), steps]);
 
   const handleClearData = () => {
     const message = handleClearSavedData();
@@ -119,8 +67,6 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <ApplicationFormHeader onClearSavedData={handleClearData} />
-      
-      <ProgressIndicator currentStep={currentStep} steps={steps} />
       
       <AutoSaveIndicator 
         isSaving={isSaving}
