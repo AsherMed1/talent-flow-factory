@@ -71,14 +71,16 @@ export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormP
     }
   };
 
-  // Determine if this is an appointment setter role
+  // More flexible role detection
+  const isVideoEditor = role?.name?.toLowerCase().includes('video') || 
+                        role?.name?.toLowerCase().includes('editor') ||
+                        role?.name?.toLowerCase().includes('content creator');
   const isAppointmentSetter = role?.name?.toLowerCase().includes('appointment') || 
                               role?.name?.toLowerCase().includes('setter') ||
                               !role?.name; // Default to appointment setter if no role specified
 
-  // Determine if this is a video editor role
-  const isVideoEditor = role?.name?.toLowerCase().includes('video editor') || 
-                        role?.name?.toLowerCase().includes('ai video');
+  console.log('ApplicationForm - isVideoEditor:', isVideoEditor);
+  console.log('ApplicationForm - isAppointmentSetter:', isAppointmentSetter);
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">

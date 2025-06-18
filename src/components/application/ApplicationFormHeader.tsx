@@ -14,6 +14,14 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
   const displayRoleName = roleName || "Appointment Setter – Remote";
   const displayDescription = roleDescription || "(Must Be Available Weekends + Bonuses!)";
 
+  // More flexible role detection
+  const isVideoEditor = roleName?.toLowerCase().includes('video') || 
+                        roleName?.toLowerCase().includes('editor') ||
+                        roleName?.toLowerCase().includes('content creator');
+
+  console.log('ApplicationFormHeader - roleName:', roleName);
+  console.log('ApplicationFormHeader - isVideoEditor:', isVideoEditor);
+
   return (
     <Card>
       <CardHeader>
@@ -27,7 +35,7 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
         </div>
 
         {/* Only show Loom video for Appointment Setter role */}
-        {roleName === "Appointment Setter – Remote" && (
+        {!isVideoEditor && (
           <div className="mb-6">
             <div className="bg-gray-100 rounded-lg p-4">
               <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -65,11 +73,11 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
         
         <div className="space-y-6 text-gray-700">
           {/* Show role-specific content or generic content */}
-          {roleName === "AI Video Editor" ? (
+          {isVideoEditor ? (
             <div>
               <p className="text-lg">
-                We are looking for a <strong>creative and skilled AI Video Editor</strong> to join our team. 
-                You'll be working with cutting-edge AI tools to create engaging video content across various projects.
+                We are looking for a <strong>creative and skilled Video Editor</strong> to join our team. 
+                You'll be working with cutting-edge tools to create engaging video content across various projects.
               </p>
               
               <div>
@@ -81,7 +89,7 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span>Access to <strong>latest AI video editing tools</strong></span>
+                    <span>Access to <strong>latest video editing tools</strong></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -95,7 +103,7 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span><strong>Experience with AI video editing tools</strong></span>
+                    <span><strong>Professional video editing experience</strong></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Diamond className="w-5 h-5 text-blue-600 flex-shrink-0" />

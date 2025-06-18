@@ -15,8 +15,16 @@ interface RoleSpecificSectionsProps {
 export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsProps) => {
   if (!roleName) return null;
 
+  // More flexible matching for video editor roles
+  const isVideoEditor = roleName.toLowerCase().includes('video') || 
+                        roleName.toLowerCase().includes('editor') ||
+                        roleName.toLowerCase().includes('content creator');
+
+  console.log('RoleSpecificSections - roleName:', roleName);
+  console.log('RoleSpecificSections - isVideoEditor:', isVideoEditor);
+
   // AI Video Editor specific sections
-  if (roleName.toLowerCase().includes('video editor') || roleName.toLowerCase().includes('ai video')) {
+  if (isVideoEditor) {
     return (
       <>
         {/* Portfolio Section */}

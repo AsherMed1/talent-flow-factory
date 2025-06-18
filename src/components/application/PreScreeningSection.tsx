@@ -13,12 +13,17 @@ interface PreScreeningSectionProps {
 }
 
 export const PreScreeningSection = ({ form, roleName }: PreScreeningSectionProps) => {
-  // Determine role type for customized questions
-  const isVideoEditor = roleName?.toLowerCase().includes('video editor') || 
-                        roleName?.toLowerCase().includes('ai video');
+  // More flexible role detection
+  const isVideoEditor = roleName?.toLowerCase().includes('video') || 
+                        roleName?.toLowerCase().includes('editor') ||
+                        roleName?.toLowerCase().includes('content creator');
   const isAppointmentSetter = roleName?.toLowerCase().includes('appointment') || 
                               roleName?.toLowerCase().includes('setter') ||
                               !roleName; // Default
+
+  console.log('PreScreeningSection - roleName:', roleName);
+  console.log('PreScreeningSection - isVideoEditor:', isVideoEditor);
+  console.log('PreScreeningSection - isAppointmentSetter:', isAppointmentSetter);
 
   return (
     <Card>
@@ -37,7 +42,7 @@ export const PreScreeningSection = ({ form, roleName }: PreScreeningSectionProps
               <FormLabel className="flex items-center gap-2">
                 <span className="text-orange-600">🎯</span>
                 {isVideoEditor 
-                  ? "Why do you want this AI video editor role? What motivates you to work in creative video production?"
+                  ? "Why do you want this video editing role? What motivates you to work in creative video production?"
                   : "Why do you want this appointment setter role? What motivates you to work in sales/customer outreach?"
                 }
               </FormLabel>
