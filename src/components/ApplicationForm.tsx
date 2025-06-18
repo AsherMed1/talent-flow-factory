@@ -16,19 +16,26 @@ import { ApplicationFormData } from './application/formSchema';
 import { useApplicationForm } from './application/useApplicationForm';
 import { useEnhancedAutoSave } from './application/useEnhancedAutoSave';
 import { submitApplication } from './application/ApplicationFormSubmission';
+import { JobRole } from '@/hooks/useJobRoles';
 
 interface ApplicationFormProps {
   jobRoleId?: string;
+  role?: JobRole;
   onSuccess?: () => void;
 }
 
-export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) => {
+export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   const { form, handleClearSavedData } = useApplicationForm();
   const { isSaving, lastSaved, hasUnsavedChanges } = useEnhancedAutoSave(form);
+
+  useEffect(() => {
+    console.log('ApplicationForm - jobRoleId:', jobRoleId);
+    console.log('ApplicationForm - role:', role);
+  }, [jobRoleId, role]);
 
   const handleClearData = () => {
     const message = handleClearSavedData();
@@ -66,7 +73,11 @@ export const ApplicationForm = ({ jobRoleId, onSuccess }: ApplicationFormProps) 
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-      <ApplicationFormHeader onClearSavedData={handleClearData} />
+      <ApplicationFormHeader 
+        onClearSavedData={handleClearData} 
+        roleName={role?.name}
+        roleDescription={role?.description}
+      />
       
       <AutoSaveIndicator 
         isSaving={isSaving}
