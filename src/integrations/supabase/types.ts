@@ -28,7 +28,12 @@ export type Database = {
           rating: number | null
           status: Database["public"]["Enums"]["application_status"] | null
           updated_at: string | null
+          video_analysis_completed_at: string | null
+          video_analysis_error: string | null
           video_analysis_results: string | null
+          video_analysis_retry_count: number | null
+          video_analysis_started_at: string | null
+          video_analysis_status: string | null
           video_analysis_timestamp: string | null
           voice_analysis_completed_at: string | null
           voice_analysis_feedback: string | null
@@ -60,7 +65,12 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          video_analysis_completed_at?: string | null
+          video_analysis_error?: string | null
           video_analysis_results?: string | null
+          video_analysis_retry_count?: number | null
+          video_analysis_started_at?: string | null
+          video_analysis_status?: string | null
           video_analysis_timestamp?: string | null
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
@@ -92,7 +102,12 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
+          video_analysis_completed_at?: string | null
+          video_analysis_error?: string | null
           video_analysis_results?: string | null
+          video_analysis_retry_count?: number | null
+          video_analysis_started_at?: string | null
+          video_analysis_status?: string | null
           video_analysis_timestamp?: string | null
           voice_analysis_completed_at?: string | null
           voice_analysis_feedback?: string | null
@@ -305,6 +320,133 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      video_analysis_details: {
+        Row: {
+          ai_model_used: string | null
+          analysis_version: number | null
+          application_id: string | null
+          candidate_speaking_time: number | null
+          clarity_score: number | null
+          confidence_level: number | null
+          confidence_score: number | null
+          created_at: string | null
+          filler_words_count: number | null
+          filler_words_rate: number | null
+          id: string
+          interview_highlights: Json | null
+          interviewer_speaking_time: number | null
+          key_moments: Json | null
+          pace_score: number | null
+          processing_duration: number | null
+          sentiment_timeline: Json | null
+          sentiment_trends: Json | null
+          speaker_segments: Json | null
+          tone_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model_used?: string | null
+          analysis_version?: number | null
+          application_id?: string | null
+          candidate_speaking_time?: number | null
+          clarity_score?: number | null
+          confidence_level?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          filler_words_count?: number | null
+          filler_words_rate?: number | null
+          id?: string
+          interview_highlights?: Json | null
+          interviewer_speaking_time?: number | null
+          key_moments?: Json | null
+          pace_score?: number | null
+          processing_duration?: number | null
+          sentiment_timeline?: Json | null
+          sentiment_trends?: Json | null
+          speaker_segments?: Json | null
+          tone_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model_used?: string | null
+          analysis_version?: number | null
+          application_id?: string | null
+          candidate_speaking_time?: number | null
+          clarity_score?: number | null
+          confidence_level?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          filler_words_count?: number | null
+          filler_words_rate?: number | null
+          id?: string
+          interview_highlights?: Json | null
+          interviewer_speaking_time?: number | null
+          key_moments?: Json | null
+          pace_score?: number | null
+          processing_duration?: number | null
+          sentiment_timeline?: Json | null
+          sentiment_trends?: Json | null
+          speaker_segments?: Json | null
+          tone_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_analysis_details_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_analysis_logs: {
+        Row: {
+          ai_model_used: string | null
+          application_id: string | null
+          attempt_number: number | null
+          created_at: string | null
+          error_details: Json | null
+          error_message: string | null
+          error_type: string | null
+          id: string
+          processing_time: number | null
+          status: string
+        }
+        Insert: {
+          ai_model_used?: string | null
+          application_id?: string | null
+          attempt_number?: number | null
+          created_at?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          processing_time?: number | null
+          status: string
+        }
+        Update: {
+          ai_model_used?: string | null
+          application_id?: string | null
+          attempt_number?: number | null
+          created_at?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          processing_time?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_analysis_logs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_configs: {
         Row: {
