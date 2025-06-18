@@ -196,35 +196,47 @@ export type Database = {
       }
       job_roles: {
         Row: {
+          ai_tone_prompt: string | null
           booking_link: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           form_fields: Json | null
+          hiring_process: string | null
           id: string
+          job_description: string | null
           name: string
+          screening_questions: string | null
           status: Database["public"]["Enums"]["role_status"] | null
           updated_at: string | null
         }
         Insert: {
+          ai_tone_prompt?: string | null
           booking_link?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           form_fields?: Json | null
+          hiring_process?: string | null
           id?: string
+          job_description?: string | null
           name: string
+          screening_questions?: string | null
           status?: Database["public"]["Enums"]["role_status"] | null
           updated_at?: string | null
         }
         Update: {
+          ai_tone_prompt?: string | null
           booking_link?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           form_fields?: Json | null
+          hiring_process?: string | null
           id?: string
+          job_description?: string | null
           name?: string
+          screening_questions?: string | null
           status?: Database["public"]["Enums"]["role_status"] | null
           updated_at?: string | null
         }
