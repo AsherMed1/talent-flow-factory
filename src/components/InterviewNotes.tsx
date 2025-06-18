@@ -12,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { InterviewDisposition } from './InterviewDisposition';
 import { InterviewCalendar } from './InterviewCalendar';
+import { DispositionDialog } from './DispositionDialog';
 
 export const InterviewNotes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +24,7 @@ export const InterviewNotes = () => {
   const [rating, setRating] = useState<number>(3);
   const [isSaving, setIsSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [showDispositionDialog, setShowDispositionDialog] = useState(false);
   
   const { data: applications, isLoading } = useApplications();
   const { toast } = useToast();
@@ -238,6 +239,13 @@ export const InterviewNotes = () => {
     );
   };
 
+  const handleInterviewStatusChange = (value: string) => {
+    setInterviewStatus(value as any);
+    if (value === 'interview_completed') {
+      setShowDispositionDialog(true);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -398,7 +406,7 @@ export const InterviewNotes = () => {
                         <Label className="text-base font-medium">Interview Status</Label>
                         <RadioGroup
                           value={interviewStatus}
-                          onValueChange={(value) => setInterviewStatus(value as any)}
+                          onValueChange={handleInterviewStatusChange}
                           className="mt-2"
                         >
                           <div className="flex items-center space-x-2">
@@ -407,7 +415,7 @@ export const InterviewNotes = () => {
                           </div>
                         </RadioGroup>
                         <p className="text-sm text-gray-500 mt-2">
-                          Use the Disposition section below to make the final hiring decision.
+                          This will open the disposition dialog to make the final hiring decision.
                         </p>
                       </div>
                     </TabsContent>
@@ -428,16 +436,6 @@ export const InterviewNotes = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Interview Disposition */}
-              {selectedApplication.status === 'interview_completed' && (
-                <InterviewDisposition 
-                  application={selectedApplication}
-                  onDispositionComplete={() => {
-                    setSelectedCandidate(null);
-                  }}
-                />
-              )}
             </div>
           )}
         </div>
@@ -631,7 +629,7 @@ export const InterviewNotes = () => {
                           <Label className="text-base font-medium">Interview Status</Label>
                           <RadioGroup
                             value={interviewStatus}
-                            onValueChange={(value) => setInterviewStatus(value as any)}
+                            onValueChange={handleInterviewStatusChange}
                             className="mt-2"
                           >
                             <div className="flex items-center space-x-2">
@@ -640,7 +638,7 @@ export const InterviewNotes = () => {
                             </div>
                           </RadioGroup>
                           <p className="text-sm text-gray-500 mt-2">
-                            Use the Disposition section below to make the final hiring decision.
+                            This will open the disposition dialog to make the final hiring decision.
                           </p>
                         </div>
                       </TabsContent>
@@ -661,16 +659,6 @@ export const InterviewNotes = () => {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Interview Disposition */}
-                {selectedApplication.status === 'interview_completed' && (
-                  <InterviewDisposition 
-                    application={selectedApplication}
-                    onDispositionComplete={() => {
-                      setSelectedCandidate(null);
-                    }}
-                  />
-                )}
               </div>
             ) : (
               <Card className="h-96 flex items-center justify-center">
@@ -682,6 +670,19 @@ export const InterviewNotes = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Disposition Dialog */}
+      {selectedApplication && (
+        <DispositionDialog
+          application={selectedApplication}
+          isOpen={showDispositionDialog}
+          onClose={() => setShowDispositionDialog(false)}
+          onDispositionComplete={() => {
+            setSelectedCandidate(null);
+            setShowDispositionDialog(false);
+          }}
+        />
       )}
     </div>
   );
