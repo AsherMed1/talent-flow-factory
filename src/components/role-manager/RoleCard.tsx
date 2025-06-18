@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,6 +88,9 @@ export const RoleCard = ({ role }: RoleCardProps) => {
 
   const handlePreview = () => {
     const previewUrl = `/apply/${role.id}`;
+    console.log('Opening preview for role:', role.name, 'with ID:', role.id);
+    console.log('Preview URL:', previewUrl);
+    console.log('Role object:', role);
     window.open(previewUrl, '_blank');
   };
 

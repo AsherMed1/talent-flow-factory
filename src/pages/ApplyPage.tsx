@@ -14,6 +14,7 @@ export const ApplyPage = () => {
   console.log('ApplyPage - matched role:', role);
 
   if (isLoading) {
+    console.log('ApplyPage - still loading roles...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -25,6 +26,8 @@ export const ApplyPage = () => {
   }
 
   if (roleId && !role) {
+    console.log('ApplyPage - Role not found. Available role IDs:');
+    roles?.forEach(r => console.log(`- ${r.name}: ${r.id}`));
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -35,6 +38,8 @@ export const ApplyPage = () => {
       </div>
     );
   }
+
+  console.log('ApplyPage - Rendering ApplicationForm with role:', role);
 
   return (
     <div className="min-h-screen bg-gray-50">
