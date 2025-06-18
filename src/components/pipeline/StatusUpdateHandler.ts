@@ -49,9 +49,21 @@ export const useStatusUpdateHandler = () => {
       const lastName = candidateData.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
       const bookingLink = jobRoleData?.booking_link;
 
+      console.log('Email sending preparation:', {
+        newStatus,
+        candidateName,
+        candidateEmail,
+        jobRole,
+        firstName,
+        lastName,
+        bookingLink
+      });
+
       // Send appropriate email based on status change
+      let emailSent = false;
       if (newStatus === 'rejected') {
-        await sendTemplateEmail({
+        console.log('Sending rejection email...');
+        emailSent = await sendTemplateEmail({
           templateType: 'thank_you',
           candidateName,
           candidateEmail,
@@ -61,7 +73,8 @@ export const useStatusUpdateHandler = () => {
           bookingLink
         });
       } else if (newStatus === 'interview_scheduled') {
-        await sendTemplateEmail({
+        console.log('Sending interview email...');
+        emailSent = await sendTemplateEmail({
           templateType: 'interview',
           candidateName,
           candidateEmail,
@@ -71,7 +84,8 @@ export const useStatusUpdateHandler = () => {
           bookingLink
         });
       } else if (newStatus === 'hired') {
-        await sendTemplateEmail({
+        console.log('Sending welcome email...');
+        emailSent = await sendTemplateEmail({
           templateType: 'welcome',
           candidateName,
           candidateEmail,
@@ -80,7 +94,11 @@ export const useStatusUpdateHandler = () => {
           jobRole,
           bookingLink
         });
+      } else {
+        console.log('No email template configured for status:', newStatus);
       }
+
+      console.log('Email sending result:', emailSent);
 
       // Trigger webhook in background
       try {
