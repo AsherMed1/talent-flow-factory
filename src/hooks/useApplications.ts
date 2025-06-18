@@ -29,6 +29,7 @@ export interface Application {
   form_data: any | null;
   zoom_recording_url: string | null;
   zoom_recording_files: any | null;
+  ghl_appointment_data: any | null;
   candidates: {
     name: string;
     email: string;
@@ -39,7 +40,8 @@ export interface Application {
   };
   job_roles: {
     name: string;
-  };
+    booking_link: string | null;
+  } | null;
 }
 
 export const useApplications = () => {
@@ -75,13 +77,14 @@ export const useApplications = () => {
           form_data,
           zoom_recording_url,
           zoom_recording_files,
+          ghl_appointment_data,
           candidates (
             name, 
             email, 
             phone,
             candidate_tags (tag)
           ),
-          job_roles (name)
+          job_roles (name, booking_link)
         `)
         .not('form_data', 'is', null)
         .neq('form_data', '{}')
