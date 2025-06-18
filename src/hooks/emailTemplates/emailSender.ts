@@ -39,8 +39,9 @@ export const useEmailSender = () => {
     }
 
     // For the interview/congratulations email, direct candidates to the application form
+    // For application_update email, also use the application form
     let finalApplicationLink = bookingLink;
-    if (templateType === 'interview') {
+    if (templateType === 'interview' || templateType === 'application_update') {
       // Get current domain from window location
       const currentDomain = typeof window !== 'undefined' ? window.location.origin : '';
       finalApplicationLink = `${currentDomain}/apply`;

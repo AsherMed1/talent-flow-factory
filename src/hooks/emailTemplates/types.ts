@@ -9,7 +9,7 @@ export interface EmailTemplate {
 }
 
 export interface SendTemplateEmailParams {
-  templateType: 'rejection' | 'interview' | 'hold_for_future' | 'welcome' | 'thank_you';
+  templateType: 'rejection' | 'interview' | 'hold_for_future' | 'welcome' | 'thank_you' | 'application_update' | 'post_interview_rejection';
   candidateName: string;
   candidateEmail: string;
   firstName?: string;
@@ -18,4 +18,4 @@ export interface SendTemplateEmailParams {
   bookingLink?: string;
 }
 
-export type TemplateType = 'rejection' | 'interview' | 'hold_for_future' | 'welcome' | 'thank_you';
+export type TemplateType = 'rejection' | 'interview' | 'hold_for_future' | 'welcome' | 'thank_you' | 'application_update' | 'post_interview_rejection';

@@ -3,8 +3,8 @@ import { EmailTemplate } from '../types';
 
 export const rejectionTemplate: EmailTemplate = {
   id: 'rejection-default',
-  name: 'Rejection Email',
-  subject: "I'm Sorry You Were Not Selected",
+  name: 'Kind Rejection After Application Review',
+  subject: 'Thank You for Applying',
   content: `<!DOCTYPE html>
 <html>
 <head>
@@ -44,21 +44,25 @@ export const rejectionTemplate: EmailTemplate = {
 </head>
 <body>
   <div class="container">
-    <h1>Application Update</h1>
+    <h1>Thank You for Your Interest</h1>
 
-    <p>Hey {{firstName}},</p>
+    <p>Hi {{firstName}},</p>
 
-    <p>Thank you so much for showing interest in our company.</p>
+    <p>Thank you for your interest in the {{jobRole}} position at Patient Pro Marketing and for taking the time to submit your application.</p>
 
-    <p>Unfortunately, our team did not select you for further consideration. I would like to note that our hiring team receives multiple resumes for each position, and it's often difficult for us to choose between several high-caliber candidates.</p>
+    <p>After careful review of your application, we have decided to move forward with other candidates who more closely match our current requirements for this role.</p>
 
-    <p>We truly appreciate the time and effort you put into your application. We wish you the best of luck in your job search and all your future endeavors.</p>
+    <p>We truly appreciate the time and effort you put into your application. Please don't let this discourage you - we encourage you to apply for future openings that may be a better fit for your skills and experience.</p>
 
-    <p>Thank you,</p>
+    <p>We wish you all the best in your job search and future career endeavors.</p>
+
+    <p>Thank you again for considering Patient Pro Marketing.</p>
+
+    <p>Best regards,</p>
 
     <p class="signature">
       <br>
-      <strong>Justin Lesh, Founder</strong><br>
+      <strong>The Hiring Team</strong><br>
       Patient Pro Marketing
     </p>
   </div>

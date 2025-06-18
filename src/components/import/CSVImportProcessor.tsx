@@ -101,7 +101,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
     for (const candidate of candidates) {
       try {
         const success = await sendTemplateEmail({
-          templateType: 'interview',
+          templateType: 'application_update',
           candidateName: `${candidate.firstName} ${candidate.lastName}`,
           candidateEmail: candidate.email,
           firstName: candidate.firstName,

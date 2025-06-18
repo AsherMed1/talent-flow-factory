@@ -29,8 +29,11 @@ export const getTemplateByType = (
   // Fall back to default template based on type
   let searchTerm = '';
   switch (type) {
+    case 'application_update':
+      searchTerm = 'application update';
+      break;
     case 'rejection':
-      searchTerm = 'rejection';
+      searchTerm = 'kind rejection after application';
       break;
     case 'interview':
       searchTerm = 'interview';
@@ -43,6 +46,9 @@ export const getTemplateByType = (
       break;
     case 'thank_you':
       searchTerm = 'thank you';
+      break;
+    case 'post_interview_rejection':
+      searchTerm = 'final rejection after interview';
       break;
   }
   

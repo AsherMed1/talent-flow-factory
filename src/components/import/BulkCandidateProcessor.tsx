@@ -58,7 +58,7 @@ export const BulkCandidateProcessor = ({
     for (const candidate of candidatesToProcess) {
       try {
         const success = await sendTemplateEmail({
-          templateType: 'interview',
+          templateType: 'application_update',
           candidateName: `${candidate.firstName} ${candidate.lastName}`,
           candidateEmail: candidate.email,
           firstName: candidate.firstName,
