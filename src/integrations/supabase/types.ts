@@ -20,6 +20,7 @@ export type Database = {
           has_voice_recording: boolean | null
           id: string
           interview_date: string | null
+          interview_recording_link: string | null
           job_role_id: string | null
           notes: string | null
           offer_sent_date: string | null
@@ -48,6 +49,7 @@ export type Database = {
           has_voice_recording?: boolean | null
           id?: string
           interview_date?: string | null
+          interview_recording_link?: string | null
           job_role_id?: string | null
           notes?: string | null
           offer_sent_date?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           has_voice_recording?: boolean | null
           id?: string
           interview_date?: string | null
+          interview_recording_link?: string | null
           job_role_id?: string | null
           notes?: string | null
           offer_sent_date?: string | null
