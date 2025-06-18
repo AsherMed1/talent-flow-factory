@@ -61,22 +61,38 @@ export const useUpdateJobRole = () => {
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
       console.log('Updating job role with ID:', id, 'and updates:', updates);
       
+      // First check if the role exists
+      const { data: existingRole, error: fetchError } = await supabase
+        .from('job_roles')
+        .select('id')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError || !existingRole) {
+        console.error('Role not found:', fetchError);
+        throw new Error('Role not found with the specified ID');
+      }
+      
+      // Now update the role
       const { data, error } = await supabase
         .from('job_roles')
-        .update(updates)
+        .update({
+          name: updates.name,
+          description: updates.description,
+          booking_link: updates.booking_link,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
-        .select();
+        .select()
+        .single();
       
       if (error) {
         console.error('Supabase update error:', error);
         throw error;
       }
       
-      if (!data || data.length === 0) {
-        throw new Error('No role found with the specified ID');
-      }
-      
-      return data[0];
+      console.log('Update successful:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['job-roles'] });
