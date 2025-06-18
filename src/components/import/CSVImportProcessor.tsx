@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -242,7 +241,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
                   Application emails will be sent automatically after import. Please configure your email settings first.
                 </p>
                 <p className="text-sm text-red-600 mt-1">
-                  Go to Settings &gt; Email Integration to set up Resend
+                  Go to Settings &gt; Email Integration to set up your email provider
                 </p>
               </div>
             </div>
