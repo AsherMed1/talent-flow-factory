@@ -1,11 +1,12 @@
 
 import { Button } from '@/components/ui/button';
-import { Brain, Loader2, Check, X } from 'lucide-react';
+import { Brain, Loader2, Check, X, RefreshCw } from 'lucide-react';
 
 interface ActionButtonsProps {
   onApprove: () => void;
   onReject: () => void;
   onAnalyzeVoice?: () => void;
+  onReAnalyzeVoice?: () => void;
   isUpdating: boolean;
   isAnalyzing: boolean;
   hasVoiceRecording: boolean;
@@ -16,6 +17,7 @@ export const ActionButtons = ({
   onApprove, 
   onReject, 
   onAnalyzeVoice, 
+  onReAnalyzeVoice,
   isUpdating, 
   isAnalyzing, 
   hasVoiceRecording, 
@@ -58,6 +60,23 @@ export const ActionButtons = ({
             <Loader2 className="w-3 h-3 animate-spin" />
           ) : (
             <Brain className="w-3 h-3" />
+          )}
+        </Button>
+      )}
+      
+      {hasVoiceRecording && hasAnalysis && onReAnalyzeVoice && (
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-xs h-7 bg-blue-50 hover:bg-blue-100 border-blue-200"
+          onClick={onReAnalyzeVoice}
+          disabled={isAnalyzing}
+          title="Re-analyze with updated criteria"
+        >
+          {isAnalyzing ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3 h-3" />
           )}
         </Button>
       )}

@@ -42,7 +42,16 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
   const handleVoiceAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      await handleAnalyzeVoice(application);
+      await handleAnalyzeVoice(application, false);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleVoiceReAnalysis = async () => {
+    setIsAnalyzing(true);
+    try {
+      await handleAnalyzeVoice(application, true);
     } finally {
       setIsAnalyzing(false);
     }
@@ -59,6 +68,7 @@ export const ApplicationActions = ({ application, currentStageIndex, onStatusCha
       onApprove={handleApprove}
       onReject={handleReject}
       onAnalyzeVoice={handleVoiceAnalysis}
+      onReAnalyzeVoice={handleVoiceReAnalysis}
       isUpdating={isUpdating}
       isAnalyzing={isAnalyzing}
       hasVoiceRecording={hasVoiceRecording}

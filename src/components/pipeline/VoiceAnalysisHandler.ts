@@ -8,7 +8,7 @@ export const useVoiceAnalysisHandler = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleAnalyzeVoice = async (application: Application) => {
+  const handleAnalyzeVoice = async (application: Application, forceReAnalysis = false) => {
     if (!application.has_voice_recording && !application.form_data?.voiceRecordings?.hasIntroduction && !application.form_data?.voiceRecordings?.hasScript) {
       toast({
         title: "No Voice Recording",
@@ -18,7 +18,17 @@ export const useVoiceAnalysisHandler = () => {
       return;
     }
 
-    console.log('Triggering voice analysis for application:', application.id);
+    // Check if already analyzed and not forcing re-analysis
+    if (application.voice_analysis_score && !forceReAnalysis) {
+      toast({
+        title: "Already Analyzed",
+        description: "This voice recording has already been analyzed. Use re-analyze to update the results.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Triggering voice analysis for application:', application.id, forceReAnalysis ? '(re-analysis)' : '');
 
     try {
       const voiceRecordings = application.form_data?.voiceRecordings;
@@ -44,8 +54,8 @@ export const useVoiceAnalysisHandler = () => {
       if (error) throw error;
 
       toast({
-        title: "Analysis Complete",
-        description: "Voice analysis has been completed successfully.",
+        title: forceReAnalysis ? "Re-Analysis Complete" : "Analysis Complete",
+        description: "Voice analysis has been completed successfully with updated criteria.",
       });
 
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
