@@ -103,6 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Get the secret token from environment
       const secretToken = Deno.env.get('ZOOM_WEBHOOK_SECRET_TOKEN');
       console.log('Secret token configured:', !!secretToken);
+      console.log('Secret token length:', secretToken?.length || 0);
       
       if (!secretToken) {
         console.error('ZOOM_WEBHOOK_SECRET_TOKEN not configured');
@@ -119,8 +120,9 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Create the encrypted token by hashing plainToken + secretToken
       const message = plainToken + secretToken;
-      console.log('Message to hash:', message);
-      console.log('Message length:', message.length);
+      console.log('Creating hash from message (length):', message.length);
+      console.log('Plain token:', plainToken);
+      console.log('Secret token (first 10 chars):', secretToken.substring(0, 10) + '...');
       
       const encoder = new TextEncoder();
       const data = encoder.encode(message);
