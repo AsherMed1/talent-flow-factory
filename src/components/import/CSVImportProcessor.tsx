@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, AlertCircle, CheckCircle, Users } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Users, Mail } from 'lucide-react';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useAddUploadedCandidates, useUploadedCandidateStats } from '@/hooks/useUploadedCandidates';
+import { useEmailSender } from '@/hooks/emailTemplates/emailSender';
 
 interface CSVImportProcessorProps {
   onImportComplete: (candidates: any[], selectedJobRole?: any) => void;
@@ -16,6 +17,7 @@ interface CSVImportProcessorProps {
 export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [selectedJobRoleId, setSelectedJobRoleId] = useState('');
   const [fieldMapping, setFieldMapping] = useState({
@@ -30,6 +32,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
   const { data: jobRoles, isLoading: jobRolesLoading } = useJobRoles();
   const addUploadedCandidates = useAddUploadedCandidates();
   const { data: candidateStats } = useUploadedCandidateStats();
+  const { sendTemplateEmail, isConnected } = useEmailSender();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -81,11 +84,80 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
     setPreviewData(preview);
   };
 
+  const sendApplicationEmails = async (candidates: any[], selectedJobRole: any) => {
+    if (!isConnected) {
+      toast({
+        title: "Email Not Configured",
+        description: "Please configure your email settings in Settings > Email Integration before importing candidates.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    setIsSendingEmails(true);
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const candidate of candidates) {
+      try {
+        const success = await sendTemplateEmail({
+          templateType: 'interview',
+          candidateName: `${candidate.firstName} ${candidate.lastName}`,
+          candidateEmail: candidate.email,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          jobRole: selectedJobRole?.name || 'General',
+          bookingLink: selectedJobRole?.booking_link
+        });
+
+        if (success) {
+          successCount++;
+        } else {
+          failureCount++;
+        }
+
+        // Small delay between emails to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Failed to send email to ${candidate.email}:`, error);
+        failureCount++;
+      }
+    }
+
+    setIsSendingEmails(false);
+
+    if (successCount > 0) {
+      toast({
+        title: "Application Emails Sent",
+        description: `Successfully sent ${successCount} application emails${failureCount > 0 ? `. ${failureCount} failed to send.` : '.'}`,
+      });
+    }
+
+    if (failureCount > 0 && successCount === 0) {
+      toast({
+        title: "Email Send Failed",
+        description: `Failed to send ${failureCount} application emails. Please check your email configuration.`,
+        variant: "destructive",
+      });
+    }
+
+    return successCount > 0;
+  };
+
   const handleImport = async () => {
     if (!csvFile || !selectedJobRoleId) {
       toast({
         title: "Validation Error",
         description: "Please select a CSV file and job role before importing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isConnected) {
+      toast({
+        title: "Email Configuration Required",
+        description: "Please configure your email settings in Settings > Email Integration before importing candidates. Application emails will be sent automatically after import.",
         variant: "destructive",
       });
       return;
@@ -115,7 +187,7 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
       })).filter(candidate => candidate.email && candidate.firstName);
 
       // Add to uploaded candidates tracking
-      await addUploadedCandidates.mutateAsync(candidates.map(c => ({
+      const newCandidates = await addUploadedCandidates.mutateAsync(candidates.map(c => ({
         firstName: c.firstName,
         lastName: c.lastName,
         email: c.email,
@@ -124,6 +196,12 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
       })));
 
       const selectedJobRole = jobRoles?.find(role => role.id === selectedJobRoleId);
+
+      // Automatically send application emails to all uploaded candidates
+      if (newCandidates.length > 0) {
+        await sendApplicationEmails(candidates, selectedJobRole);
+      }
+
       onImportComplete(candidates, selectedJobRole);
       
       // Reset form
@@ -149,6 +227,28 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
 
   return (
     <div className="space-y-6">
+      {/* Email Configuration Warning */}
+      {!isConnected && (
+        <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Mail className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-red-900">Email Configuration Required</h3>
+                <p className="text-red-700">
+                  Application emails will be sent automatically after import. Please configure your email settings first.
+                </p>
+                <p className="text-sm text-red-600 mt-1">
+                  Go to Settings > Email Integration to set up Resend
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Candidates Stats Card */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <CardContent className="p-6">
@@ -220,6 +320,18 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
               <FileText className="w-4 h-4 text-green-600" />
               <span className="text-sm text-green-700">{csvFile.name}</span>
               <Badge variant="secondary">{previewData.length} rows detected</Badge>
+            </div>
+          )}
+
+          {isConnected && (
+            <div className="bg-green-50 p-3 rounded-lg">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                <div className="text-sm text-green-700">
+                  <p className="font-medium">Email configured - Application emails will be sent automatically</p>
+                  <p>After importing, each candidate will receive an interview invitation email with the application link.</p>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -301,10 +413,12 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
               <div className="mt-4 flex justify-end">
                 <Button
                   onClick={handleImport}
-                  disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || !selectedJobRoleId || isProcessing}
+                  disabled={!fieldMapping.firstName || !fieldMapping.lastName || !fieldMapping.email || !selectedJobRoleId || isProcessing || isSendingEmails}
                   className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
                 >
-                  {isProcessing ? 'Processing...' : `Import ${previewData.length} Candidates`}
+                  {isProcessing ? 'Processing...' : 
+                   isSendingEmails ? 'Sending Emails...' : 
+                   `Import ${previewData.length} Candidates & Send Emails`}
                 </Button>
               </div>
             </CardContent>
