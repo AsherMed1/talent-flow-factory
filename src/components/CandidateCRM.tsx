@@ -21,6 +21,8 @@ export const CandidateCRM = () => {
     setDeletingCandidateId(candidateId);
     
     try {
+      console.log('Starting deletion process for candidate:', candidateId);
+      
       // First delete all applications for this candidate
       const { error: applicationsError } = await supabase
         .from('applications')
@@ -28,6 +30,7 @@ export const CandidateCRM = () => {
         .eq('candidate_id', candidateId);
 
       if (applicationsError) {
+        console.error('Error deleting applications:', applicationsError);
         throw applicationsError;
       }
 
@@ -38,6 +41,7 @@ export const CandidateCRM = () => {
         .eq('candidate_id', candidateId);
 
       if (tagsError) {
+        console.error('Error deleting tags:', tagsError);
         throw tagsError;
       }
 
@@ -48,16 +52,19 @@ export const CandidateCRM = () => {
         .eq('id', candidateId);
 
       if (candidateError) {
+        console.error('Error deleting candidate:', candidateError);
         throw candidateError;
       }
+
+      console.log('Successfully deleted candidate:', candidateId);
 
       toast({
         title: "Candidate Deleted",
         description: `${candidateName} has been removed from the system.`,
       });
 
-      // Refresh the candidates list
-      refetch();
+      // Force refresh the candidates list
+      await refetch();
     } catch (error) {
       console.error('Error deleting candidate:', error);
       toast({
@@ -249,8 +256,9 @@ export const CandidateCRM = () => {
                           <AlertDialogAction
                             onClick={() => handleDeleteCandidate(candidate.id, candidate.name)}
                             className="bg-red-600 hover:bg-red-700"
+                            disabled={deletingCandidateId === candidate.id}
                           >
-                            Delete Candidate
+                            {deletingCandidateId === candidate.id ? 'Deleting...' : 'Delete Candidate'}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

@@ -1,8 +1,9 @@
-
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useJobRoles } from '@/hooks/useJobRoles';
-import { useAddUploadedCandidates } from '@/hooks/useUploadedCandidates';
 import { EmailConfigurationWarning } from './EmailConfigurationWarning';
 import { CandidateStatsCard } from './CandidateStatsCard';
 import { FileUploadSection } from './FileUploadSection';
@@ -10,16 +11,8 @@ import { FieldMappingSection } from './FieldMappingSection';
 import { PreviewSection } from './PreviewSection';
 import { useCSVEmailService } from './CSVEmailService';
 
-interface CSVImportProcessorProps {
-  onImportComplete: (candidates: any[], selectedJobRole?: any) => void;
-}
-
-export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps) => {
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSendingEmails, setIsSendingEmails] = useState(false);
-  const [previewData, setPreviewData] = useState<any[]>([]);
-  const [selectedJobRoleId, setSelectedJobRoleId] = useState('');
+export const CSVImportProcessor = () => {
+  const [csvData, setCsvData] = useState<any[]>([]);
   const [fieldMapping, setFieldMapping] = useState({
     firstName: '',
     lastName: '',
@@ -27,136 +20,161 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
     phone: '',
     jobRole: ''
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [selectedJobRole, setSelectedJobRole] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSendingEmails, setIsSendingEmails] = useState(false);
+
   const { toast } = useToast();
   const { data: jobRoles } = useJobRoles();
-  const addUploadedCandidates = useAddUploadedCandidates();
   const { sendApplicationEmails, isConnected } = useCSVEmailService({
     onEmailStatusUpdate: setIsSendingEmails
   });
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'text/csv') {
-      setCsvFile(file);
-      processCSVPreview(file);
-    } else {
-      toast({
-        title: "Invalid File",
-        description: "Please select a valid CSV file.",
-        variant: "destructive",
-      });
-    }
-  };
+    if (!file) return;
 
-  const processCSVPreview = async (file: File) => {
-    const text = await file.text();
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    
-    // Auto-detect common field mappings
-    const mapping = { ...fieldMapping };
-    headers.forEach((header, index) => {
-      const lowerHeader = header.toLowerCase();
-      if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
-        mapping.firstName = header;
-      } else if (lowerHeader.includes('last') && lowerHeader.includes('name')) {
-        mapping.lastName = header;
-      } else if (lowerHeader.includes('email')) {
-        mapping.email = header;
-      } else if (lowerHeader.includes('phone')) {
-        mapping.phone = header;
-      } else if (lowerHeader.includes('job') || lowerHeader.includes('role') || lowerHeader.includes('position')) {
-        mapping.jobRole = header;
-      }
-    });
-    setFieldMapping(mapping);
-
-    // Show preview of first 5 rows
-    const preview = lines.slice(1, 6).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const obj: any = {};
-      headers.forEach((header, index) => {
-        obj[header] = values[index] || '';
-      });
-      return obj;
-    }).filter(row => Object.values(row).some(val => val !== ''));
-
-    setPreviewData(preview);
-  };
-
-  const handleImport = async () => {
-    if (!csvFile || !selectedJobRoleId) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a CSV file and job role before importing.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isConnected) {
-      toast({
-        title: "Email Configuration Required",
-        description: "Please configure your email settings in Settings > Email Integration before importing candidates. Application emails will be sent automatically after import.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const text = await csvFile.text();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
       const lines = text.split('\n');
       const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
       
-      const candidates = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        const obj: any = {};
-        headers.forEach((header, index) => {
-          obj[header] = values[index] || '';
+      const data = lines.slice(1)
+        .filter(line => line.trim())
+        .map(line => {
+          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+          const row: any = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+          });
+          return row;
         });
-        return obj;
-      }).filter(row => Object.values(row).some(val => val !== ''))
-      .map(row => ({
+
+      setCsvData(data);
+      
+      // Auto-map fields if possible
+      const autoMapping = { ...fieldMapping };
+      headers.forEach(header => {
+        const lowerHeader = header.toLowerCase();
+        if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
+          autoMapping.firstName = header;
+        } else if (lowerHeader.includes('last') && lowerHeader.includes('name')) {
+          autoMapping.lastName = header;
+        } else if (lowerHeader.includes('email')) {
+          autoMapping.email = header;
+        } else if (lowerHeader.includes('phone')) {
+          autoMapping.phone = header;
+        } else if (lowerHeader.includes('job') || lowerHeader.includes('role') || lowerHeader.includes('position')) {
+          autoMapping.jobRole = header;
+        }
+      });
+      
+      setFieldMapping(autoMapping);
+      setPreviewData(data.slice(0, 5));
+    };
+    
+    reader.readAsText(file);
+  };
+
+  const handleFieldMappingChange = (field: string, value: string) => {
+    const newMapping = { ...fieldMapping, [field]: value };
+    setFieldMapping(newMapping);
+    
+    // Update preview when mapping changes
+    if (csvData.length > 0) {
+      setPreviewData(csvData.slice(0, 5));
+    }
+  };
+
+  const handleJobRoleChange = (value: string) => {
+    const role = jobRoles?.find(r => r.id === value);
+    setSelectedJobRole(role);
+  };
+
+  const handleImport = async () => {
+    if (!csvData.length) return;
+
+    setIsProcessing(true);
+
+    try {
+      const candidates = csvData.map(row => ({
         firstName: row[fieldMapping.firstName] || '',
         lastName: row[fieldMapping.lastName] || '',
         email: row[fieldMapping.email] || '',
         phone: row[fieldMapping.phone] || '',
-        jobRole: row[fieldMapping.jobRole] || '',
-        originalData: row
-      })).filter(candidate => candidate.email && candidate.firstName);
+        jobRole: selectedJobRole?.name || row[fieldMapping.jobRole] || ''
+      }));
 
-      // Add to uploaded candidates tracking
-      const newCandidates = await addUploadedCandidates.mutateAsync(candidates.map(c => ({
-        firstName: c.firstName,
-        lastName: c.lastName,
-        email: c.email,
-        phone: c.phone,
-        jobRole: c.jobRole
-      })));
+      // Insert candidates into database
+      const { data: insertedCandidates, error: candidatesError } = await supabase
+        .from('candidates')
+        .insert(
+          candidates.map(candidate => ({
+            name: `${candidate.firstName} ${candidate.lastName}`.trim(),
+            email: candidate.email,
+            phone: candidate.phone || null
+          }))
+        )
+        .select();
 
-      const selectedJobRole = jobRoles?.find(role => role.id === selectedJobRoleId);
+      if (candidatesError) throw candidatesError;
 
-      // Automatically send application emails to all uploaded candidates
-      if (newCandidates.length > 0) {
-        await sendApplicationEmails(candidates, selectedJobRole);
+      // Create applications for each candidate
+      if (insertedCandidates && selectedJobRole) {
+        const applications = insertedCandidates.map(candidate => ({
+          candidate_id: candidate.id,
+          job_role_id: selectedJobRole.id,
+          status: 'applied' as const,
+          notes: `Remote ${selectedJobRole.name} application. Location: ${candidates.find(c => c.email === candidate.email)?.jobRole || 'Not specified'}. Weekend availability: Not specified. Listening test completed.`,
+          applied_date: new Date().toISOString()
+        }));
+
+        const { error: applicationsError } = await supabase
+          .from('applications')
+          .insert(applications);
+
+        if (applicationsError) throw applicationsError;
+
+        // Add tags for each candidate
+        const tags = insertedCandidates.flatMap(candidate => [
+          { candidate_id: candidate.id, tag: 'Remote Worker' },
+          { candidate_id: candidate.id, tag: 'Weekend Available' }
+        ]);
+
+        const { error: tagsError } = await supabase
+          .from('candidate_tags')
+          .insert(tags);
+
+        if (tagsError) throw tagsError;
       }
 
-      onImportComplete(candidates, selectedJobRole);
-      
-      // Reset form
-      setCsvFile(null);
-      setPreviewData([]);
-      setSelectedJobRoleId('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      
-    } catch (error) {
+      // Send application emails
+      await sendApplicationEmails(candidates, selectedJobRole);
+
       toast({
-        title: "Import Error",
-        description: "Failed to process the CSV file.",
+        title: "Import Successful",
+        description: `Successfully imported ${candidates.length} candidates and sent application emails.`,
+      });
+
+      // Reset form
+      setCsvData([]);
+      setPreviewData([]);
+      setFieldMapping({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        jobRole: ''
+      });
+      setSelectedJobRole(null);
+
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: "Import Failed",
+        description: "There was an error importing the candidates. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -164,33 +182,48 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
     }
   };
 
-  const handleFieldMappingChange = (field: string, value: string) => {
-    setFieldMapping(prev => ({ ...prev, [field]: value }));
-  };
-
-  const availableHeaders = previewData.length > 0 ? Object.keys(previewData[0]) : [];
-  const canImport = fieldMapping.firstName && fieldMapping.lastName && fieldMapping.email && selectedJobRoleId;
+  const availableHeaders = csvData.length > 0 ? Object.keys(csvData[0]) : [];
+  const canImport = fieldMapping.firstName && fieldMapping.lastName && fieldMapping.email && selectedJobRole;
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Import Candidates from CSV</h2>
+      </div>
+
       <EmailConfigurationWarning isConnected={isConnected} />
       <CandidateStatsCard />
-      <FileUploadSection
-        csvFile={csvFile}
-        selectedJobRoleId={selectedJobRoleId}
-        previewDataLength={previewData.length}
-        isConnected={isConnected}
-        onFileSelect={handleFileSelect}
-        onJobRoleChange={setSelectedJobRoleId}
-      />
-      
-      {previewData.length > 0 && (
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FileUploadSection onFileUpload={handleFileUpload} />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Job Role</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <select
+              value={selectedJobRole?.id || ''}
+              onChange={(e) => handleJobRoleChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select a job role...</option>
+              {jobRoles?.map(role => (
+                <option key={role.id} value={role.id}>{role.name}</option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      </div>
+
+      {csvData.length > 0 && (
         <>
           <FieldMappingSection
             fieldMapping={fieldMapping}
             availableHeaders={availableHeaders}
             onFieldMappingChange={handleFieldMappingChange}
           />
+
           <PreviewSection
             previewData={previewData}
             fieldMapping={fieldMapping}
