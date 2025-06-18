@@ -59,9 +59,26 @@ export const useUpdateJobRole = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<JobRole> & { id: string }) => {
-      console.log('Updating job role with ID:', id, 'and updates:', updates);
+      console.log('=== UPDATE JOB ROLE DEBUG ===');
+      console.log('Updating job role with ID:', id, 'typeof:', typeof id);
+      console.log('Updates:', updates);
       
       try {
+        // First verify the role exists with debugging
+        const { data: existingRoles, error: checkError } = await supabase
+          .from('job_roles')
+          .select('*');
+        
+        console.log('All roles in database:', existingRoles?.map(r => ({ id: r.id, name: r.name })));
+        
+        const roleExists = existingRoles?.find(r => r.id === id);
+        console.log('Role exists check:', roleExists ? 'YES' : 'NO');
+        
+        if (!roleExists) {
+          console.error('Role not found in database with ID:', id);
+          throw new Error(`Role with ID ${id} not found in database`);
+        }
+        
         // Build the update object with only the fields that are being updated
         const updateData: any = {
           updated_at: new Date().toISOString()
@@ -78,14 +95,14 @@ export const useUpdateJobRole = () => {
           updateData.booking_link = updates.booking_link === '' ? null : updates.booking_link;
         }
         
-        console.log('Update data being sent to Supabase:', updateData);
+        console.log('Final update data being sent to Supabase:', updateData);
         
         const { data, error } = await supabase
           .from('job_roles')
           .update(updateData)
           .eq('id', id)
           .select()
-          .maybeSingle();
+          .single();
         
         if (error) {
           console.error('Supabase update error:', error);
@@ -93,21 +110,18 @@ export const useUpdateJobRole = () => {
         }
         
         if (!data) {
-          console.error('No data returned - role may not exist with ID:', id);
-          throw new Error('Role not found or update failed');
+          console.error('No data returned from update');
+          throw new Error('Update operation returned no data');
         }
         
         console.log('Update successful, returned data:', data);
+        console.log('=== UPDATE COMPLETE ===');
         return data;
         
       } catch (error) {
+        console.error('=== UPDATE FAILED ===');
         console.error('Full update error:', error);
-        // Re-throw with more context
-        if (error instanceof Error) {
-          throw error;
-        } else {
-          throw new Error('Unknown error occurred during update');
-        }
+        throw error;
       }
     },
     onSuccess: (data) => {
