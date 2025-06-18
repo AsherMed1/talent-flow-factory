@@ -5,10 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useCandidateDelete = (refetch: () => Promise<any>) => {
   const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null);
+  const [deletedCandidateIds, setDeletedCandidateIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const handleDeleteCandidate = async (candidateId: string, candidateName: string) => {
+    // Immediately mark candidate as being deleted and remove from UI
     setDeletingCandidateId(candidateId);
+    setDeletedCandidateIds(prev => new Set([...prev, candidateId]));
     
     try {
       console.log('Starting deletion process for candidate:', candidateId, 'Name:', candidateName);
@@ -89,6 +92,14 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
       
     } catch (error) {
       console.error('Detailed error during candidate deletion:', error);
+      
+      // If deletion failed, remove from deleted set so they reappear
+      setDeletedCandidateIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(candidateId);
+        return newSet;
+      });
+      
       toast({
         title: "Deletion Failed",
         description: error instanceof Error ? error.message : "Failed to delete candidate. Please try again.",
@@ -101,6 +112,7 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
 
   return {
     deletingCandidateId,
+    deletedCandidateIds,
     handleDeleteCandidate
   };
 };

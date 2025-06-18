@@ -11,8 +11,11 @@ export const CandidateCRM = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const { data: candidates, isLoading, refetch } = useCandidates();
-  const { deletingCandidateId, handleDeleteCandidate } = useCandidateDelete(refetch);
-  const { filteredCandidates, filters } = useCandidateFilters(candidates, searchTerm, selectedFilter);
+  const { deletingCandidateId, deletedCandidateIds, handleDeleteCandidate } = useCandidateDelete(refetch);
+  
+  // Filter out deleted candidates immediately
+  const activeCandidates = candidates?.filter(candidate => !deletedCandidateIds.has(candidate.id));
+  const { filteredCandidates, filters } = useCandidateFilters(activeCandidates, searchTerm, selectedFilter);
 
   if (isLoading) {
     return (
