@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Save, Calendar, Star, Video, ExternalLink, Link } from 'lucide-react';
+import { Search, Save, Calendar, Star, Video, ExternalLink, Link, CalendarDays, List } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { InterviewDisposition } from './InterviewDisposition';
+import { InterviewCalendar } from './InterviewCalendar';
 
 export const InterviewNotes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +23,7 @@ export const InterviewNotes = () => {
   const [interviewStatus, setInterviewStatus] = useState<'hired' | 'rejected' | 'interview_completed'>('interview_completed');
   const [rating, setRating] = useState<number>(3);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   
   const { data: applications, isLoading } = useApplications();
   const { toast } = useToast();
@@ -35,6 +36,17 @@ export const InterviewNotes = () => {
   ) || [];
 
   const selectedApplication = applications?.find(app => app.id === selectedCandidate);
+
+  const handleSelectCandidate = (candidateId: string) => {
+    setSelectedCandidate(candidateId);
+    const application = applications?.find(app => app.id === candidateId);
+    if (application) {
+      setNotes(application.notes || '');
+      setInterviewRecordingLink(application.interview_recording_link || '');
+      setRating(application.rating || 3);
+      setInterviewStatus(application.status as any);
+    }
+  };
 
   const handleSaveNotes = async () => {
     if (!selectedCandidate) return;
@@ -226,88 +238,42 @@ export const InterviewNotes = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Interview Notes</h1>
-        <Badge variant="outline" className="text-sm">
-          {interviewCandidates.length} candidates ready for interview
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-sm">
+            {interviewCandidates.length} candidates ready for interview
+          </Badge>
+          <div className="flex rounded-lg border">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-r-none"
+            >
+              <List className="w-4 h-4 mr-2" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+              className="rounded-l-none"
+            >
+              <CalendarDays className="w-4 h-4 mr-2" />
+              Calendar
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Candidate List */}
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search candidates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {interviewCandidates.map((application) => (
-              <Card
-                key={application.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedCandidate === application.id ? 'ring-2 ring-blue-500' : ''
-                }`}
-                onClick={() => {
-                  setSelectedCandidate(application.id);
-                  setNotes(application.notes || '');
-                  setInterviewRecordingLink(application.interview_recording_link || '');
-                  setRating(application.rating || 3);
-                  setInterviewStatus(application.status as any);
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback>
-                        {application.candidates.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {application.candidates.name}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {application.job_roles?.name}
-                      </div>
-                      {application.interview_date && (
-                        <div className="text-xs text-blue-600 flex items-center gap-1 mt-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(application.interview_date).toLocaleDateString()}
-                        </div>
-                      )}
-                      {(application.interview_recording_link || application.zoom_recording_url) && (
-                        <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                          <Video className="w-3 h-3" />
-                          Recording Available
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <Badge className={`text-xs ${getStatusColor(application.status)}`}>
-                      {application.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {interviewCandidates.length === 0 && (
-            <div className="text-center text-gray-500 py-8">
-              <p className="text-lg">No candidates ready for interview</p>
-              <p className="text-sm">Candidates will appear here when interviews are scheduled</p>
-            </div>
-          )}
-        </div>
-
-        {/* Interview Notes Section */}
-        <div className="lg:col-span-2">
-          {selectedApplication ? (
+      {viewMode === 'calendar' ? (
+        <div className="space-y-6">
+          <InterviewCalendar 
+            applications={applications || []} 
+            onSelectCandidate={handleSelectCandidate}
+          />
+          
+          {/* Interview Notes Section for Calendar View */}
+          {selectedApplication && (
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -425,22 +391,218 @@ export const InterviewNotes = () => {
                 <InterviewDisposition 
                   application={selectedApplication}
                   onDispositionComplete={() => {
-                    // Refresh the selected candidate data
                     setSelectedCandidate(null);
                   }}
                 />
               )}
             </div>
-          ) : (
-            <Card className="h-96 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <div className="text-lg font-medium">Select a candidate</div>
-                <div className="text-sm">Choose a candidate from the list to start taking interview notes</div>
-              </div>
-            </Card>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Candidate List */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search candidates..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {interviewCandidates.map((application) => (
+                <Card
+                  key={application.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedCandidate === application.id ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                  onClick={() => handleSelectCandidate(application.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback>
+                          {application.candidates.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {application.candidates.name}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {application.job_roles?.name}
+                        </div>
+                        {application.interview_date && (
+                          <div className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(application.interview_date).toLocaleDateString()}
+                          </div>
+                        )}
+                        {(application.interview_recording_link || application.zoom_recording_url) && (
+                          <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                            <Video className="w-3 h-3" />
+                            Recording Available
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <Badge className={`text-xs ${getStatusColor(application.status)}`}>
+                        {application.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {interviewCandidates.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                <p className="text-lg">No candidates ready for interview</p>
+                <p className="text-sm">Candidates will appear here when interviews are scheduled</p>
+              </div>
+            )}
+          </div>
+
+          {/* Interview Notes Section */}
+          <div className="lg:col-span-2">
+            {selectedApplication ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xl">{selectedApplication.candidates.name}</div>
+                        <div className="text-sm text-gray-500 font-normal">
+                          {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(selectedApplication.status)}>
+                        {selectedApplication.status.replace('_', ' ')}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <Tabs defaultValue="notes" className="w-full">
+                      <TabsList>
+                        <TabsTrigger value="notes">Interview Notes</TabsTrigger>
+                        <TabsTrigger value="recording">Recording Link</TabsTrigger>
+                        <TabsTrigger value="rating">Rating & Status</TabsTrigger>
+                        <TabsTrigger value="recordings">All Recordings</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="notes" className="space-y-4">
+                        <div>
+                          <Label htmlFor="notes" className="text-base font-medium">
+                            Interview Notes
+                          </Label>
+                          <Textarea
+                            id="notes"
+                            placeholder="Take notes during the interview..."
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            className="mt-2 min-h-64 resize-none"
+                          />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="recording" className="space-y-4">
+                        <div>
+                          <Label htmlFor="recording-link" className="text-base font-medium">
+                            Interview Recording Link
+                          </Label>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Add a link to the interview recording (Loom, Zoom, Google Drive, etc.)
+                          </p>
+                          <Input
+                            id="recording-link"
+                            placeholder="https://loom.com/share/... or https://zoom.us/rec/..."
+                            value={interviewRecordingLink}
+                            onChange={(e) => setInterviewRecordingLink(e.target.value)}
+                            className="mt-2"
+                          />
+                          {interviewRecordingLink && (
+                            <div className="mt-3">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(interviewRecordingLink, '_blank')}
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Test Link
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="rating" className="space-y-6">
+                        <div>
+                          <Label className="text-base font-medium">Overall Rating</Label>
+                          <div className="mt-2">
+                            {renderStars(rating)}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-base font-medium">Interview Status</Label>
+                          <RadioGroup
+                            value={interviewStatus}
+                            onValueChange={(value) => setInterviewStatus(value as any)}
+                            className="mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="interview_completed" id="potential" />
+                              <Label htmlFor="potential">Interview Complete - Ready for disposition</Label>
+                            </div>
+                          </RadioGroup>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Use the Disposition section below to make the final hiring decision.
+                          </p>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="recordings" className="space-y-4">
+                        {renderRecordings(selectedApplication)}
+                      </TabsContent>
+                    </Tabs>
+
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <div className="text-sm text-gray-500">
+                        {selectedApplication.notes ? 'Last updated: ' + new Date(selectedApplication.updated_at || '').toLocaleString() : 'No previous notes'}
+                      </div>
+                      <Button onClick={handleSaveNotes} disabled={isSaving}>
+                        <Save className="w-4 h-4 mr-2" />
+                        {isSaving ? 'Saving...' : 'Save Notes'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Interview Disposition */}
+                {selectedApplication.status === 'interview_completed' && (
+                  <InterviewDisposition 
+                    application={selectedApplication}
+                    onDispositionComplete={() => {
+                      setSelectedCandidate(null);
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <Card className="h-96 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <div className="text-lg font-medium">Select a candidate</div>
+                  <div className="text-sm">Choose a candidate from the list to start taking interview notes</div>
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
