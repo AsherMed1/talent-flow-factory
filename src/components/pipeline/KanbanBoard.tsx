@@ -9,13 +9,20 @@ import { SmartFilters, SmartFilterCriteria } from './SmartFilters';
 import { useSmartFilters } from './useSmartFilters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Users, Brain } from 'lucide-react';
+import { SkeletonCard, SkeletonRow } from '@/components/ui/skeleton-card';
+import { useRealtimeApplications } from '@/hooks/useRealtimeApplications';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface KanbanBoardProps {
   applications: Application[];
+  isLoading?: boolean;
 }
 
-export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
+export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProps) => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [processingApplications, setProcessingApplications] = useState<Set<string>>(new Set());
   const [smartFilters, setSmartFilters] = useState<SmartFilterCriteria>({
     minOverallScore: 6,
@@ -27,7 +34,45 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
     topPercentOnly: null,
   });
 
+  // Enable real-time updates
+  useRealtimeApplications();
+
   const { filteredApplications, statistics } = useSmartFilters(applications, smartFilters);
+
+  const handleStatusUpdate = async (applicationId: string, newStatus: ApplicationStatus) => {
+    setProcessingApplications(prev => new Set(prev).add(applicationId));
+    
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: newStatus })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status Updated",
+        description: `Application moved to ${newStatus.replace('_', ' ')}`,
+      });
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update application status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setProcessingApplications(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(applicationId);
+          return newSet;
+        });
+      }, 1000);
+    }
+  };
+
+  const { dragState, handleDragStart, handleDragEnd, handleDragOver, handleDrop } = useDragAndDrop(handleStatusUpdate);
 
   const getApplicationsByStage = (stageName: ApplicationStatus) => {
     return filteredApplications?.filter(app => 
@@ -36,15 +81,7 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
   };
 
   const handleStatusChanged = (applicationId: string, newStatus: ApplicationStatus) => {
-    setProcessingApplications(prev => new Set(prev).add(applicationId));
-    
-    setTimeout(() => {
-      setProcessingApplications(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(applicationId);
-        return newSet;
-      });
-    }, 1000);
+    handleStatusUpdate(applicationId, newStatus);
   };
 
   const handleSwipeLeft = (application: Application) => {
@@ -54,6 +91,53 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
   const handleSwipeRight = (application: Application) => {
     console.log('Swipe right - approve/move forward:', application.candidates.name);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Loading skeleton for filters */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 rounded animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Loading skeleton for pipeline */}
+        <div className="space-y-4">
+          {stages.map((stage, index) => (
+            <div key={index} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className={`p-4 ${stage.color} border-b border-gray-200`}>
+                <div className="h-6 w-48 bg-white/30 rounded animate-pulse" />
+              </div>
+              <div className="p-3">
+                {isMobile ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <SkeletonCard key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <SkeletonRow key={i} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -143,13 +227,20 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
                 </div>
                 
                 {/* Enhanced Mobile Applications */}
-                <div className="p-3">
+                <div 
+                  className="p-3"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, stage.name)}
+                >
                   {stageApplications.length > 0 ? (
                     <div className="space-y-3">
                       {stageApplications.map((application) => (
                         <div
                           key={application.id}
                           className="transform transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                          draggable
+                          onDragStart={() => handleDragStart(application)}
+                          onDragEnd={handleDragEnd}
                         >
                           <MobileApplicationCard 
                             application={application} 
@@ -169,7 +260,9 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
                         </svg>
                       </div>
                       <p className="text-sm font-medium">No applications</p>
-                      <p className="text-xs text-gray-400 mt-1">Applications will appear here when available</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {dragState.isDragging ? 'Drop here to move application' : 'Applications will appear here when available'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -182,10 +275,20 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
           {stages.map((stage, stageIndex) => {
             const stageApplications = getApplicationsByStage(stage.name);
             return (
-              <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div 
+                key={stageIndex} 
+                className={`bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-200 ${
+                  dragState.isDragging ? 'border-dashed border-2 border-blue-400' : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, stage.name)}
+              >
                 <div className={`p-4 ${stage.color} border-b border-gray-200`}>
                   <h3 className="font-semibold text-gray-900">
                     {stage.displayName} ({stageApplications.length})
+                    {dragState.isDragging && dragState.draggedFromStage !== stage.name && (
+                      <span className="ml-2 text-blue-600 text-sm">Drop to move here</span>
+                    )}
                   </h3>
                 </div>
                 
@@ -202,16 +305,41 @@ export const KanbanBoard = ({ applications }: KanbanBoardProps) => {
                 <div>
                   {stageApplications.length > 0 ? (
                     stageApplications.map((application) => (
-                      <ApplicationRow 
-                        key={application.id} 
-                        application={application} 
-                        stageIndex={stageIndex}
-                        onStatusChanged={handleStatusChanged}
-                      />
+                      <div
+                        key={application.id}
+                        draggable
+                        onDragStart={() => handleDragStart(application)}
+                        onDragEnd={handleDragEnd}
+                        className={`cursor-move transition-all duration-200 ${
+                          dragState.draggedApplication?.id === application.id ? 'opacity-50' : ''
+                        }`}
+                      >
+                        <ApplicationRow 
+                          application={application} 
+                          stageIndex={stageIndex}
+                          onStatusChanged={handleStatusChanged}
+                        />
+                      </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-gray-500">
-                      No applications match your filters in this stage
+                    <div className={`p-8 text-center text-gray-500 transition-all duration-200 ${
+                      dragState.isDragging ? 'bg-blue-50 border-2 border-dashed border-blue-300' : ''
+                    }`}>
+                      {dragState.isDragging && dragState.draggedFromStage !== stage.name ? (
+                        <div>
+                          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
+                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-medium text-blue-600">Drop application here</p>
+                          <p className="text-xs text-blue-400 mt-1">Move to {stage.displayName}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          No applications match your filters in this stage
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

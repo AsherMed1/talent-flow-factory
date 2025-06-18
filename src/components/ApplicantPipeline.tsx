@@ -23,18 +23,10 @@ export const ApplicantPipeline = () => {
       <div className={`${isMobile ? 'p-4' : 'p-6'} space-y-6`}>
         <div className="flex items-center justify-between">
           <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900`}>
-            Hiring Pipeline
+            {isMobile ? 'Pipeline' : 'Hiring Pipeline'}
           </h1>
         </div>
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'}`}>
-          {Array.from({ length: isMobile ? 4 : 6 }).map((_, index) => (
-            <div key={index} className="animate-pulse">
-              <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-                <div className={`${isMobile ? 'h-12' : 'h-16'} bg-gray-200 rounded`}></div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <KanbanBoard applications={[]} isLoading={true} />
       </div>
     );
   }
@@ -71,8 +63,8 @@ export const ApplicantPipeline = () => {
       {/* Pipeline Overview - Hide on mobile if too cluttered */}
       {!isMobile && <PipelineOverview applications={filteredApplications} />}
 
-      {/* Kanban Board - Now responsive */}
-      <KanbanBoard applications={filteredApplications} />
+      {/* Kanban Board - Now responsive with enhanced UX */}
+      <KanbanBoard applications={filteredApplications} isLoading={false} />
 
       {/* Mobile Export Button */}
       {isMobile && (
