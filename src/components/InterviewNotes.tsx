@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Save, Calendar, Star, Video, ExternalLink } from 'lucide-react';
+import { Search, Save, Calendar, Star, Video, ExternalLink, Link } from 'lucide-react';
 import { useApplications } from '@/hooks/useApplications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,7 @@ export const InterviewNotes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [interviewRecordingLink, setInterviewRecordingLink] = useState('');
   const [interviewStatus, setInterviewStatus] = useState<'hired' | 'rejected' | 'interview_completed'>('interview_completed');
   const [rating, setRating] = useState<number>(3);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,6 +43,7 @@ export const InterviewNotes = () => {
         .from('applications')
         .update({
           notes: notes,
+          interview_recording_link: interviewRecordingLink || null,
           status: interviewStatus,
           rating: rating,
           updated_at: new Date().toISOString()
@@ -53,7 +54,7 @@ export const InterviewNotes = () => {
 
       toast({
         title: "Notes Saved",
-        description: "Interview notes and status have been updated successfully.",
+        description: "Interview notes and recording link have been updated successfully.",
       });
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -98,20 +99,53 @@ export const InterviewNotes = () => {
     );
   };
 
-  const renderZoomRecordings = (application: any) => {
-    if (!application.zoom_recording_url && !application.zoom_recording_files) {
-      return null;
+  const renderRecordings = (application: any) => {
+    const hasManualLink = application.interview_recording_link;
+    const hasZoomRecording = application.zoom_recording_url || application.zoom_recording_files;
+
+    if (!hasManualLink && !hasZoomRecording) {
+      return (
+        <div className="text-center text-gray-500 py-8">
+          <Video className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          <p className="text-lg">No recordings available</p>
+          <p className="text-sm">Add a recording link manually or wait for Zoom integration</p>
+        </div>
+      );
     }
 
     return (
       <div className="space-y-3">
         <h4 className="font-medium text-gray-900">Interview Recordings</h4>
         
-        {application.zoom_recording_url && (
+        {/* Manual Recording Link */}
+        {hasManualLink && (
           <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
             <div className="flex items-center gap-2">
-              <Video className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium">Zoom Recording</span>
+              <Link className="w-4 h-4 text-blue-600" />
+              <div>
+                <span className="text-sm font-medium">Interview Recording</span>
+                <div className="text-xs text-gray-500 truncate max-w-60">
+                  {application.interview_recording_link}
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(application.interview_recording_link, '_blank')}
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />
+              View
+            </Button>
+          </div>
+        )}
+
+        {/* Zoom Recordings */}
+        {application.zoom_recording_url && (
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Video className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-medium">Zoom Recording (Auto)</span>
             </div>
             <Button
               variant="outline"
@@ -131,7 +165,7 @@ export const InterviewNotes = () => {
                 <div className="flex items-center gap-2">
                   <Video className="w-4 h-4 text-gray-600" />
                   <div>
-                    <span className="text-sm font-medium">{file.type} Recording</span>
+                    <span className="text-sm font-medium">{file.type} Recording (Auto)</span>
                     {file.recording_start && (
                       <div className="text-xs text-gray-500">
                         {new Date(file.recording_start).toLocaleString()}
@@ -218,6 +252,7 @@ export const InterviewNotes = () => {
                 onClick={() => {
                   setSelectedCandidate(application.id);
                   setNotes(application.notes || '');
+                  setInterviewRecordingLink(application.interview_recording_link || '');
                   setRating(application.rating || 3);
                   setInterviewStatus(application.status as any);
                 }}
@@ -242,7 +277,7 @@ export const InterviewNotes = () => {
                           {new Date(application.interview_date).toLocaleDateString()}
                         </div>
                       )}
-                      {application.zoom_recording_url && (
+                      {(application.interview_recording_link || application.zoom_recording_url) && (
                         <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
                           <Video className="w-3 h-3" />
                           Recording Available
@@ -289,8 +324,9 @@ export const InterviewNotes = () => {
                 <Tabs defaultValue="notes" className="w-full">
                   <TabsList>
                     <TabsTrigger value="notes">Interview Notes</TabsTrigger>
+                    <TabsTrigger value="recording">Recording Link</TabsTrigger>
                     <TabsTrigger value="rating">Rating & Status</TabsTrigger>
-                    <TabsTrigger value="recordings">Recordings</TabsTrigger>
+                    <TabsTrigger value="recordings">All Recordings</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="notes" className="space-y-4">
@@ -305,6 +341,36 @@ export const InterviewNotes = () => {
                         onChange={(e) => setNotes(e.target.value)}
                         className="mt-2 min-h-64 resize-none"
                       />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="recording" className="space-y-4">
+                    <div>
+                      <Label htmlFor="recording-link" className="text-base font-medium">
+                        Interview Recording Link
+                      </Label>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Add a link to the interview recording (Loom, Zoom, Google Drive, etc.)
+                      </p>
+                      <Input
+                        id="recording-link"
+                        placeholder="https://loom.com/share/... or https://zoom.us/rec/..."
+                        value={interviewRecordingLink}
+                        onChange={(e) => setInterviewRecordingLink(e.target.value)}
+                        className="mt-2"
+                      />
+                      {interviewRecordingLink && (
+                        <div className="mt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(interviewRecordingLink, '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Test Link
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                   
@@ -340,14 +406,7 @@ export const InterviewNotes = () => {
                   </TabsContent>
 
                   <TabsContent value="recordings" className="space-y-4">
-                    {renderZoomRecordings(selectedApplication)}
-                    {!selectedApplication.zoom_recording_url && !selectedApplication.zoom_recording_files && (
-                      <div className="text-center text-gray-500 py-8">
-                        <Video className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p className="text-lg">No recordings available</p>
-                        <p className="text-sm">Zoom recordings will appear here automatically after the interview</p>
-                      </div>
-                    )}
+                    {renderRecordings(selectedApplication)}
                   </TabsContent>
                 </Tabs>
 

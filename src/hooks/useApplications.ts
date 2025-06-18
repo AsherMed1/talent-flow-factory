@@ -13,6 +13,7 @@ export interface Application {
   has_voice_recording: boolean;
   has_video: boolean;
   interview_date: string | null;
+  interview_recording_link: string | null;
   offer_sent_date: string | null;
   applied_date: string;
   updated_at: string | null;
