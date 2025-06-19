@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { InterviewGuide } from './InterviewGuide';
 import { useInterviewGuides } from '@/hooks/useInterviewGuides';
+import { useState } from 'react';
 
 interface InterviewNotesContentProps {
   selectedApplication: any;
@@ -50,6 +52,7 @@ export const InterviewNotesContent = ({
 }: InterviewNotesContentProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isSavingRecording, setIsSavingRecording] = useState(false);
   
   // Add interview guide hook
   const { guide, loading: guideLoading, toggleStepComplete, updateStepNotes } = useInterviewGuides(
@@ -108,9 +111,20 @@ export const InterviewNotesContent = ({
   };
 
   const handleRecordingLinkSave = async () => {
-    if (!selectedApplication || !interviewRecordingLink) return;
+    if (!selectedApplication || !interviewRecordingLink) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a recording link before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSavingRecording(true);
     
     try {
+      console.log('Saving recording link:', interviewRecordingLink);
+      
       const { error } = await supabase
         .from('applications')
         .update({
@@ -119,7 +133,12 @@ export const InterviewNotesContent = ({
         })
         .eq('id', selectedApplication.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving recording link:', error);
+        throw error;
+      }
+
+      console.log('Recording link saved successfully');
 
       // Refresh the data to trigger auto-analysis
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
@@ -135,6 +154,8 @@ export const InterviewNotesContent = ({
         description: "Failed to save recording link. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSavingRecording(false);
     }
   };
 
@@ -260,10 +281,11 @@ export const InterviewNotesContent = ({
                   <Button
                     size="sm"
                     onClick={handleRecordingLinkSave}
+                    disabled={isSavingRecording}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Save & Analyze
+                    {isSavingRecording ? 'Saving...' : 'Save & Analyze'}
                   </Button>
                 </div>
               )}
