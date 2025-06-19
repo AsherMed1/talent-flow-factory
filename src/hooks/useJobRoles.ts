@@ -39,7 +39,7 @@ export const useJobRoles = () => {
       // Transform the data to ensure pipeline_stages is properly typed
       return data.map(role => ({
         ...role,
-        pipeline_stages: role.pipeline_stages as PipelineStage[] || [
+        pipeline_stages: (role.pipeline_stages as unknown as PipelineStage[]) || [
           {"name": "applied", "displayName": "Applied", "color": "bg-gray-100"},
           {"name": "reviewed", "displayName": "Reviewed", "color": "bg-blue-100"},
           {"name": "interview_scheduled", "displayName": "Interview Scheduled", "color": "bg-yellow-100"},
@@ -76,14 +76,14 @@ export const useCreateJobRole = () => {
           screening_questions: roleData.screening_questions,
           job_description: roleData.job_description,
           ai_tone_prompt: roleData.ai_tone_prompt,
-          pipeline_stages: roleData.pipeline_stages || [
+          pipeline_stages: (roleData.pipeline_stages || [
             {"name": "applied", "displayName": "Applied", "color": "bg-gray-100"},
             {"name": "reviewed", "displayName": "Reviewed", "color": "bg-blue-100"},
             {"name": "interview_scheduled", "displayName": "Interview Scheduled", "color": "bg-yellow-100"},
             {"name": "interview_completed", "displayName": "Interview Completed", "color": "bg-purple-100"},
             {"name": "offer_sent", "displayName": "Offer Sent", "color": "bg-green-100"},
             {"name": "hired", "displayName": "Hired", "color": "bg-emerald-100"}
-          ],
+          ]) as any,
           status: 'draft' as const
         })
         .select()
