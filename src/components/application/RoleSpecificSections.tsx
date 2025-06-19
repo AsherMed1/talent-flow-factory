@@ -1,7 +1,7 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Briefcase, Code, Palette } from 'lucide-react';
@@ -44,10 +44,13 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
                   <FormLabel>Portfolio URL *</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="https://your-portfolio.com or https://vimeo.com/your-videos" 
+                      placeholder="https://vimeo.com/your-videos or https://your-portfolio.com" 
                       {...field} 
                     />
                   </FormControl>
+                  <FormDescription>
+                    Please provide a link to your video portfolio on Vimeo, YouTube, Behance, or your personal website
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -61,11 +64,14 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
                   <FormLabel>Video Editing Experience *</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe your video editing experience, including software you've used (e.g., Premiere Pro, After Effects, DaVinci Resolve), types of projects you've worked on, and any AI video tools you're familiar with..."
+                      placeholder="Describe your video editing experience in detail, including software you've used (e.g., Premiere Pro, After Effects, DaVinci Resolve), types of projects you've worked on, and any AI video tools you're familiar with..."
                       className="min-h-[120px]"
                       {...field} 
                     />
                   </FormControl>
+                  <FormDescription>
+                    Please provide at least 100 characters describing your experience
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -113,6 +119,9 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
                       {...field} 
                     />
                   </FormControl>
+                  <FormDescription>
+                    Please provide at least 50 characters describing your software skills
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -155,11 +164,14 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
                   <FormLabel>Describe Your 3 Most Recent Video Projects *</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="For each project, briefly describe: 1) The type of video (commercial, social media, educational, etc.), 2) Your role and responsibilities, 3) Tools/software used, 4) Duration of the project. Include links if available..."
+                      placeholder="For each project, describe: 1) The type of video (commercial, social media, educational, etc.), 2) Your role and responsibilities, 3) Tools/software used, 4) Duration of the project, 5) Key challenges and how you solved them. Include links if available..."
                       className="min-h-[150px]"
                       {...field} 
                     />
                   </FormControl>
+                  <FormDescription>
+                    Please provide at least 150 characters with detailed project descriptions
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
