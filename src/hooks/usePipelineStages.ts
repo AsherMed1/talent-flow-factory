@@ -28,7 +28,8 @@ export const usePipelineStages = (roleId?: string) => {
         throw error;
       }
       
-      return data as PipelineStage[];
+      // Safely cast the JSON response to PipelineStage[]
+      return (data as unknown) as PipelineStage[];
     },
     enabled: true // Always enabled since we have fallback
   });

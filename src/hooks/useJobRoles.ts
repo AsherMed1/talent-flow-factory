@@ -35,7 +35,19 @@ export const useJobRoles = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as JobRole[];
+      
+      // Transform the data to ensure pipeline_stages is properly typed
+      return data.map(role => ({
+        ...role,
+        pipeline_stages: role.pipeline_stages as PipelineStage[] || [
+          {"name": "applied", "displayName": "Applied", "color": "bg-gray-100"},
+          {"name": "reviewed", "displayName": "Reviewed", "color": "bg-blue-100"},
+          {"name": "interview_scheduled", "displayName": "Interview Scheduled", "color": "bg-yellow-100"},
+          {"name": "interview_completed", "displayName": "Interview Completed", "color": "bg-purple-100"},
+          {"name": "offer_sent", "displayName": "Offer Sent", "color": "bg-green-100"},
+          {"name": "hired", "displayName": "Hired", "color": "bg-emerald-100"}
+        ]
+      })) as JobRole[];
     }
   });
 };
@@ -56,7 +68,7 @@ export const useCreateJobRole = () => {
     }) => {
       const { data, error } = await supabase
         .from('job_roles')
-        .insert([{
+        .insert({
           name: roleData.name,
           description: roleData.description,
           booking_link: roleData.booking_link,
@@ -73,7 +85,7 @@ export const useCreateJobRole = () => {
             {"name": "hired", "displayName": "Hired", "color": "bg-emerald-100"}
           ],
           status: 'draft' as const
-        }])
+        })
         .select()
         .single();
       
