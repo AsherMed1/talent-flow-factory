@@ -2,6 +2,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface PreScreeningResponse {
+  motivation_response: string;
+  motivation_score: number;
+  experience_response: string;
+  experience_score: number;
+  availability_response: string;
+  availability_score: number;
+  communication_score: number;
+  overall_prescreening_score: number;
+  scored_at?: string;
+}
+
 export interface Application {
   id: string;
   candidate_id: string;
@@ -32,16 +44,7 @@ export interface Application {
   ghl_appointment_data: any | null;
   video_analysis_results: string | null;
   video_analysis_timestamp: string | null;
-  pre_screening_responses?: Array<{
-    motivation_response: string;
-    motivation_score: number;
-    experience_response: string;
-    experience_score: number;
-    availability_response: string;
-    availability_score: number;
-    communication_score: number;
-    overall_prescreening_score: number;
-  }>;
+  pre_screening_responses?: PreScreeningResponse[];
   candidates: {
     name: string;
     email: string;
