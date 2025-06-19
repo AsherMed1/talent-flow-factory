@@ -10,19 +10,24 @@ export interface PreScreeningScores {
 export const scorePreScreeningResponses = async (
   motivationResponse: string,
   experienceResponse: string,
-  availabilityResponse: string
+  availabilityResponse: string,
+  collaborationResponse?: string,
+  isVideoEditor: boolean = false
 ): Promise<PreScreeningScores> => {
-  // Motivation scoring - look for hunger, drive, enthusiasm keywords
-  const motivationScore = scoreMotivation(motivationResponse);
+  // Motivation scoring with role-specific keywords
+  const motivationScore = scoreMotivation(motivationResponse, isVideoEditor);
   
-  // Experience scoring - look for relevant experience keywords
-  const experienceScore = scoreExperience(experienceResponse);
+  // Experience scoring with role-specific keywords
+  const experienceScore = scoreExperience(experienceResponse, isVideoEditor);
   
-  // Availability scoring - prioritize flexible schedules
-  const availabilityScore = scoreAvailability(availabilityResponse);
+  // Availability scoring with role-specific preferences
+  const availabilityScore = scoreAvailability(availabilityResponse, isVideoEditor);
   
-  // Communication scoring based on written quality
-  const communicationScore = scoreCommunication(motivationResponse + ' ' + experienceResponse);
+  // Communication scoring based on written quality (including collaboration for video editors)
+  const combinedText = collaborationResponse 
+    ? motivationResponse + ' ' + experienceResponse + ' ' + collaborationResponse
+    : motivationResponse + ' ' + experienceResponse;
+  const communicationScore = scoreCommunication(combinedText);
   
   // Overall weighted score
   const overallScore = Math.round(
@@ -41,11 +46,22 @@ export const scorePreScreeningResponses = async (
   };
 };
 
-const scoreMotivation = (response: string): number => {
-  const hungerKeywords = [
+const scoreMotivation = (response: string, isVideoEditor: boolean): number => {
+  const commonHungerKeywords = [
     'motivated', 'driven', 'ambitious', 'eager', 'passionate', 'excited',
     'hungry', 'determined', 'goal-oriented', 'success', 'achieve', 'grow',
     'opportunity', 'challenge', 'thrive', 'excel', 'dedicated', 'committed'
+  ];
+
+  const videoEditorKeywords = [
+    'creative', 'storytelling', 'visual', 'artistic', 'innovative', 'ai tools',
+    'cutting-edge', 'technology', 'craft', 'portfolio', 'vision', 'aesthetic',
+    'narrative', 'cinematic', 'post-production', 'editing'
+  ];
+
+  const appointmentSetterKeywords = [
+    'sales', 'people', 'communication', 'helping', 'connecting', 'relationship',
+    'target', 'goals', 'revenue', 'client', 'customer', 'phone', 'outreach'
   ];
   
   const negativeKeywords = [
@@ -56,8 +72,16 @@ const scoreMotivation = (response: string): number => {
   let score = 40; // Base score
   const lowerResponse = response.toLowerCase();
   
-  // Add points for positive keywords
-  hungerKeywords.forEach(keyword => {
+  // Add points for common positive keywords
+  commonHungerKeywords.forEach(keyword => {
+    if (lowerResponse.includes(keyword)) {
+      score += 6;
+    }
+  });
+
+  // Add points for role-specific keywords
+  const roleKeywords = isVideoEditor ? videoEditorKeywords : appointmentSetterKeywords;
+  roleKeywords.forEach(keyword => {
     if (lowerResponse.includes(keyword)) {
       score += 8;
     }
@@ -77,21 +101,39 @@ const scoreMotivation = (response: string): number => {
   return Math.min(Math.max(score, 0), 100);
 };
 
-const scoreExperience = (response: string): number => {
-  const relevantKeywords = [
+const scoreExperience = (response: string, isVideoEditor: boolean): number => {
+  const commonKeywords = [
+    'years experience', 'worked in', 'professional', 'skilled', 'proficient'
+  ];
+
+  const videoEditorKeywords = [
+    'video editing', 'premiere pro', 'after effects', 'final cut', 'davinci resolve',
+    'motion graphics', 'color grading', 'sound design', 'post-production',
+    'commercial', 'documentary', 'social media', 'youtube', 'vimeo', 'portfolio',
+    'client work', 'freelance', 'agency', 'broadcast', 'film', 'television'
+  ];
+
+  const appointmentSetterKeywords = [
     'sales', 'customer service', 'phone', 'call center', 'telemarketing',
     'appointment', 'lead generation', 'cold calling', 'outbound', 'inbound',
-    'client', 'customer', 'communication', 'support', 'representative',
-    'years experience', 'worked in', 'handled calls'
+    'client', 'customer', 'communication', 'support', 'representative'
   ];
   
   let score = 30; // Base score
   const lowerResponse = response.toLowerCase();
   
-  // Add points for relevant experience keywords
-  relevantKeywords.forEach(keyword => {
+  // Add points for common experience keywords
+  commonKeywords.forEach(keyword => {
     if (lowerResponse.includes(keyword)) {
-      score += 12;
+      score += 8;
+    }
+  });
+
+  // Add points for role-specific experience keywords
+  const roleKeywords = isVideoEditor ? videoEditorKeywords : appointmentSetterKeywords;
+  roleKeywords.forEach(keyword => {
+    if (lowerResponse.includes(keyword)) {
+      score += 10;
     }
   });
   
@@ -111,16 +153,24 @@ const scoreExperience = (response: string): number => {
   return Math.min(Math.max(score, 0), 100);
 };
 
-const scoreAvailability = (availabilityResponse: string): number => {
-  const availabilityScores: Record<string, number> = {
+const scoreAvailability = (availabilityResponse: string, isVideoEditor: boolean): number => {
+  const videoEditorAvailabilityScores: Record<string, number> = {
+    'full-time-flexible': 100,
+    'part-time-flexible': 90,
+    'project-based': 95,
+    'retainer-based': 85,
+    'rush-projects': 90
+  };
+
+  const appointmentSetterAvailabilityScores: Record<string, number> = {
     'full-time-flexible': 100,
     'part-time-flexible': 85,
-    'full-time-standard': 70,
-    'part-time-standard': 55,
-    'evenings-only': 60,
-    'weekends-only': 45
+    'weekdays-only': 70,
+    'evenings-weekends': 60,
+    'specific-hours': 55
   };
   
+  const availabilityScores = isVideoEditor ? videoEditorAvailabilityScores : appointmentSetterAvailabilityScores;
   return availabilityScores[availabilityResponse] || 50;
 };
 

@@ -80,18 +80,21 @@ export const applicationFormSchema = z.object({
   husbandName: z.string().optional(),
   treatmentNotDone: z.string().optional(),
   
-  // Pre-screening questions (generic) with enhanced validation
+  // Unified pre-screening questions with consistent naming
   motivationResponse: z.string()
     .min(50, 'Please provide at least 50 characters explaining your motivation')
-    .max(1000, 'Response must be less than 1000 characters'),
+    .max(1500, 'Response must be less than 1500 characters'),
   
   experienceResponse: z.string()
     .min(30, 'Please provide at least 30 characters about your experience')
-    .max(1000, 'Response must be less than 1000 characters'),
+    .max(1500, 'Response must be less than 1500 characters'),
   
   availabilityResponse: z.string()
     .min(1, 'Please select your availability')
     .max(500, 'Response must be less than 500 characters'),
+  
+  // Additional video editor pre-screening question
+  collaborationResponse: z.string().optional(),
   
   // Video Editor specific fields with enhanced validation
   portfolioUrl: z.string().optional(),
@@ -102,14 +105,6 @@ export const applicationFormSchema = z.object({
   softwareSkills: z.string().optional(),
   creativeProcess: z.string().optional(),
   recentProjects: z.string().optional(),
-  
-  // Video Editor specific pre-screening with enhanced validation
-  videoEditorMotivation: z.string().optional(),
-  videoEditorExperience: z.string().optional(),
-  videoEditorAvailability: z.string().optional(),
-  clientCollaboration: z.string().optional(),
-  projectTimelines: z.string().optional(),
-  creativeProcessApproach: z.string().optional(),
   
   // Terms
   agreeToTerms: z.boolean().refine(val => val === true, {
@@ -187,82 +182,18 @@ export const applicationFormSchema = z.object({
       });
     }
 
-    // Enhanced Video Editor specific pre-screening validations
-    if (!data.videoEditorMotivation || data.videoEditorMotivation.trim().length < 100) {
+    // Enhanced video editor specific collaboration validation (now optional)
+    if (data.collaborationResponse && data.collaborationResponse.trim().length > 0 && data.collaborationResponse.trim().length < 30) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please provide at least 100 characters explaining your motivation for video editing",
-        path: ["videoEditorMotivation"]
+        message: "If providing collaboration experience, please provide at least 30 characters",
+        path: ["collaborationResponse"]
       });
-    } else if (data.videoEditorMotivation.trim().length > 1500) {
+    } else if (data.collaborationResponse && data.collaborationResponse.trim().length > 1000) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Motivation response must be less than 1500 characters",
-        path: ["videoEditorMotivation"]
-      });
-    }
-
-    if (!data.videoEditorExperience || data.videoEditorExperience.trim().length < 100) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please provide at least 100 characters about your video editing background",
-        path: ["videoEditorExperience"]
-      });
-    } else if (data.videoEditorExperience.trim().length > 1500) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Experience response must be less than 1500 characters",
-        path: ["videoEditorExperience"]
-      });
-    }
-
-    if (!data.clientCollaboration || data.clientCollaboration.trim().length < 50) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please provide at least 50 characters about your client collaboration experience",
-        path: ["clientCollaboration"]
-      });
-    } else if (data.clientCollaboration.trim().length > 1000) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Client collaboration response must be less than 1000 characters",
-        path: ["clientCollaboration"]
-      });
-    }
-
-    if (!data.projectTimelines || data.projectTimelines.trim().length < 30) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please describe your approach to project timelines (minimum 30 characters)",
-        path: ["projectTimelines"]
-      });
-    } else if (data.projectTimelines.trim().length > 800) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Project timelines response must be less than 800 characters",
-        path: ["projectTimelines"]
-      });
-    }
-
-    if (!data.creativeProcessApproach || data.creativeProcessApproach.trim().length < 50) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please provide at least 50 characters about your creative process",
-        path: ["creativeProcessApproach"]
-      });
-    } else if (data.creativeProcessApproach.trim().length > 1200) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Creative process response must be less than 1200 characters",
-        path: ["creativeProcessApproach"]
-      });
-    }
-
-    if (!data.videoEditorAvailability) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please select your availability for video editing projects",
-        path: ["videoEditorAvailability"]
+        message: "Collaboration response must be less than 1000 characters",
+        path: ["collaborationResponse"]
       });
     }
 
