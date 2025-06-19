@@ -206,6 +206,7 @@ export type Database = {
           id: string
           job_description: string | null
           name: string
+          pipeline_stages: Json | null
           screening_questions: string | null
           status: Database["public"]["Enums"]["role_status"] | null
           updated_at: string | null
@@ -221,6 +222,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           name: string
+          pipeline_stages?: Json | null
           screening_questions?: string | null
           status?: Database["public"]["Enums"]["role_status"] | null
           updated_at?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           name?: string
+          pipeline_stages?: Json | null
           screening_questions?: string | null
           status?: Database["public"]["Enums"]["role_status"] | null
           updated_at?: string | null
@@ -528,7 +531,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_pipeline_stages_for_role: {
+        Args: { role_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       application_status:

@@ -2,6 +2,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface PipelineStage {
+  name: string;
+  displayName: string;
+  color: string;
+}
+
 export interface JobRole {
   id: string;
   name: string;
@@ -13,6 +19,7 @@ export interface JobRole {
   screening_questions?: string;
   job_description?: string;
   ai_tone_prompt?: string;
+  pipeline_stages?: PipelineStage[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -45,6 +52,7 @@ export const useCreateJobRole = () => {
       screening_questions?: string;
       job_description?: string;
       ai_tone_prompt?: string;
+      pipeline_stages?: PipelineStage[];
     }) => {
       const { data, error } = await supabase
         .from('job_roles')
@@ -56,6 +64,14 @@ export const useCreateJobRole = () => {
           screening_questions: roleData.screening_questions,
           job_description: roleData.job_description,
           ai_tone_prompt: roleData.ai_tone_prompt,
+          pipeline_stages: roleData.pipeline_stages || [
+            {"name": "applied", "displayName": "Applied", "color": "bg-gray-100"},
+            {"name": "reviewed", "displayName": "Reviewed", "color": "bg-blue-100"},
+            {"name": "interview_scheduled", "displayName": "Interview Scheduled", "color": "bg-yellow-100"},
+            {"name": "interview_completed", "displayName": "Interview Completed", "color": "bg-purple-100"},
+            {"name": "offer_sent", "displayName": "Offer Sent", "color": "bg-green-100"},
+            {"name": "hired", "displayName": "Hired", "color": "bg-emerald-100"}
+          ],
           status: 'draft' as const
         }])
         .select()
@@ -104,6 +120,9 @@ export const useUpdateJobRole = () => {
       }
       if (updates.ai_tone_prompt !== undefined) {
         updateData.ai_tone_prompt = updates.ai_tone_prompt === '' ? null : updates.ai_tone_prompt;
+      }
+      if (updates.pipeline_stages !== undefined) {
+        updateData.pipeline_stages = updates.pipeline_stages;
       }
       
       console.log('Update data:', updateData);
