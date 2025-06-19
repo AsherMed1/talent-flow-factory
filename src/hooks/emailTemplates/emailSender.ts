@@ -4,6 +4,7 @@ import { getTemplateByType, replaceVariables } from './templateUtils';
 import { useResendSender } from '../useResendSender';
 import { useSmtpSender } from '../useSmtpSender';
 import { useToast } from '../use-toast';
+import { detectRoleType } from '@/utils/roleDetection';
 
 export const useEmailSender = () => {
   const resend = useResendSender();
@@ -41,9 +42,24 @@ export const useEmailSender = () => {
 
     console.log('Sending email via:', resend.isConnected ? 'Resend' : 'SMTP');
 
-    const template = getTemplateByType(templateType, jobRole);
+    // Detect if this is a video editor role for template selection
+    const { isVideoEditor } = detectRoleType(jobRole);
+    
+    // Try to get role-specific template first
+    let template = null;
+    if (isVideoEditor && (templateType === 'interview' || templateType === 'welcome')) {
+      const roleSpecificType = templateType === 'interview' ? 'video-editor-interview' : 'video-editor-welcome';
+      template = getTemplateByType(roleSpecificType as any, jobRole);
+      console.log(`Looking for video editor specific template: ${roleSpecificType}`, template ? 'Found' : 'Not found');
+    }
+    
+    // Fall back to generic template if no role-specific template found
     if (!template) {
-      console.error('Template not found for:', { templateType, jobRole });
+      template = getTemplateByType(templateType, jobRole);
+    }
+    
+    if (!template) {
+      console.error('Template not found for:', { templateType, jobRole, isVideoEditor });
       
       // Try to get a generic template without job role
       const genericTemplate = getTemplateByType(templateType);
@@ -58,8 +74,7 @@ export const useEmailSender = () => {
       }
       
       console.log('Using generic template:', genericTemplate.name);
-      // Use the generic template
-      const template = genericTemplate;
+      template = genericTemplate;
     }
 
     // For the interview/congratulations email, direct candidates to the application form
@@ -90,7 +105,8 @@ export const useEmailSender = () => {
       to: candidateEmail,
       subject,
       service: resend.isConnected ? 'Resend' : 'SMTP',
-      templateUsed: template.name
+      templateUsed: template.name,
+      isVideoEditorSpecific: isVideoEditor && template.id.includes('video-editor')
     });
 
     try {
