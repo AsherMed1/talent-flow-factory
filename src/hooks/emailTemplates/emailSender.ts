@@ -43,7 +43,7 @@ export const useEmailSender = () => {
     console.log('Sending email via:', resend.isConnected ? 'Resend' : 'SMTP');
 
     // Detect if this is a video editor role for template selection
-    const { isVideoEditor } = detectRoleType(jobRole);
+    const { isVideoEditor, isAppointmentSetter } = detectRoleType(jobRole);
     
     // Try to get role-specific template first
     let template = null;
@@ -77,13 +77,21 @@ export const useEmailSender = () => {
       template = genericTemplate;
     }
 
-    // For the interview/congratulations email, direct candidates to the application form
-    // For application_update email, also use the application form
+    // Get current domain from window location
+    const currentDomain = typeof window !== 'undefined' ? window.location.origin : '';
+    
+    // Determine the appropriate application link based on role and template type
     let finalApplicationLink = bookingLink;
+    
     if (templateType === 'interview' || templateType === 'application_update') {
-      // Get current domain from window location
-      const currentDomain = typeof window !== 'undefined' ? window.location.origin : '';
-      finalApplicationLink = `${currentDomain}/apply`;
+      if (isVideoEditor) {
+        finalApplicationLink = `${currentDomain}/apply/video-editor`;
+      } else if (isAppointmentSetter) {
+        finalApplicationLink = `${currentDomain}/apply/appointment-setter`;
+      } else {
+        // Generic application form
+        finalApplicationLink = `${currentDomain}/apply`;
+      }
     } else {
       // For other email types, use the provided booking link or default
       finalApplicationLink = bookingLink || 'https://link.patientpromarketing.com/widget/booking/1TnMI0I04dlMjYsoNxt3';
@@ -106,7 +114,8 @@ export const useEmailSender = () => {
       subject,
       service: resend.isConnected ? 'Resend' : 'SMTP',
       templateUsed: template.name,
-      isVideoEditorSpecific: isVideoEditor && template.id.includes('video-editor')
+      isVideoEditorSpecific: isVideoEditor && template.id.includes('video-editor'),
+      applicationLink: finalApplicationLink
     });
 
     try {
