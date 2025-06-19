@@ -14,17 +14,30 @@ export const useEnhancedAutoSave = (form: UseFormReturn<ApplicationFormData>) =>
     debounce(async (data: Partial<ApplicationFormData>) => {
       setIsSaving(true);
       try {
-        // Simulate API delay for better UX feedback
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Enhanced save timing based on data type
+        const hasLargeFiles = data.videoUpload || data.downloadSpeedScreenshot || 
+                             data.uploadSpeedScreenshot || data.workstationPhoto;
+        
+        // Simulate appropriate delay based on content
+        const delay = hasLargeFiles ? 500 : 200;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
         saveFormData(data);
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
+        
+        console.log('Auto-save completed:', {
+          hasVideoUpload: !!data.videoUpload,
+          hasPortfolioUrl: !!data.portfolioUrl,
+          hasVoiceRecordings: !!(data.introductionRecording || data.scriptRecording),
+          hasFileUploads: hasLargeFiles
+        });
       } catch (error) {
         console.error('Error saving form data:', error);
       } finally {
         setIsSaving(false);
       }
-    }, 800),
+    }, 1000), // Slightly longer debounce for better UX
     []
   );
 

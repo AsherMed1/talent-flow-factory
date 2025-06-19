@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Upload, Video, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Video, X, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { ApplicationFormData } from './formSchema';
@@ -76,12 +76,14 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadingFileName, setUploadingFileName] = useState<string>('');
 
   const handleVideoUpload = async (file: File) => {
     if (!file) return;
 
     // Clear previous errors
     setUploadError(null);
+    setUploadingFileName(file.name);
 
     // Enhanced validation
     const validation = validateVideoFile(file);
@@ -99,15 +101,15 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
     setUploadProgress(0);
 
     try {
-      // Improved progress simulation with more realistic timing
+      // Enhanced progress simulation with realistic timing
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) return prev;
           // Slower progress as it gets higher (more realistic)
-          const increment = prev < 50 ? 8 : prev < 80 ? 4 : 2;
+          const increment = prev < 30 ? 12 : prev < 60 ? 8 : prev < 80 ? 4 : 2;
           return Math.min(prev + increment, 90);
         });
-      }, 300);
+      }, 400);
 
       // Create sanitized filename
       const sanitizedName = file.name.replace(/[<>:"/\\|?*]/g, '_');
@@ -122,8 +124,8 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
       if (result.success && result.url) {
         form.setValue('videoUpload', result.url);
         toast({
-          title: "Upload Successful",
-          description: `Your demo reel "${file.name}" has been uploaded successfully.`,
+          title: "Upload Complete!",
+          description: `"${file.name}" has been uploaded successfully and will be auto-saved.`,
         });
       } else {
         throw new Error(result.error || 'Upload failed');
@@ -139,6 +141,7 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
       });
     } finally {
       setIsUploading(false);
+      setUploadingFileName('');
       setTimeout(() => {
         setUploadProgress(0);
         setUploadError(null);
@@ -151,7 +154,7 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
     setUploadError(null);
     toast({
       title: "Video Removed",
-      description: "Your uploaded video has been removed.",
+      description: "Your uploaded video has been removed and changes will be auto-saved.",
     });
   };
 
@@ -217,7 +220,7 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
                           Supported: MP4, MOV, AVI, WMV, WebM, QuickTime
                         </p>
                         <p className="text-xs text-gray-500">
-                          Size: 100KB - 150MB
+                          Size: 100KB - 150MB • Auto-saved when uploaded
                         </p>
                       </div>
                       <input
@@ -232,34 +235,50 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
                       />
                       
                       {isUploading && (
-                        <div className="mt-4">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Clock className="w-5 h-5 text-blue-600 animate-pulse" />
+                            <div className="text-left">
+                              <p className="text-sm font-medium text-blue-800">
+                                Uploading "{uploadingFileName}"
+                              </p>
+                              <p className="text-xs text-blue-600">
+                                Please don't close this page • Progress will be auto-saved
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-full bg-blue-100 rounded-full h-3">
                             <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                              className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out" 
                               style={{ width: `${uploadProgress}%` }}
                             ></div>
                           </div>
-                          <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
+                          <p className="text-sm text-blue-700 mt-2 text-center font-medium">
+                            {uploadProgress}% complete
+                          </p>
                         </div>
                       )}
 
                       {uploadError && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="flex items-center gap-2 text-red-700">
-                            <AlertCircle className="w-4 h-4" />
-                            <p className="text-sm font-medium">Upload Error</p>
+                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-red-700 mb-2">
+                            <AlertCircle className="w-5 h-5" />
+                            <p className="text-sm font-medium">Upload Failed</p>
                           </div>
-                          <p className="text-sm text-red-600 mt-1">{uploadError}</p>
+                          <p className="text-sm text-red-600">{uploadError}</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            Please try again or contact support if the issue persists.
+                          </p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between p-4 border border-green-200 bg-green-50 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <CheckCircle className="w-6 h-6 text-green-600" />
                         <div>
                           <p className="text-sm font-medium text-green-800">Demo reel uploaded successfully</p>
-                          <p className="text-xs text-green-600">Ready for review</p>
+                          <p className="text-xs text-green-600">Auto-saved and ready for review</p>
                         </div>
                       </div>
                       <Button

@@ -1,126 +1,132 @@
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Brain } from 'lucide-react';
-import { useState } from 'react';
-
-interface PreScreeningResponse {
-  motivation_response: string;
-  motivation_score: number;
-  experience_response: string;
-  experience_score: number;
-  availability_response: string;
-  availability_score: number;
-  communication_score: number;
-  overall_prescreening_score: number;
-}
+import { Brain, MessageCircle, Star, TrendingUp } from 'lucide-react';
+import { PreScreeningResponse } from '@/hooks/useApplications';
 
 interface PreScreeningAnalysisSectionProps {
   responses: PreScreeningResponse[];
 }
 
 export const PreScreeningAnalysisSection = ({ responses }: PreScreeningAnalysisSectionProps) => {
-  const [showDetails, setShowDetails] = useState(false);
+  if (!responses || responses.length === 0) return null;
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  const latestResponse = responses[0];
+  const hasScores = latestResponse.overall_prescreening_score !== null;
+
+  const getScoreColor = (score: number | null) => {
+    if (!score) return 'text-gray-400';
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
-  if (!responses || responses.length === 0) {
-    return null;
-  }
+  const getScoreBadgeColor = (score: number | null) => {
+    if (!score) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (score >= 80) return 'bg-green-100 text-green-700 border-green-200';
+    if (score >= 60) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    return 'bg-red-100 text-red-700 border-red-200';
+  };
 
-  const response = responses[0]; // Use the first response
+  const renderScoreStars = (score: number | null) => {
+    if (!score) return null;
+    
+    const starCount = Math.ceil(score / 20); // Convert 100-point scale to 5-star
+    
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, index) => (
+          <Star
+            key={index}
+            className={`w-3 h-3 ${
+              index < starCount ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="border-t pt-3 mt-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-medium text-gray-700">AI Pre-screening Analysis</span>
-          <Badge className={`text-xs ${getScoreColor(response.overall_prescreening_score)} border-0`}>
-            {response.overall_prescreening_score}/100
+    <div className="mt-3 pt-3 border-t border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Brain className="w-4 h-4 text-purple-600" />
+        <span className="text-sm font-medium text-purple-600">Pre-screening Analysis</span>
+        {hasScores && (
+          <Badge className={`text-xs ${getScoreBadgeColor(latestResponse.overall_prescreening_score)}`}>
+            {latestResponse.overall_prescreening_score}/100
           </Badge>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowDetails(!showDetails)}
-          className="h-6 px-2"
-        >
-          {showDetails ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </Button>
+        )}
       </div>
 
-      {showDetails && (
-        <div className="mt-3 space-y-3">
-          {/* Individual Scores Grid */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex justify-between">
-              <span>Motivation:</span>
-              <Badge variant="outline" className={getScoreColor(response.motivation_score)}>
-                {response.motivation_score}/100
-              </Badge>
+      {hasScores ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          {/* Motivation Score */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-orange-500" />
+              <span className="text-gray-600">Motivation</span>
             </div>
-            <div className="flex justify-between">
-              <span>Experience:</span>
-              <Badge variant="outline" className={getScoreColor(response.experience_score)}>
-                {response.experience_score}/100
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Availability:</span>
-              <Badge variant="outline" className={getScoreColor(response.availability_score)}>
-                {response.availability_score}/100
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Communication:</span>
-              <Badge variant="outline" className={getScoreColor(response.communication_score)}>
-                {response.communication_score}/100
-              </Badge>
+            <div className="flex items-center gap-2">
+              {renderScoreStars(latestResponse.motivation_score)}
+              <span className={`font-medium ${getScoreColor(latestResponse.motivation_score)}`}>
+                {latestResponse.motivation_score}/100
+              </span>
             </div>
           </div>
 
-          {/* Response Previews */}
-          <div className="space-y-2">
-            {response.motivation_response && (
-              <div className="bg-gray-50 p-2 rounded text-xs">
-                <div className="font-medium text-gray-700 mb-1">Motivation:</div>
-                <div className="text-gray-600 line-clamp-2">
-                  {response.motivation_response.length > 100 
-                    ? `${response.motivation_response.substring(0, 100)}...` 
-                    : response.motivation_response}
-                </div>
-              </div>
-            )}
-            {response.experience_response && (
-              <div className="bg-gray-50 p-2 rounded text-xs">
-                <div className="font-medium text-gray-700 mb-1">Experience:</div>
-                <div className="text-gray-600 line-clamp-2">
-                  {response.experience_response.length > 100 
-                    ? `${response.experience_response.substring(0, 100)}...` 
-                    : response.experience_response}
-                </div>
-              </div>
-            )}
-            {response.availability_response && (
-              <div className="bg-gray-50 p-2 rounded text-xs">
-                <div className="font-medium text-gray-700 mb-1">Availability:</div>
-                <div className="text-gray-600 line-clamp-2">
-                  {response.availability_response.length > 100 
-                    ? `${response.availability_response.substring(0, 100)}...` 
-                    : response.availability_response}
-                </div>
-              </div>
-            )}
+          {/* Experience Score */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-blue-500" />
+              <span className="text-gray-600">Experience</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {renderScoreStars(latestResponse.experience_score)}
+              <span className={`font-medium ${getScoreColor(latestResponse.experience_score)}`}>
+                {latestResponse.experience_score}/100
+              </span>
+            </div>
           </div>
+
+          {/* Availability Score */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-3 h-3 text-green-500" />
+              <span className="text-gray-600">Availability</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {renderScoreStars(latestResponse.availability_score)}
+              <span className={`font-medium ${getScoreColor(latestResponse.availability_score)}`}>
+                {latestResponse.availability_score}/100
+              </span>
+            </div>
+          </div>
+
+          {/* Communication Score */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1">
+              <Brain className="w-3 h-3 text-purple-500" />
+              <span className="text-gray-600">Communication</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {renderScoreStars(latestResponse.communication_score)}
+              <span className={`font-medium ${getScoreColor(latestResponse.communication_score)}`}>
+                {latestResponse.communication_score}/100
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <MessageCircle className="w-3 h-3" />
+          <span>Pre-screening responses submitted • Analysis pending</span>
+        </div>
+      )}
+
+      {/* Show analysis timestamp */}
+      {latestResponse.scored_at && (
+        <div className="mt-2 text-xs text-gray-400">
+          Analyzed: {new Date(latestResponse.scored_at).toLocaleDateString()}
         </div>
       )}
     </div>
