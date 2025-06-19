@@ -1,27 +1,68 @@
 
 import { z } from 'zod';
 
-// URL validation helper
+// Enhanced URL validation helper
 const urlSchema = z.string().url('Please enter a valid URL').refine((url) => {
-  // Check for common portfolio platforms
-  const portfolioPatterns = [
-    /^https?:\/\/(www\.)?(vimeo\.com|player\.vimeo\.com)/,
-    /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/,
-    /^https?:\/\/(www\.)?(behance\.net)/,
-    /^https?:\/\/(www\.)?(dribbble\.com)/,
-    /^https?:\/\/(www\.)?.*\.(com|net|org|io|co)/
-  ];
-  
-  return portfolioPatterns.some(pattern => pattern.test(url));
+  try {
+    const urlObj = new URL(url);
+    // Check for common portfolio platforms and general web URLs
+    const portfolioPatterns = [
+      /^https?:\/\/(www\.)?(vimeo\.com|player\.vimeo\.com)/,
+      /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/,
+      /^https?:\/\/(www\.)?(behance\.net)/,
+      /^https?:\/\/(www\.)?(dribbble\.com)/,
+      /^https?:\/\/(www\.)?(github\.io)/,
+      /^https?:\/\/(www\.)?(portfolio\.)/,
+      /^https?:\/\/.*\.(com|net|org|io|co|dev|me|design|creative|art|studio)$/
+    ];
+    
+    // Allow any HTTPS URL with proper domain structure
+    const isValidDomain = urlObj.protocol === 'https:' && urlObj.hostname.includes('.');
+    const isPortfolioSite = portfolioPatterns.some(pattern => pattern.test(url));
+    
+    return isValidDomain || isPortfolioSite;
+  } catch {
+    return false;
+  }
 }, {
-  message: 'Please provide a valid portfolio URL (Vimeo, YouTube, Behance, personal website, etc.)'
+  message: 'Please provide a valid portfolio URL (must be HTTPS and include a proper domain)'
+});
+
+// Video file validation helper
+const videoFileSchema = z.string().refine((fileUrl) => {
+  if (!fileUrl) return true; // Optional field
+  
+  // Basic URL validation for uploaded files
+  try {
+    new URL(fileUrl);
+    return true;
+  } catch {
+    return false;
+  }
+}, {
+  message: 'Invalid video file URL'
 });
 
 export const applicationFormSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
-  location: z.string().min(1, 'Location is required'),
+  // Basic info with enhanced validation
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+  
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+  
+  email: z.string()
+    .email('Please enter a valid email address')
+    .max(254, 'Email address is too long'),
+  
+  location: z.string()
+    .min(2, 'Location must be at least 2 characters')
+    .max(100, 'Location must be less than 100 characters'),
+  
   weekendAvailability: z.enum(['yes', 'no', 'on-occasion'], {
     required_error: 'Please select your weekend availability'
   }),
@@ -39,21 +80,30 @@ export const applicationFormSchema = z.object({
   husbandName: z.string().optional(),
   treatmentNotDone: z.string().optional(),
   
-  // Pre-screening questions (generic)
-  motivationResponse: z.string().min(50, 'Please provide at least 50 characters explaining your motivation'),
-  experienceResponse: z.string().min(30, 'Please provide at least 30 characters about your experience'),
-  availabilityResponse: z.string().min(1, 'Please select your availability'),
+  // Pre-screening questions (generic) with enhanced validation
+  motivationResponse: z.string()
+    .min(50, 'Please provide at least 50 characters explaining your motivation')
+    .max(1000, 'Response must be less than 1000 characters'),
   
-  // Video Editor specific fields
+  experienceResponse: z.string()
+    .min(30, 'Please provide at least 30 characters about your experience')
+    .max(1000, 'Response must be less than 1000 characters'),
+  
+  availabilityResponse: z.string()
+    .min(1, 'Please select your availability')
+    .max(500, 'Response must be less than 500 characters'),
+  
+  // Video Editor specific fields with enhanced validation
   portfolioUrl: z.string().optional(),
-  videoUpload: z.string().optional(), // New field for video file uploads
+  videoUpload: videoFileSchema.optional(),
+  
   videoEditingExperience: z.string().optional(),
   aiToolsExperience: z.string().optional(),
   softwareSkills: z.string().optional(),
   creativeProcess: z.string().optional(),
   recentProjects: z.string().optional(),
   
-  // Video Editor specific pre-screening
+  // Video Editor specific pre-screening with enhanced validation
   videoEditorMotivation: z.string().optional(),
   videoEditorExperience: z.string().optional(),
   videoEditorAvailability: z.string().optional(),
@@ -80,7 +130,7 @@ export const applicationFormSchema = z.object({
       });
     }
     
-    // Portfolio URL validation (only if provided)
+    // Enhanced portfolio URL validation (only if provided)
     if (data.portfolioUrl && data.portfolioUrl.trim().length > 0) {
       const urlValidation = urlSchema.safeParse(data.portfolioUrl);
       if (!urlValidation.success) {
@@ -92,38 +142,62 @@ export const applicationFormSchema = z.object({
       }
     }
     
-    // Video editing experience validation
+    // Enhanced video editing experience validation
     if (!data.videoEditingExperience || data.videoEditingExperience.trim().length < 100) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Please provide at least 100 characters describing your video editing experience",
         path: ["videoEditingExperience"]
       });
+    } else if (data.videoEditingExperience.trim().length > 2000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Video editing experience description must be less than 2000 characters",
+        path: ["videoEditingExperience"]
+      });
     }
     
-    // Software skills validation
+    // Enhanced software skills validation
     if (!data.softwareSkills || data.softwareSkills.trim().length < 50) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Please provide at least 50 characters describing your software skills",
         path: ["softwareSkills"]
       });
+    } else if (data.softwareSkills.trim().length > 1500) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Software skills description must be less than 1500 characters",
+        path: ["softwareSkills"]
+      });
     }
     
-    // Recent projects validation
+    // Enhanced recent projects validation
     if (!data.recentProjects || data.recentProjects.trim().length < 150) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Please provide at least 150 characters describing your recent projects",
         path: ["recentProjects"]
       });
+    } else if (data.recentProjects.trim().length > 3000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Recent projects description must be less than 3000 characters",
+        path: ["recentProjects"]
+      });
     }
 
-    // Video Editor specific pre-screening validations
+    // Enhanced Video Editor specific pre-screening validations
     if (!data.videoEditorMotivation || data.videoEditorMotivation.trim().length < 100) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Please provide at least 100 characters explaining your motivation for video editing",
+        path: ["videoEditorMotivation"]
+      });
+    } else if (data.videoEditorMotivation.trim().length > 1500) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Motivation response must be less than 1500 characters",
         path: ["videoEditorMotivation"]
       });
     }
@@ -134,6 +208,12 @@ export const applicationFormSchema = z.object({
         message: "Please provide at least 100 characters about your video editing background",
         path: ["videoEditorExperience"]
       });
+    } else if (data.videoEditorExperience.trim().length > 1500) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Experience response must be less than 1500 characters",
+        path: ["videoEditorExperience"]
+      });
     }
 
     if (!data.clientCollaboration || data.clientCollaboration.trim().length < 50) {
@@ -142,12 +222,24 @@ export const applicationFormSchema = z.object({
         message: "Please provide at least 50 characters about your client collaboration experience",
         path: ["clientCollaboration"]
       });
+    } else if (data.clientCollaboration.trim().length > 1000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Client collaboration response must be less than 1000 characters",
+        path: ["clientCollaboration"]
+      });
     }
 
     if (!data.projectTimelines || data.projectTimelines.trim().length < 30) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please describe your approach to project timelines",
+        message: "Please describe your approach to project timelines (minimum 30 characters)",
+        path: ["projectTimelines"]
+      });
+    } else if (data.projectTimelines.trim().length > 800) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Project timelines response must be less than 800 characters",
         path: ["projectTimelines"]
       });
     }
@@ -158,6 +250,12 @@ export const applicationFormSchema = z.object({
         message: "Please provide at least 50 characters about your creative process",
         path: ["creativeProcessApproach"]
       });
+    } else if (data.creativeProcessApproach.trim().length > 1200) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Creative process response must be less than 1200 characters",
+        path: ["creativeProcessApproach"]
+      });
     }
 
     if (!data.videoEditorAvailability) {
@@ -165,6 +263,36 @@ export const applicationFormSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: "Please select your availability for video editing projects",
         path: ["videoEditorAvailability"]
+      });
+    }
+
+    // AI tools experience validation (optional but if provided, should be meaningful)
+    if (data.aiToolsExperience && data.aiToolsExperience.trim().length > 0 && data.aiToolsExperience.trim().length < 20) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "If providing AI tools experience, please provide at least 20 characters",
+        path: ["aiToolsExperience"]
+      });
+    } else if (data.aiToolsExperience && data.aiToolsExperience.trim().length > 1000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "AI tools experience must be less than 1000 characters",
+        path: ["aiToolsExperience"]
+      });
+    }
+
+    // Creative process validation (optional but if provided, should be meaningful)
+    if (data.creativeProcess && data.creativeProcess.trim().length > 0 && data.creativeProcess.trim().length < 30) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "If describing your creative process, please provide at least 30 characters",
+        path: ["creativeProcess"]
+      });
+    } else if (data.creativeProcess && data.creativeProcess.trim().length > 1200) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Creative process description must be less than 1200 characters",
+        path: ["creativeProcess"]
       });
     }
   }

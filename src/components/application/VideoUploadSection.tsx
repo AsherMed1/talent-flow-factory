@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Upload, Video, X, CheckCircle } from 'lucide-react';
+import { Upload, Video, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { ApplicationFormData } from './formSchema';
@@ -14,31 +14,82 @@ interface VideoUploadSectionProps {
   form: UseFormReturn<ApplicationFormData>;
 }
 
+// Enhanced validation constants
+const ALLOWED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/mov', 
+  'video/avi', 
+  'video/wmv', 
+  'video/webm',
+  'video/quicktime'
+];
+
+const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB in bytes
+const MIN_FILE_SIZE = 100 * 1024; // 100KB minimum
+
+const validateVideoFile = (file: File): { isValid: boolean; error?: string } => {
+  // Check file type
+  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+    return {
+      isValid: false,
+      error: `Invalid file type. Please upload: ${ALLOWED_VIDEO_TYPES.map(type => type.split('/')[1].toUpperCase()).join(', ')}`
+    };
+  }
+
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      isValid: false,
+      error: `File too large. Maximum size is ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB`
+    };
+  }
+
+  if (file.size < MIN_FILE_SIZE) {
+    return {
+      isValid: false,
+      error: `File too small. Minimum size is ${Math.round(MIN_FILE_SIZE / 1024)}KB`
+    };
+  }
+
+  // Check filename
+  if (file.name.length > 255) {
+    return {
+      isValid: false,
+      error: 'Filename is too long. Please rename your file.'
+    };
+  }
+
+  // Check for potentially problematic characters in filename
+  const problematicChars = /[<>:"/\\|?*]/g;
+  if (problematicChars.test(file.name)) {
+    return {
+      isValid: false,
+      error: 'Filename contains invalid characters. Please rename your file.'
+    };
+  }
+
+  return { isValid: true };
+};
+
 export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleVideoUpload = async (file: File) => {
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['video/mp4', 'video/mov', 'video/avi', 'video/wmv', 'video/webm'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload a video file (MP4, MOV, AVI, WMV, or WebM)",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Clear previous errors
+    setUploadError(null);
 
-    // Validate file size (max 100MB)
-    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-    if (file.size > maxSize) {
+    // Enhanced validation
+    const validation = validateVideoFile(file);
+    if (!validation.isValid) {
+      setUploadError(validation.error || 'Invalid file');
       toast({
-        title: "File Too Large",
-        description: "Please upload a video file smaller than 100MB",
+        title: "File Validation Error",
+        description: validation.error,
         variant: "destructive",
       });
       return;
@@ -48,12 +99,22 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
     setUploadProgress(0);
 
     try {
-      // Simulate upload progress
+      // Improved progress simulation with more realistic timing
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
-      }, 200);
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev;
+          // Slower progress as it gets higher (more realistic)
+          const increment = prev < 50 ? 8 : prev < 80 ? 4 : 2;
+          return Math.min(prev + increment, 90);
+        });
+      }, 300);
 
-      const result = await uploadVideoFile(file, `demo-reel-${Date.now()}.${file.name.split('.').pop()}`);
+      // Create sanitized filename
+      const sanitizedName = file.name.replace(/[<>:"/\\|?*]/g, '_');
+      const timestamp = Date.now();
+      const fileName = `demo-reel-${timestamp}-${sanitizedName}`;
+
+      const result = await uploadVideoFile(file, fileName);
       
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -61,27 +122,33 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
       if (result.success && result.url) {
         form.setValue('videoUpload', result.url);
         toast({
-          title: "Video Uploaded Successfully",
-          description: "Your demo reel has been uploaded and is ready for review.",
+          title: "Upload Successful",
+          description: `Your demo reel "${file.name}" has been uploaded successfully.`,
         });
       } else {
         throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Error uploading video:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+      setUploadError(errorMessage);
       toast({
-        title: "Upload Error",
-        description: "There was an error uploading your video. Please try again.",
+        title: "Upload Failed",
+        description: `Failed to upload "${file.name}": ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
       setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploadError(null);
+      }, 3000);
     }
   };
 
   const handleRemoveVideo = () => {
     form.setValue('videoUpload', '');
+    setUploadError(null);
     toast({
       title: "Video Removed",
       description: "Your uploaded video has been removed.",
@@ -113,7 +180,7 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
                 />
               </FormControl>
               <FormDescription>
-                Link to your online portfolio (Vimeo, YouTube, Behance, or personal website)
+                Link to your online portfolio (Vimeo, YouTube, Behance, or personal website). Must be HTTPS.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -147,19 +214,23 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
                           Upload your best demo reel or sample video work
                         </p>
                         <p className="text-xs text-gray-500">
-                          Supported formats: MP4, MOV, AVI, WMV, WebM (Max 100MB)
+                          Supported: MP4, MOV, AVI, WMV, WebM, QuickTime
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Size: 100KB - 150MB
                         </p>
                       </div>
                       <input
                         type="file"
-                        accept="video/*"
+                        accept={ALLOWED_VIDEO_TYPES.join(',')}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleVideoUpload(file);
                         }}
                         disabled={isUploading}
-                        className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer mt-4"
+                        className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
+                      
                       {isUploading && (
                         <div className="mt-4">
                           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -169,6 +240,16 @@ export const VideoUploadSection = ({ form }: VideoUploadSectionProps) => {
                             ></div>
                           </div>
                           <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
+                        </div>
+                      )}
+
+                      {uploadError && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-red-700">
+                            <AlertCircle className="w-4 h-4" />
+                            <p className="text-sm font-medium">Upload Error</p>
+                          </div>
+                          <p className="text-sm text-red-600 mt-1">{uploadError}</p>
                         </div>
                       )}
                     </div>
