@@ -4,8 +4,8 @@ import { EmailTemplate } from '../types';
 export const videoEditorInterviewTemplate: EmailTemplate = {
   id: 'video-editor-interview',
   name: 'Video Editor Interview Invitation',
-  type: 'interview',
   jobRole: 'Video Editor',
+  isDefault: true,
   subject: '🎬 Exciting Video Editor Opportunity - Let\'s Schedule Your Interview!',
   content: `<!DOCTYPE html>
 <html>

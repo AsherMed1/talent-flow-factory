@@ -4,8 +4,8 @@ import { EmailTemplate } from '../types';
 export const videoEditorWelcomeTemplate: EmailTemplate = {
   id: 'video-editor-welcome',
   name: 'Video Editor Welcome Email',
-  type: 'welcome',
   jobRole: 'Video Editor',
+  isDefault: true,
   subject: '🎬 Welcome to the Creative Team at Patient Pro Marketing!',
   content: `<!DOCTYPE html>
 <html>
