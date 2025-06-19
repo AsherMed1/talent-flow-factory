@@ -14,7 +14,7 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
     setDeletedCandidateIds(prev => new Set([...prev, candidateId]));
     
     try {
-      console.log('Starting deletion process for candidate:', candidateId, 'Name:', candidateName);
+      console.log('Starting comprehensive deletion process for candidate:', candidateId, 'Name:', candidateName);
       
       // Check if candidate exists first
       const { data: candidateCheck, error: checkError } = await supabase
@@ -43,8 +43,47 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
 
       console.log(`Found ${applications?.length || 0} applications to delete`);
 
-      // Delete applications first
+      // Delete all related data in the correct order
       if (applications && applications.length > 0) {
+        const applicationIds = applications.map(app => app.id);
+
+        // Delete pre-screening responses for each application
+        const { error: preScreeningError } = await supabase
+          .from('pre_screening_responses')
+          .delete()
+          .in('application_id', applicationIds);
+
+        if (preScreeningError) {
+          console.error('Error deleting pre-screening responses:', preScreeningError);
+          throw new Error(`Failed to delete pre-screening responses: ${preScreeningError.message}`);
+        }
+        console.log('Successfully deleted pre-screening responses');
+
+        // Delete video analysis details for each application
+        const { error: videoAnalysisError } = await supabase
+          .from('video_analysis_details')
+          .delete()
+          .in('application_id', applicationIds);
+
+        if (videoAnalysisError) {
+          console.error('Error deleting video analysis details:', videoAnalysisError);
+          throw new Error(`Failed to delete video analysis details: ${videoAnalysisError.message}`);
+        }
+        console.log('Successfully deleted video analysis details');
+
+        // Delete video analysis logs for each application
+        const { error: videoLogsError } = await supabase
+          .from('video_analysis_logs')
+          .delete()
+          .in('application_id', applicationIds);
+
+        if (videoLogsError) {
+          console.error('Error deleting video analysis logs:', videoLogsError);
+          throw new Error(`Failed to delete video analysis logs: ${videoLogsError.message}`);
+        }
+        console.log('Successfully deleted video analysis logs');
+
+        // Delete applications
         const { error: applicationsError } = await supabase
           .from('applications')
           .delete()
@@ -83,15 +122,15 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
       console.log('Successfully deleted candidate:', candidateId);
 
       toast({
-        title: "Candidate Deleted",
-        description: `${candidateName} has been successfully removed from the system.`,
+        title: "Candidate Completely Removed",
+        description: `${candidateName} and all associated records have been permanently removed from the entire system.`,
       });
 
-      // Force refresh the candidates list
+      // Force refresh the candidates list and any other dependent data
       await refetch();
       
     } catch (error) {
-      console.error('Detailed error during candidate deletion:', error);
+      console.error('Detailed error during comprehensive candidate deletion:', error);
       
       // If deletion failed, remove from deleted set so they reappear
       setDeletedCandidateIds(prev => {
@@ -102,7 +141,7 @@ export const useCandidateDelete = (refetch: () => Promise<any>) => {
       
       toast({
         title: "Deletion Failed",
-        description: error instanceof Error ? error.message : "Failed to delete candidate. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete candidate completely. Please try again.",
         variant: "destructive",
       });
     } finally {

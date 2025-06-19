@@ -25,9 +25,19 @@ export const CandidateDeleteButton = ({ candidate, onDelete, isDeleting }: Candi
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Candidate</AlertDialogTitle>
+          <AlertDialogTitle>Permanently Delete Candidate</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete {candidate.name} (ID: {candidate.id.slice(0, 8)})? This will permanently remove their profile, all applications, and notes from the system. This action cannot be undone.
+            Are you sure you want to permanently delete {candidate.name}? This will remove them from:
+            <br /><br />
+            <strong>• Talent Vault</strong><br />
+            <strong>• Pipeline</strong><br />
+            <strong>• All Applications</strong><br />
+            <strong>• Interview Notes & Recordings</strong><br />
+            <strong>• Voice & Video Analysis</strong><br />
+            <strong>• Pre-screening Data</strong><br />
+            <strong>• All Tags & History</strong>
+            <br /><br />
+            <span className="text-red-600 font-medium">This action cannot be undone and will completely remove all traces of this candidate from the system.</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -37,7 +47,7 @@ export const CandidateDeleteButton = ({ candidate, onDelete, isDeleting }: Candi
             className="bg-red-600 hover:bg-red-700"
             disabled={isDeleting}
           >
-            {isDeleting ? 'Deleting...' : 'Delete Candidate'}
+            {isDeleting ? 'Deleting All Records...' : 'Delete Everything'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
