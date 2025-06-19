@@ -45,12 +45,10 @@ export const createOrUpdateApplication = async (
       weekendAvailability: data.weekendAvailability,
     },
     videoEditorPreScreening: {
-      motivationResponse: data.videoEditorMotivation,
-      experienceResponse: data.videoEditorExperience,
-      availabilityResponse: data.videoEditorAvailability,
-      clientCollaboration: data.clientCollaboration,
-      projectTimelines: data.projectTimelines,
-      creativeProcessApproach: data.creativeProcessApproach,
+      motivationResponse: data.motivationResponse,
+      experienceResponse: data.experienceResponse,
+      availabilityResponse: data.availabilityResponse,
+      collaborationResponse: data.collaborationResponse,
     },
     portfolio: {
       portfolioUrl: data.portfolioUrl,
