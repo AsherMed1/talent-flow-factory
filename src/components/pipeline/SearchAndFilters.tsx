@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,8 +33,13 @@ export const SearchAndFilters = ({ applications, onFilteredApplications }: Searc
 
   const [showFilters, setShowFilters] = useState(false);
 
-  // Get unique roles for filter dropdown
-  const uniqueRoles = Array.from(new Set(applications.map(app => app.job_roles?.name).filter(Boolean)));
+  // Get unique roles for filter dropdown - ensure we include common roles even if not in current applications
+  const uniqueRoles = Array.from(new Set([
+    ...applications.map(app => app.job_roles?.name).filter(Boolean),
+    'Video Editor', // Always include Video Editor as an option
+    'Appointment Setter',
+    'Customer Service Representative'
+  ])).sort();
 
   const applyFilters = (newFilters: FilterState) => {
     let filtered = [...applications];
