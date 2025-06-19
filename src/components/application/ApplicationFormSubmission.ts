@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApplicationFormData } from './formSchema';
 import { clearSavedData } from './formStorage';
@@ -71,8 +72,42 @@ export const submitApplication = async (
       .eq('job_role_id', roleId)
       .single();
 
-    // Prepare form data with pre-screening responses
-    const formData = {
+    // Determine if this is a video editor application
+    const isVideoEditor = !!(data.videoEditingExperience || data.portfolioUrl || data.videoUpload);
+
+    // Prepare form data based on role type
+    const formData = isVideoEditor ? {
+      basicInfo: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        location: data.location,
+      },
+      availability: {
+        weekendAvailability: data.weekendAvailability,
+      },
+      videoEditorPreScreening: {
+        motivationResponse: data.videoEditorMotivation,
+        experienceResponse: data.videoEditorExperience,
+        availabilityResponse: data.videoEditorAvailability,
+        clientCollaboration: data.clientCollaboration,
+        projectTimelines: data.projectTimelines,
+        creativeProcessApproach: data.creativeProcessApproach,
+      },
+      portfolio: {
+        portfolioUrl: data.portfolioUrl,
+        videoUpload: data.videoUpload,
+        hasPortfolioUrl: !!data.portfolioUrl,
+        hasVideoUpload: !!data.videoUpload,
+      },
+      experience: {
+        videoEditingExperience: data.videoEditingExperience,
+        aiToolsExperience: data.aiToolsExperience,
+        softwareSkills: data.softwareSkills,
+        creativeProcess: data.creativeProcess,
+        recentProjects: data.recentProjects,
+      },
+    } : {
       basicInfo: {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -108,6 +143,7 @@ export const submitApplication = async (
     };
 
     const hasVoiceRecording = !!(data.introductionRecording || data.scriptRecording);
+    const hasVideoUpload = !!data.videoUpload;
 
     let applicationId: string;
 
@@ -119,7 +155,10 @@ export const submitApplication = async (
           status: 'applied',
           form_data: formData,
           has_voice_recording: hasVoiceRecording,
-          notes: `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
+          has_video: hasVideoUpload,
+          notes: isVideoEditor 
+            ? `Video Editor application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Portfolio and experience submitted.`
+            : `Remote Appointment Setter application (Updated). Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingApplication.id);
@@ -136,7 +175,10 @@ export const submitApplication = async (
           status: 'applied',
           form_data: formData,
           has_voice_recording: hasVoiceRecording,
-          notes: `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
+          has_video: hasVideoUpload,
+          notes: isVideoEditor 
+            ? `Video Editor application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Portfolio and experience submitted.`
+            : `Remote Appointment Setter application. Location: ${data.location}. Weekend availability: ${data.weekendAvailability}. Pre-screening and listening test completed.`,
         })
         .select('id')
         .single();
@@ -146,39 +188,72 @@ export const submitApplication = async (
     }
 
     // Score the pre-screening responses
-    if (data.motivationResponse && data.experienceResponse && data.availabilityResponse) {
-      try {
-        const scores = await scorePreScreeningResponses(
-          data.motivationResponse,
-          data.experienceResponse,
-          data.availabilityResponse
-        );
+    if (isVideoEditor) {
+      // Score video editor pre-screening responses
+      if (data.videoEditorMotivation && data.videoEditorExperience && data.videoEditorAvailability) {
+        try {
+          const scores = await scorePreScreeningResponses(
+            data.videoEditorMotivation,
+            data.videoEditorExperience,
+            data.videoEditorAvailability
+          );
 
-        // Save pre-screening scores
-        await supabase
-          .from('pre_screening_responses')
-          .upsert({
-            application_id: applicationId,
-            motivation_response: data.motivationResponse,
-            motivation_score: scores.motivationScore,
-            experience_response: data.experienceResponse,
-            experience_score: scores.experienceScore,
-            availability_response: data.availabilityResponse,
-            availability_score: scores.availabilityScore,
-            communication_score: scores.communicationScore,
-            overall_prescreening_score: scores.overallScore,
-            scored_at: new Date().toISOString(),
-          });
+          // Save pre-screening scores
+          await supabase
+            .from('pre_screening_responses')
+            .upsert({
+              application_id: applicationId,
+              motivation_response: data.videoEditorMotivation,
+              motivation_score: scores.motivationScore,
+              experience_response: data.videoEditorExperience,
+              experience_score: scores.experienceScore,
+              availability_response: data.videoEditorAvailability,
+              availability_score: scores.availabilityScore,
+              communication_score: scores.communicationScore,
+              overall_prescreening_score: scores.overallScore,
+              scored_at: new Date().toISOString(),
+            });
 
-        console.log('Pre-screening scores saved:', scores);
-      } catch (scoringError) {
-        console.error('Error scoring pre-screening responses:', scoringError);
-        // Don't fail the whole submission if scoring fails
+          console.log('Video editor pre-screening scores saved:', scores);
+        } catch (scoringError) {
+          console.error('Error scoring video editor pre-screening responses:', scoringError);
+        }
+      }
+    } else {
+      // Score appointment setter pre-screening responses
+      if (data.motivationResponse && data.experienceResponse && data.availabilityResponse) {
+        try {
+          const scores = await scorePreScreeningResponses(
+            data.motivationResponse,
+            data.experienceResponse,
+            data.availabilityResponse
+          );
+
+          // Save pre-screening scores
+          await supabase
+            .from('pre_screening_responses')
+            .upsert({
+              application_id: applicationId,
+              motivation_response: data.motivationResponse,
+              motivation_score: scores.motivationScore,
+              experience_response: data.experienceResponse,
+              experience_score: scores.experienceScore,
+              availability_response: data.availabilityResponse,
+              availability_score: scores.availabilityScore,
+              communication_score: scores.communicationScore,
+              overall_prescreening_score: scores.overallScore,
+              scored_at: new Date().toISOString(),
+            });
+
+          console.log('Pre-screening scores saved:', scores);
+        } catch (scoringError) {
+          console.error('Error scoring pre-screening responses:', scoringError);
+        }
       }
     }
 
     // Update candidate tags
-    await updateCandidateTags(candidateId, data);
+    await updateCandidateTags(candidateId, data, isVideoEditor);
 
     // Trigger AI analysis if there are voice recordings
     if (hasVoiceRecording && (data.introductionRecording || data.scriptRecording)) {
@@ -203,7 +278,6 @@ export const submitApplication = async (
         
       } catch (analysisError) {
         console.error('Error triggering AI analysis:', analysisError);
-        // Don't fail the whole submission if AI analysis fails
       }
     }
 
@@ -223,15 +297,24 @@ export const submitApplication = async (
   }
 };
 
-const updateCandidateTags = async (candidateId: string, data: ApplicationFormData) => {
+const updateCandidateTags = async (candidateId: string, data: ApplicationFormData, isVideoEditor: boolean) => {
   // Remove existing tags first to avoid duplicates
   await supabase
     .from('candidate_tags')
     .delete()
     .eq('candidate_id', candidateId);
 
-  const tags = ['Remote Worker', 'Weekend Available', 'Pre-Screened'];
-  if (data.introductionRecording && data.scriptRecording) tags.push('Voice Submitted');
+  const tags = ['Remote Worker'];
+  
+  if (isVideoEditor) {
+    tags.push('Video Editor', 'Creative Professional');
+    if (data.portfolioUrl) tags.push('Portfolio Submitted');
+    if (data.videoUpload) tags.push('Demo Reel Uploaded');
+    if (data.aiToolsExperience) tags.push('AI Tools Experience');
+  } else {
+    tags.push('Weekend Available', 'Pre-Screened');
+    if (data.introductionRecording && data.scriptRecording) tags.push('Voice Submitted');
+  }
   
   for (const tag of tags) {
     await supabase

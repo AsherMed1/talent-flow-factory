@@ -2,10 +2,10 @@
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Briefcase, Code, Palette } from 'lucide-react';
+import { Code, Palette } from 'lucide-react';
 import { ApplicationFormData } from './formSchema';
+import { VideoUploadSection } from './VideoUploadSection';
 
 interface RoleSpecificSectionsProps {
   form: UseFormReturn<ApplicationFormData>;
@@ -27,35 +27,18 @@ export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsPro
   if (isVideoEditor) {
     return (
       <>
-        {/* Portfolio Section */}
+        {/* Portfolio & Video Upload Section */}
+        <VideoUploadSection form={form} />
+
+        {/* Experience Section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5" />
-              Portfolio & Experience
+              <Palette className="w-5 h-5" />
+              Experience & Background
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="portfolioUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Portfolio URL *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://vimeo.com/your-videos or https://your-portfolio.com" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Please provide a link to your video portfolio on Vimeo, YouTube, Behance, or your personal website
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="videoEditingExperience"

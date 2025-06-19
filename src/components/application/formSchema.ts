@@ -46,11 +46,20 @@ export const applicationFormSchema = z.object({
   
   // Video Editor specific fields
   portfolioUrl: z.string().optional(),
+  videoUpload: z.string().optional(), // New field for video file uploads
   videoEditingExperience: z.string().optional(),
   aiToolsExperience: z.string().optional(),
   softwareSkills: z.string().optional(),
   creativeProcess: z.string().optional(),
   recentProjects: z.string().optional(),
+  
+  // Video Editor specific pre-screening
+  videoEditorMotivation: z.string().optional(),
+  videoEditorExperience: z.string().optional(),
+  videoEditorAvailability: z.string().optional(),
+  clientCollaboration: z.string().optional(),
+  projectTimelines: z.string().optional(),
+  creativeProcessApproach: z.string().optional(),
   
   // Terms
   agreeToTerms: z.boolean().refine(val => val === true, {
@@ -58,18 +67,21 @@ export const applicationFormSchema = z.object({
   })
 }).superRefine((data, ctx) => {
   // Detect if this is a video editor application
-  const hasVideoEditorFields = data.portfolioUrl || data.videoEditingExperience || data.softwareSkills || data.recentProjects;
+  const hasVideoEditorFields = data.portfolioUrl || data.videoEditingExperience || data.softwareSkills || data.recentProjects || data.videoUpload;
   
   if (hasVideoEditorFields) {
-    // Portfolio URL validation
-    if (!data.portfolioUrl || data.portfolioUrl.trim().length === 0) {
+    // At least one portfolio method is required (URL or video upload)
+    if ((!data.portfolioUrl || data.portfolioUrl.trim().length === 0) && 
+        (!data.videoUpload || data.videoUpload.trim().length === 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Portfolio URL is required for video editor positions",
+        message: "Please provide either a portfolio URL or upload a demo reel",
         path: ["portfolioUrl"]
       });
-    } else {
-      // Validate URL format
+    }
+    
+    // Portfolio URL validation (only if provided)
+    if (data.portfolioUrl && data.portfolioUrl.trim().length > 0) {
       const urlValidation = urlSchema.safeParse(data.portfolioUrl);
       if (!urlValidation.success) {
         ctx.addIssue({
@@ -104,6 +116,55 @@ export const applicationFormSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: "Please provide at least 150 characters describing your recent projects",
         path: ["recentProjects"]
+      });
+    }
+
+    // Video Editor specific pre-screening validations
+    if (!data.videoEditorMotivation || data.videoEditorMotivation.trim().length < 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please provide at least 100 characters explaining your motivation for video editing",
+        path: ["videoEditorMotivation"]
+      });
+    }
+
+    if (!data.videoEditorExperience || data.videoEditorExperience.trim().length < 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please provide at least 100 characters about your video editing background",
+        path: ["videoEditorExperience"]
+      });
+    }
+
+    if (!data.clientCollaboration || data.clientCollaboration.trim().length < 50) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please provide at least 50 characters about your client collaboration experience",
+        path: ["clientCollaboration"]
+      });
+    }
+
+    if (!data.projectTimelines || data.projectTimelines.trim().length < 30) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please describe your approach to project timelines",
+        path: ["projectTimelines"]
+      });
+    }
+
+    if (!data.creativeProcessApproach || data.creativeProcessApproach.trim().length < 50) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please provide at least 50 characters about your creative process",
+        path: ["creativeProcessApproach"]
+      });
+    }
+
+    if (!data.videoEditorAvailability) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select your availability for video editing projects",
+        path: ["videoEditorAvailability"]
       });
     }
   }
