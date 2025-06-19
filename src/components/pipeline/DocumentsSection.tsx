@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Eye, Image, Wifi, AlertCircle } from 'lucide-react';
+import { FileText, Eye, Image, Wifi, AlertCircle, Video } from 'lucide-react';
 import { Application } from '@/hooks/useApplications';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 
@@ -24,49 +24,116 @@ export const DocumentsSection = ({ application, onDocumentView }: DocumentsSecti
     if (application.form_data) {
       const formData = application.form_data as any;
       
-      // Check for download speed test
-      if (formData.uploads?.hasDownloadSpeed || formData.uploads?.downloadSpeedScreenshot || formData.downloadSpeedScreenshot) {
+      // Check for appointment setter uploads
+      if (formData.uploads?.hasDownloadSpeed || formData.uploads?.downloadSpeedScreenshot) {
         docs.push({ 
           type: 'Download Speed Test', 
           key: 'downloadSpeed', 
           icon: Wifi,
-          hasData: !!(formData.uploads?.downloadSpeedScreenshot || formData.downloadSpeedScreenshot)
+          hasData: !!(formData.uploads?.downloadSpeedScreenshot)
         });
       }
       
-      // Check for upload speed test
-      if (formData.uploads?.hasUploadSpeed || formData.uploads?.uploadSpeedScreenshot || formData.uploadSpeedScreenshot) {
+      if (formData.uploads?.hasUploadSpeed || formData.uploads?.uploadSpeedScreenshot) {
         docs.push({ 
           type: 'Upload Speed Test', 
           key: 'uploadSpeed', 
           icon: Wifi,
-          hasData: !!(formData.uploads?.uploadSpeedScreenshot || formData.uploadSpeedScreenshot)
+          hasData: !!(formData.uploads?.uploadSpeedScreenshot)
         });
       }
       
-      // Check for workstation photo
-      if (formData.uploads?.hasWorkstation || formData.uploads?.workstationPhoto || formData.workstationPhoto) {
+      if (formData.uploads?.hasWorkstation || formData.uploads?.workstationPhoto) {
         docs.push({ 
           type: 'Workstation Photo', 
           key: 'workstation', 
           icon: Image,
-          hasData: !!(formData.uploads?.workstationPhoto || formData.workstationPhoto)
+          hasData: !!(formData.uploads?.workstationPhoto)
+        });
+      }
+
+      // Check for video editor portfolio
+      if (formData.portfolio?.hasPortfolioUrl || formData.portfolio?.portfolioUrl) {
+        docs.push({ 
+          type: 'Portfolio URL', 
+          key: 'portfolio', 
+          icon: Eye,
+          hasData: !!(formData.portfolio?.portfolioUrl)
+        });
+      }
+
+      if (formData.portfolio?.hasVideoUpload || formData.portfolio?.videoUpload) {
+        docs.push({ 
+          type: 'Demo Reel', 
+          key: 'videoDemo', 
+          icon: Video,
+          hasData: !!(formData.portfolio?.videoUpload)
+        });
+      }
+
+      // Legacy support for direct form data fields
+      if (formData.downloadSpeedScreenshot) {
+        docs.push({ 
+          type: 'Download Speed Test', 
+          key: 'downloadSpeed', 
+          icon: Wifi,
+          hasData: true
+        });
+      }
+      
+      if (formData.uploadSpeedScreenshot) {
+        docs.push({ 
+          type: 'Upload Speed Test', 
+          key: 'uploadSpeed', 
+          icon: Wifi,
+          hasData: true
+        });
+      }
+      
+      if (formData.workstationPhoto) {
+        docs.push({ 
+          type: 'Workstation Photo', 
+          key: 'workstation', 
+          icon: Image,
+          hasData: true
+        });
+      }
+
+      if (formData.portfolioUrl) {
+        docs.push({ 
+          type: 'Portfolio URL', 
+          key: 'portfolio', 
+          icon: Eye,
+          hasData: true
+        });
+      }
+
+      if (formData.videoUpload) {
+        docs.push({ 
+          type: 'Demo Reel', 
+          key: 'videoDemo', 
+          icon: Video,
+          hasData: true
         });
       }
     }
-    return docs;
+    
+    // Remove duplicates based on type
+    const uniqueDocs = docs.filter((doc, index, self) => 
+      index === self.findIndex(d => d.type === doc.type)
+    );
+    
+    return uniqueDocs;
   };
 
   const uploadedDocs = getUploadedDocuments();
   const hasDocuments = application.has_resume || uploadedDocs.length > 0 || application.has_video;
 
   const handleDocumentClick = (docType: string) => {
-    // Call the optional callback for backwards compatibility
     if (onDocumentView) {
       onDocumentView(docType);
     }
     
-    // Open the preview modal
     setPreviewModal({
       isOpen: true,
       documentType: docType

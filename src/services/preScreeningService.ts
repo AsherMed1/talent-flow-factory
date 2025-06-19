@@ -8,22 +8,24 @@ export const handlePreScreeningScoring = async (
   data: ApplicationFormData,
   isVideoEditor: boolean
 ) => {
-  // Both video editors and appointment setters now use the same unified field names
+  // Ensure we have the unified pre-screening responses
   if (data.motivationResponse && data.experienceResponse && data.availabilityResponse) {
     try {
-      // Pass the collaboration response for video editors (optional field)
-      const collaborationResponse = isVideoEditor ? data.collaborationResponse : undefined;
+      console.log('Processing pre-screening for:', isVideoEditor ? 'Video Editor' : 'Appointment Setter');
       
+      // Score the responses with role-specific logic
       const scores = await scorePreScreeningResponses(
         data.motivationResponse,
         data.experienceResponse,
         data.availabilityResponse,
-        collaborationResponse,
+        data.collaborationResponse, // This is optional and only for video editors
         isVideoEditor
       );
 
-      // Save pre-screening scores with unified field names
-      await supabase
+      console.log('Pre-screening scores calculated:', scores);
+
+      // Save pre-screening scores to database
+      const { error } = await supabase
         .from('pre_screening_responses')
         .upsert({
           application_id: applicationId,
@@ -38,9 +40,22 @@ export const handlePreScreeningScoring = async (
           scored_at: new Date().toISOString(),
         });
 
-      console.log('Pre-screening scores saved:', scores);
+      if (error) {
+        console.error('Error saving pre-screening scores:', error);
+        throw error;
+      }
+
+      console.log('Pre-screening scores saved successfully');
     } catch (scoringError) {
-      console.error('Error scoring pre-screening responses:', scoringError);
+      console.error('Error in pre-screening scoring process:', scoringError);
+      // Don't throw here to prevent blocking application submission
+      // Just log the error for debugging
     }
+  } else {
+    console.warn('Missing required pre-screening responses:', {
+      motivationResponse: !!data.motivationResponse,
+      experienceResponse: !!data.experienceResponse,
+      availabilityResponse: !!data.availabilityResponse
+    });
   }
 };
