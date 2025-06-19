@@ -113,7 +113,7 @@ export const processFailedWebhookData = async () => {
           status: 'interview_scheduled',
           interview_date: interviewDate,
           updated_at: new Date().toISOString(),
-          ghl_appointment_data: webhookData
+          ghl_appointment_data: JSON.parse(JSON.stringify(webhookData))
         })
         .eq('id', application.id)
         .select()
