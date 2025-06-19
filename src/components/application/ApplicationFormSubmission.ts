@@ -1,10 +1,10 @@
-
 import { ApplicationFormData } from './formSchema';
 import { clearSavedData } from './formStorage';
 import { createOrUpdateCandidate, updateCandidateTags } from '@/services/candidateService';
 import { createOrUpdateApplication } from '@/services/applicationService';
 import { handlePreScreeningScoring } from '@/services/preScreeningService';
 import { triggerVoiceAnalysis } from '@/services/voiceAnalysisService';
+import { detectRoleType } from '@/utils/roleDetection';
 
 export interface SubmissionResult {
   success: boolean;
@@ -22,8 +22,15 @@ export const submitApplication = async (
     // Create or find the candidate
     const { candidateId } = await createOrUpdateCandidate(data);
 
-    // Determine if this is a video editor application
-    const isVideoEditor = !!(data.videoEditingExperience || data.portfolioUrl || data.videoUpload);
+    // Use centralized role detection - we need to get the role name first
+    let roleName = '';
+    if (jobRoleId) {
+      // If we have a job role ID, we should get the role name
+      // For now, we'll determine based on form data presence
+      roleName = (data.videoEditingExperience || data.portfolioUrl || data.videoUpload) ? 'Video Editor' : 'Appointment Setter';
+    }
+    
+    const { isVideoEditor } = detectRoleType(roleName);
 
     // Create or update application
     const { applicationId, isUpdate } = await createOrUpdateApplication(

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +18,7 @@ import { useApplicationForm } from './application/useApplicationForm';
 import { useEnhancedAutoSave } from './application/useEnhancedAutoSave';
 import { submitApplication } from './application/ApplicationFormSubmission';
 import { JobRole } from '@/hooks/useJobRoles';
+import { detectRoleType } from '@/utils/roleDetection';
 
 interface ApplicationFormProps {
   jobRoleId?: string;
@@ -73,13 +73,8 @@ export const ApplicationForm = ({ jobRoleId, role, onSuccess }: ApplicationFormP
     }
   };
 
-  // More flexible role detection
-  const isVideoEditor = role?.name?.toLowerCase().includes('video') || 
-                        role?.name?.toLowerCase().includes('editor') ||
-                        role?.name?.toLowerCase().includes('content creator');
-  const isAppointmentSetter = role?.name?.toLowerCase().includes('appointment') || 
-                              role?.name?.toLowerCase().includes('setter') ||
-                              !role?.name; // Default to appointment setter if no role specified
+  // Use centralized role detection
+  const { isVideoEditor, isAppointmentSetter } = detectRoleType(role?.name);
 
   console.log('ApplicationForm - isVideoEditor:', isVideoEditor);
   console.log('ApplicationForm - isAppointmentSetter:', isAppointmentSetter);

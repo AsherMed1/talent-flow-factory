@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
@@ -6,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Code, Palette } from 'lucide-react';
 import { ApplicationFormData } from './formSchema';
 import { VideoUploadSection } from './VideoUploadSection';
+import { detectRoleType } from '@/utils/roleDetection';
 
 interface RoleSpecificSectionsProps {
   form: UseFormReturn<ApplicationFormData>;
@@ -15,10 +15,8 @@ interface RoleSpecificSectionsProps {
 export const RoleSpecificSections = ({ form, roleName }: RoleSpecificSectionsProps) => {
   if (!roleName) return null;
 
-  // More flexible matching for video editor roles
-  const isVideoEditor = roleName.toLowerCase().includes('video') || 
-                        roleName.toLowerCase().includes('editor') ||
-                        roleName.toLowerCase().includes('content creator');
+  // Use centralized role detection
+  const { isVideoEditor } = detectRoleType(roleName);
 
   console.log('RoleSpecificSections - roleName:', roleName);
   console.log('RoleSpecificSections - isVideoEditor:', isVideoEditor);

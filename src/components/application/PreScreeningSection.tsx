@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -6,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageCircle } from 'lucide-react';
 import { ApplicationFormData } from './formSchema';
+import { detectRoleType } from '@/utils/roleDetection';
 
 interface PreScreeningSectionProps {
   form: UseFormReturn<ApplicationFormData>;
@@ -13,13 +13,8 @@ interface PreScreeningSectionProps {
 }
 
 export const PreScreeningSection = ({ form, roleName }: PreScreeningSectionProps) => {
-  // More flexible role detection
-  const isVideoEditor = roleName?.toLowerCase().includes('video') || 
-                        roleName?.toLowerCase().includes('editor') ||
-                        roleName?.toLowerCase().includes('content creator');
-  const isAppointmentSetter = roleName?.toLowerCase().includes('appointment') || 
-                              roleName?.toLowerCase().includes('setter') ||
-                              !roleName; // Default
+  // Use centralized role detection
+  const { isVideoEditor, isAppointmentSetter } = detectRoleType(roleName);
 
   console.log('PreScreeningSection - roleName:', roleName);
   console.log('PreScreeningSection - isVideoEditor:', isVideoEditor);

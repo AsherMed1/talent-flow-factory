@@ -1,7 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Phone, Calendar, Target, Diamond, DollarSign } from 'lucide-react';
+import { detectRoleType } from '@/utils/roleDetection';
 
 interface ApplicationFormHeaderProps {
   onClearSavedData: () => void;
@@ -14,10 +14,8 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
   const displayRoleName = roleName || "Appointment Setter – Remote";
   const displayDescription = roleDescription || "(Must Be Available Weekends + Bonuses!)";
 
-  // More flexible role detection
-  const isVideoEditor = roleName?.toLowerCase().includes('video') || 
-                        roleName?.toLowerCase().includes('editor') ||
-                        roleName?.toLowerCase().includes('content creator');
+  // Use centralized role detection
+  const { isVideoEditor } = detectRoleType(roleName);
 
   console.log('ApplicationFormHeader - roleName:', roleName);
   console.log('ApplicationFormHeader - isVideoEditor:', isVideoEditor);
@@ -117,7 +115,6 @@ export const ApplicationFormHeader = ({ onClearSavedData, roleName, roleDescript
               </div>
             </div>
           ) : (
-            // Default Appointment Setter content
             <div>
               <p className="text-lg">
                 We are a <strong>fast-growing agency</strong> looking for a personable and detail-oriented{' '}
