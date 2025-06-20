@@ -71,17 +71,18 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Handle job_roles with simplified type checking
+          // Extract job_roles data first
+          const jobRolesData = app.job_roles;
           let validJobRoles = null;
-          if (app.job_roles && 
-              typeof app.job_roles === 'object' && 
-              'name' in app.job_roles &&
-              app.job_roles.name &&
-              typeof app.job_roles.name === 'string') {
+          
+          if (jobRolesData !== null && 
+              typeof jobRolesData === 'object' && 
+              'name' in jobRolesData &&
+              jobRolesData.name &&
+              typeof jobRolesData.name === 'string') {
             
-            const jobRoles = app.job_roles as any;
             validJobRoles = {
-              name: jobRoles.name
+              name: jobRolesData.name
             };
           }
 

@@ -135,35 +135,37 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Handle candidates with simplified type checking
+        // Extract candidates data first
+        const candidatesData = app.candidates;
         let validCandidates = null;
-        if (app.candidates && 
-            typeof app.candidates === 'object' && 
-            'name' in app.candidates &&
-            app.candidates.name &&
-            typeof app.candidates.name === 'string') {
+        
+        if (candidatesData !== null && 
+            typeof candidatesData === 'object' && 
+            'name' in candidatesData &&
+            candidatesData.name &&
+            typeof candidatesData.name === 'string') {
           
-          const candidates = app.candidates as any;
           validCandidates = {
-            name: candidates.name,
-            email: candidates.email || '',
-            phone: candidates.phone || null,
-            candidate_tags: candidates.candidate_tags || []
+            name: candidatesData.name,
+            email: candidatesData.email || '',
+            phone: candidatesData.phone || null,
+            candidate_tags: candidatesData.candidate_tags || []
           };
         }
 
-        // Handle job_roles with simplified type checking
+        // Extract job_roles data first
+        const jobRolesData = app.job_roles;
         let validJobRoles = null;
-        if (app.job_roles && 
-            typeof app.job_roles === 'object' && 
-            'name' in app.job_roles &&
-            app.job_roles.name &&
-            typeof app.job_roles.name === 'string') {
+        
+        if (jobRolesData !== null && 
+            typeof jobRolesData === 'object' && 
+            'name' in jobRolesData &&
+            jobRolesData.name &&
+            typeof jobRolesData.name === 'string') {
           
-          const jobRoles = app.job_roles as any;
           validJobRoles = {
-            name: jobRoles.name,
-            booking_link: jobRoles.booking_link || null
+            name: jobRolesData.name,
+            booking_link: jobRolesData.booking_link || null
           };
         }
 
