@@ -21,9 +21,9 @@ export const ExpandedContent = ({
     <div className="mt-3 space-y-3 border-t pt-3">
       {/* Additional candidate info when expanded */}
       <div className="text-xs text-gray-600 space-y-1">
-        <div>Email: {application.candidates.email}</div>
-        {application.candidates.phone && (
-          <div>Phone: {application.candidates.phone}</div>
+        <div>Email: {application.candidate.email}</div>
+        {application.candidate.phone && (
+          <div>Phone: {application.candidate.phone}</div>
         )}
         {application.notes && (
           <div className="bg-gray-50 p-2 rounded text-xs">

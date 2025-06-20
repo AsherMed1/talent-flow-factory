@@ -68,14 +68,14 @@ export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: App
         <div className="col-span-3 flex items-center gap-3">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="text-xs">
-              {application.candidates.name.split(' ').map(n => n[0]).join('')}
+              {application.candidate.name.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="font-medium text-sm truncate">{application.candidates.name}</div>
-            <div className="text-xs text-gray-600 truncate">{application.candidates.email}</div>
+            <div className="font-medium text-sm truncate">{application.candidate.name}</div>
+            <div className="text-xs text-gray-600 truncate">{application.candidate.email}</div>
             <div className="text-xs text-gray-500 truncate">
-              {application.job_roles && application.job_roles.name ? application.job_roles.name : 'Unknown Role'}
+              {application.job_role && application.job_role.name ? application.job_role.name : 'Unknown Role'}
             </div>
           </div>
         </div>
@@ -171,9 +171,9 @@ export const ApplicationRow = ({ application, stageIndex, onStatusChanged }: App
           <CandidateTagsSection application={application} />
           
           <div className="text-xs text-gray-600 space-y-1">
-            <div>Email: {application.candidates.email}</div>
-            {application.candidates.phone && (
-              <div>Phone: {application.candidates.phone}</div>
+            <div>Email: {application.candidate.email}</div>
+            {application.candidate.phone && (
+              <div>Phone: {application.candidate.phone}</div>
             )}
             {application.notes && (
               <div className="bg-white p-2 rounded text-xs border">

@@ -42,9 +42,9 @@ export const DispositionDialog = ({ application, isOpen, onClose, onDispositionC
     
     try {
       // Prepare candidate info
-      const candidateName = application.candidates.name;
-      const candidateEmail = application.candidates.email;
-      const jobRole = application.job_roles?.name || 'General';
+      const candidateName = application.candidate.name;
+      const candidateEmail = application.candidate.email;
+      const jobRole = application.job_role?.name || 'General';
       const firstName = application.form_data?.basicInfo?.firstName || candidateName.split(' ')[0];
       const lastName = application.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
 
@@ -150,7 +150,7 @@ export const DispositionDialog = ({ application, isOpen, onClose, onDispositionC
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Interview Disposition - {application.candidates.name}</DialogTitle>
+          <DialogTitle>Interview Disposition - {application.candidate.name}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">

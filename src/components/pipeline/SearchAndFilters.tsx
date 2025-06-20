@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ export const SearchAndFilters = ({ applications, onFilteredApplications }: Searc
 
   // Get unique roles for filter dropdown - ensure we include common roles even if not in current applications
   const uniqueRoles = Array.from(new Set([
-    ...applications.map(app => app.job_roles?.name).filter(Boolean),
+    ...applications.map(app => app.job_role?.name).filter(Boolean),
     'Video Editor', // Always include Video Editor as an option
     'Appointment Setter',
     'Customer Service Representative'
@@ -48,9 +49,9 @@ export const SearchAndFilters = ({ applications, onFilteredApplications }: Searc
     if (newFilters.search.trim()) {
       const searchLower = newFilters.search.toLowerCase();
       filtered = filtered.filter(app =>
-        app.candidates.name.toLowerCase().includes(searchLower) ||
-        app.candidates.email.toLowerCase().includes(searchLower) ||
-        app.job_roles?.name.toLowerCase().includes(searchLower)
+        app.candidate.name.toLowerCase().includes(searchLower) ||
+        app.candidate.email.toLowerCase().includes(searchLower) ||
+        app.job_role?.name.toLowerCase().includes(searchLower)
       );
     }
 
@@ -93,7 +94,7 @@ export const SearchAndFilters = ({ applications, onFilteredApplications }: Searc
 
     // Role filter
     if (newFilters.role !== 'all') {
-      filtered = filtered.filter(app => app.job_roles?.name === newFilters.role);
+      filtered = filtered.filter(app => app.job_role?.name === newFilters.role);
     }
 
     onFilteredApplications(filtered);

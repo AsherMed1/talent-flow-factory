@@ -33,9 +33,9 @@ export const MobileSearchFilters = ({ applications, onFilteredApplications }: Mo
 
     if (searchTerm) {
       filtered = filtered.filter(app =>
-        app.candidates.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.candidates.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (app.job_roles?.name && app.job_roles.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        app.candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (app.job_role?.name && app.job_role.name.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 

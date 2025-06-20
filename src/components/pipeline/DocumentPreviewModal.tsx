@@ -63,7 +63,7 @@ export const DocumentPreviewModal = ({
     if (documentUrl) {
       const link = document.createElement('a');
       link.href = documentUrl;
-      link.download = `${application.candidates.name}_${documentType}`;
+      link.download = `${application.candidate.name}_${documentType}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -101,7 +101,7 @@ export const DocumentPreviewModal = ({
           <iframe 
             src={documentUrl} 
             className="w-full h-full rounded-lg border"
-            title={`${documentType} for ${application.candidates.name}`}
+            title={`${documentType} for ${application.candidate.name}`}
           />
         </div>
       );
@@ -145,7 +145,7 @@ export const DocumentPreviewModal = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="flex-1">
-            {documentType} - {application.candidates.name}
+            {documentType} - {application.candidate.name}
           </DialogTitle>
           <div className="flex items-center gap-2">
             {documentUrl && (

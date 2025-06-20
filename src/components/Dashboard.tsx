@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Calendar, TrendingUp, GitBranch } from 'lucide-react';
 import { useApplicationStats, useApplications } from '@/hooks/useApplications';
@@ -25,8 +24,8 @@ export const Dashboard = () => {
     action: `${app.status === 'applied' ? 'New application from' : 
              app.status === 'interview_scheduled' ? 'Interview scheduled with' :
              app.status === 'offer_sent' ? 'Offer sent to' : 
-             'Updated application for'} ${app.candidates.name}`,
-    role: app.job_roles?.name || 'Unknown Role',
+             'Updated application for'} ${app.candidate.name}`,
+    role: app.job_role?.name || 'Unknown Role',
     time: new Date(app.applied_date).toLocaleDateString()
   })) || [];
 

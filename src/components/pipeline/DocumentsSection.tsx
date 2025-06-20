@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Eye, Image, Wifi, AlertCircle, Video, ExternalLink, Play } from 'lucide-react';
@@ -21,7 +20,7 @@ export const DocumentsSection = ({ application, onDocumentView }: DocumentsSecti
   });
 
   // Detect role type for better categorization
-  const roleName = application.job_roles?.name;
+  const roleName = application.job_role?.name;
   const { isVideoEditor, isAppointmentSetter } = detectRoleType(roleName);
 
   const getUploadedDocuments = () => {

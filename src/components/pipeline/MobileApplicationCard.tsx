@@ -42,7 +42,7 @@ export const MobileApplicationCard = ({
         <div className="flex flex-col space-y-1">
           <div className="flex items-center">
             <h4 className="text-sm font-semibold">
-              {application.candidates.name}
+              {application.candidate.name}
             </h4>
           </div>
           <p className="text-xs text-gray-500">

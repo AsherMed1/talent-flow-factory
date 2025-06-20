@@ -40,9 +40,9 @@ export const InterviewDisposition = ({ application, onDispositionComplete }: Int
     
     try {
       // Prepare candidate info
-      const candidateName = application.candidates.name;
-      const candidateEmail = application.candidates.email;
-      const jobRole = application.job_roles?.name || 'General';
+      const candidateName = application.candidate.name;
+      const candidateEmail = application.candidate.email;
+      const jobRole = application.job_role?.name || 'General';
       const firstName = application.form_data?.basicInfo?.firstName || candidateName.split(' ')[0];
       const lastName = application.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
 
@@ -141,7 +141,7 @@ export const InterviewDisposition = ({ application, onDispositionComplete }: Int
       <CardHeader>
         <CardTitle>Interview Disposition</CardTitle>
         <p className="text-sm text-gray-600">
-          Complete the hiring process for {application.candidates.name}
+          Complete the hiring process for {application.candidate.name}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">

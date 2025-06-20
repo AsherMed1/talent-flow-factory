@@ -13,14 +13,14 @@ export const ApplicationHeader = ({ application }: ApplicationHeaderProps) => {
       <div className="flex items-center gap-2">
         <Avatar className="w-8 h-8">
           <AvatarFallback className="text-xs">
-            {application.candidates.name.split(' ').map(n => n[0]).join('')}
+            {application.candidate.name.split(' ').map(n => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
         <div>
-          <div className="font-medium text-sm">{application.candidates.name}</div>
-          <div className="text-xs text-gray-600">{application.candidates.email}</div>
+          <div className="font-medium text-sm">{application.candidate.name}</div>
+          <div className="text-xs text-gray-600">{application.candidate.email}</div>
           <div className="text-xs text-gray-500">
-            {application.job_roles && application.job_roles.name ? application.job_roles.name : 'Unknown Role'}
+            {application.job_role && application.job_role.name ? application.job_role.name : 'Unknown Role'}
           </div>
         </div>
       </div>
