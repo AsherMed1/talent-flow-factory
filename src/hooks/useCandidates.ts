@@ -17,7 +17,7 @@ export interface Candidate {
     voice_analysis_score: number | null;
     job_roles: {
       name: string;
-    };
+    } | null;
     pre_screening_responses?: Array<{
       motivation_response: string;
       motivation_score: number;

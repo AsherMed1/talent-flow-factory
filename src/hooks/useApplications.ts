@@ -105,7 +105,7 @@ export const useApplications = () => {
             communication_score,
             overall_prescreening_score
           ),
-          candidates (
+          candidates!inner (
             name, 
             email, 
             phone,
@@ -115,13 +115,14 @@ export const useApplications = () => {
         `)
         .not('form_data', 'is', null)
         .neq('form_data', '{}')
+        .not('candidate_id', 'is', null)
         .order('applied_date', { ascending: false });
       
       if (error) throw error;
       
       // Additional filtering to ensure applications have proper form data structure
       const filteredData = data?.filter(app => {
-        if (!app.form_data) return false;
+        if (!app.form_data || !app.candidates) return false;
         
         // Check if form_data has the expected structure from your application form
         const formData = app.form_data as any;
@@ -148,7 +149,8 @@ export const useApplicationStats = () => {
         .from('applications')
         .select('status, applied_date, interview_date, form_data')
         .not('form_data', 'is', null)
-        .neq('form_data', '{}');
+        .neq('form_data', '{}')
+        .not('candidate_id', 'is', null);
       
       if (error) throw error;
       
