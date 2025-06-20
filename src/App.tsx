@@ -11,9 +11,9 @@ import { VideoEditorApplicationPage } from "./pages/VideoEditorApplicationPage";
 import { AppointmentSetterApplicationPage } from "./pages/AppointmentSetterApplicationPage";
 import { ThankYouPage } from "./pages/ThankYouPage";
 import { VideoLibraryPage } from "./pages/VideoLibraryPage";
-import { GmailCallbackPage } from "./pages/GmailCallbackPage";
-import { WebhookProcessorPage } from "./pages/WebhookProcessorPage";
-import { NotFound } from "./pages/NotFound";
+import GmailCallbackPage from "./pages/GmailCallbackPage";
+import WebhookProcessorPage from "./pages/WebhookProcessorPage";
+import NotFound from "./pages/NotFound";
 import { Settings } from "./components/Settings";
 
 const queryClient = new QueryClient();
