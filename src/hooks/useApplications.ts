@@ -14,7 +14,12 @@ export const useApplications = () => {
         throw result.error;
       }
       return result.data || [];
-    }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes - data stays fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes in cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
   });
 };
 
@@ -27,6 +32,11 @@ export const useApplicationStats = () => {
         throw result.error;
       }
       return result.data;
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - stats don't change often
+    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
   });
 };
