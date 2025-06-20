@@ -143,11 +143,13 @@ export const useApplications = () => {
             'name' in candidatesData && 
             typeof candidatesData.name === 'string' &&
             !('error' in candidatesData)) {
+          // Type assertion after null check
+          const safeCandidate = candidatesData as NonNullable<typeof candidatesData>;
           validCandidates = {
-            name: candidatesData.name,
-            email: candidatesData.email || '',
-            phone: candidatesData.phone || null,
-            candidate_tags: candidatesData.candidate_tags || []
+            name: safeCandidate.name,
+            email: safeCandidate.email || '',
+            phone: safeCandidate.phone || null,
+            candidate_tags: safeCandidate.candidate_tags || []
           };
         }
 
@@ -159,9 +161,11 @@ export const useApplications = () => {
             'name' in jobRolesData && 
             typeof jobRolesData.name === 'string' &&
             !('error' in jobRolesData)) {
+          // Type assertion after null check
+          const safeJobRole = jobRolesData as NonNullable<typeof jobRolesData>;
           validJobRoles = {
-            name: jobRolesData.name,
-            booking_link: jobRolesData.booking_link || null
+            name: safeJobRole.name,
+            booking_link: safeJobRole.booking_link || null
           };
         }
 

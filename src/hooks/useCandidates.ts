@@ -79,8 +79,10 @@ export const useCandidates = () => {
               'name' in jobRolesData && 
               typeof jobRolesData.name === 'string' &&
               !('error' in jobRolesData)) {
+            // Type assertion after null check
+            const safeJobRole = jobRolesData as NonNullable<typeof jobRolesData>;
             validJobRoles = {
-              name: jobRolesData.name
+              name: safeJobRole.name
             };
           }
 
