@@ -71,15 +71,16 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Handle job_roles with simpler null checking
+          // Handle job_roles with proper null checking
           let validJobRoles = null;
-          if (app.job_roles && 
-              typeof app.job_roles === 'object' && 
-              'name' in app.job_roles && 
-              typeof app.job_roles.name === 'string' &&
-              !('error' in app.job_roles)) {
+          const jobRolesData = app.job_roles;
+          if (jobRolesData !== null && 
+              typeof jobRolesData === 'object' && 
+              'name' in jobRolesData && 
+              typeof jobRolesData.name === 'string' &&
+              !('error' in jobRolesData)) {
             validJobRoles = {
-              name: app.job_roles.name
+              name: jobRolesData.name
             };
           }
 
