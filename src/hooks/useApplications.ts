@@ -15,11 +15,11 @@ export const useApplications = () => {
       }
       return result.data || [];
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - data stays fresh
-    gcTime: 10 * 60 * 1000, // 10 minutes in cache
+    staleTime: 3 * 60 * 1000, // 3 minutes - increased for better caching
+    gcTime: 15 * 60 * 1000, // 15 minutes - increased cache time
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 2,
+    retry: 1, // Reduced from 2 to 1 for faster failure
   });
 };
 
@@ -33,8 +33,8 @@ export const useApplicationStats = () => {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - stats don't change often
-    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    staleTime: 10 * 60 * 1000, // 10 minutes - stats change less frequently
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep stats cached longer
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 1,

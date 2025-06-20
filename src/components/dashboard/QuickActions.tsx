@@ -1,8 +1,8 @@
-
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GitBranch, Users, Calendar } from 'lucide-react';
 
-const QuickActions = () => {
+const QuickActions = memo(() => {
   return (
     <Card>
       <CardHeader>
@@ -43,6 +43,8 @@ const QuickActions = () => {
       </CardContent>
     </Card>
   );
-};
+});
+
+QuickActions.displayName = 'QuickActions';
 
 export default QuickActions;

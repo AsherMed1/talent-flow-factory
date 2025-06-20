@@ -1,8 +1,8 @@
-
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApplications } from '@/hooks/useApplications';
 
-const RecentActivity = () => {
+const RecentActivity = memo(() => {
   const { data: applications } = useApplications();
 
   const recentActivity = applications?.slice(0, 4).map(app => ({
@@ -38,6 +38,8 @@ const RecentActivity = () => {
       </CardContent>
     </Card>
   );
-};
+});
+
+RecentActivity.displayName = 'RecentActivity';
 
 export default RecentActivity;
