@@ -23,7 +23,7 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
   const tags = candidate.candidate_tags.map(tag => tag.tag);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow relative">
+    <Card className="hover:shadow-lg transition-shadow relative h-fit">
       <CardHeader className="pb-3">
         <CandidateHeader
           candidate={candidate}
@@ -36,26 +36,26 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
       <CardContent className="space-y-4">
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-1">
+            <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
               <Star className="w-3 h-3" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="scoring" className="flex items-center gap-1">
+            <TabsTrigger value="scoring" className="flex items-center gap-1 text-xs">
               <User className="w-3 h-3" />
               <span className="hidden sm:inline">Scoring</span>
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="flex items-center gap-1">
+            <TabsTrigger value="assignments" className="flex items-center gap-1 text-xs">
               <Users className="w-3 h-3" />
               <span className="hidden sm:inline">Team</span>
             </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center gap-1">
+            <TabsTrigger value="notes" className="flex items-center gap-1 text-xs">
               <MessageSquare className="w-3 h-3" />
               <span className="hidden sm:inline">Notes</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-4">
                 <CandidateRating 
                   rating={latestApplication?.rating} 
@@ -69,7 +69,7 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
                 
                 <div className="flex flex-wrap gap-1">
                   {tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
+                    <Badge key={index} variant="outline" className="text-xs break-words">
                       {tag}
                     </Badge>
                   ))}
@@ -83,7 +83,7 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
             
             {latestApplication?.notes && (
               <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-700">{latestApplication.notes}</p>
+                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">{latestApplication.notes}</p>
                 <div className="text-xs text-gray-500 mt-2">
                   Last contact: {new Date(latestApplication.applied_date).toLocaleDateString()}
                 </div>

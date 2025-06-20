@@ -49,26 +49,28 @@ export const CandidateHeader = ({
   };
 
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <Avatar className="w-12 h-12">
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <Avatar className="w-12 h-12 flex-shrink-0">
           <AvatarFallback>
             {candidate.name.split(' ').map(n => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <CardTitle className="text-lg">
+        <div className="min-w-0 flex-1">
+          <CardTitle className="text-lg truncate">
             {candidate.name}
-            <span className="text-xs text-gray-500 ml-2">ID: {candidate.id.slice(0, 8)}</span>
           </CardTitle>
+          <div className="text-xs text-gray-500 truncate">
+            ID: {candidate.id.slice(0, 8)}
+          </div>
           {latestApplication?.job_roles?.name && (
-            <p className="text-sm text-gray-600">{latestApplication.job_roles.name}</p>
+            <p className="text-sm text-gray-600 truncate">{latestApplication.job_roles.name}</p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {latestApplication && (
-          <Badge className={getStatusColor(latestApplication.status)}>
+          <Badge className={`${getStatusColor(latestApplication.status)} text-xs whitespace-nowrap`}>
             {getDisplayStatus(latestApplication.status)}
           </Badge>
         )}
