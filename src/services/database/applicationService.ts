@@ -5,7 +5,7 @@ import { DataTransformers } from './transformers';
 import { OptimizedApplicationService } from './optimizedApplicationService';
 
 export class ApplicationService {
-  // Enhanced getAll with service worker support
+  // Enhanced getAll with better error handling and service worker support
   static async getAll(): Promise<DatabaseResult<SafeApplication[]>> {
     try {
       // Check if we have cached data in service worker first
@@ -81,24 +81,45 @@ export class ApplicationService {
         .order('applied_date', { ascending: false });
 
       if (error) {
-        return { data: null, error: new Error(error.message) };
+        console.error('Database error in ApplicationService.getAll:', error);
+        return { 
+          data: null, 
+          error: new Error(`Failed to fetch applications: ${error.message}`) 
+        };
       }
 
-      // Filter and transform data safely
+      // Filter and transform data safely with enhanced error handling
       const validApplications = (data || [])
         .filter(app => {
-          if (!app.form_data) return false;
-          const formData = app.form_data as any;
-          return (
-            formData.basicInfo || 
-            formData.availability || 
-            formData.preScreening ||
-            formData.voiceRecordings || 
-            formData.listeningComprehension || 
-            formData.uploads
-          );
+          try {
+            if (!app.form_data) return false;
+            const formData = app.form_data as any;
+            return (
+              formData.basicInfo || 
+              formData.availability || 
+              formData.preScreening ||
+              formData.voiceRecordings || 
+              formData.listeningComprehension || 
+              formData.uploads
+            );
+          } catch (filterError) {
+            console.warn('Error filtering application:', app.id, filterError);
+            return false;
+          }
         })
-        .map(app => DataTransformers.transformApplication(app));
+        .map(app => {
+          try {
+            return DataTransformers.transformApplication(app);
+          } catch (transformError) {
+            console.warn('Error transforming application:', app.id, transformError);
+            // Return a basic version of the application if transformation fails
+            return {
+              ...app,
+              candidate: app.candidates || { name: 'Unknown', email: '', phone: '', candidate_tags: [] },
+              job_role: app.job_roles || { name: 'Unknown Position', booking_link: null }
+            };
+          }
+        });
 
       // Cache the result in service worker if available
       if ('serviceWorker' in navigator && 'caches' in window) {
@@ -115,40 +136,59 @@ export class ApplicationService {
       return { data: validApplications, error: null };
 
     } catch (err) {
+      console.error('Unexpected error in ApplicationService.getAll:', err);
       return { 
         data: null, 
-        error: err instanceof Error ? err : new Error('Unknown error occurred') 
+        error: err instanceof Error ? err : new Error('An unexpected error occurred while fetching applications') 
       };
     }
   }
 
-  // Background refresh for cached data
+  // Background refresh for cached data with error handling
   private static async backgroundRefresh() {
     try {
       // Fetch fresh data without blocking the UI
       setTimeout(async () => {
-        const freshData = await this.getAll();
-        if (freshData.data && 'serviceWorker' in navigator && 'caches' in window) {
-          const cache = await caches.open('api-v1');
-          await cache.put('/api/applications', new Response(JSON.stringify(freshData.data), {
-            headers: { 'Content-Type': 'application/json' }
-          }));
+        try {
+          const freshData = await this.getAll();
+          if (freshData.data && 'serviceWorker' in navigator && 'caches' in window) {
+            const cache = await caches.open('api-v1');
+            await cache.put('/api/applications', new Response(JSON.stringify(freshData.data), {
+              headers: { 'Content-Type': 'application/json' }
+            }));
+          }
+        } catch (refreshError) {
+          console.log('Background refresh failed:', refreshError);
         }
       }, 100);
     } catch (error) {
-      console.log('Background refresh failed:', error);
+      console.log('Background refresh setup failed:', error);
     }
   }
 
-  // Use optimized database function for pagination
+  // Use optimized database function for pagination with error handling
   static async getPaginated(offset: number, limit: number): Promise<DatabaseResult<{ applications: SafeApplication[], totalCount: number }>> {
-    // Delegate to optimized service
-    return OptimizedApplicationService.getPaginatedOptimized(offset, limit);
+    try {
+      return await OptimizedApplicationService.getPaginatedOptimized(offset, limit);
+    } catch (error) {
+      console.error('Error in getPaginated:', error);
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Failed to fetch paginated applications')
+      };
+    }
   }
 
-  // Use optimized stats function
+  // Use optimized stats function with error handling
   static async getStats(): Promise<DatabaseResult<any>> {
-    // Delegate to optimized service  
-    return OptimizedApplicationService.getOptimizedStats();
+    try {
+      return await OptimizedApplicationService.getOptimizedStats();
+    } catch (error) {
+      console.error('Error in getStats:', error);
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Failed to fetch application statistics')
+      };
+    }
   }
 }

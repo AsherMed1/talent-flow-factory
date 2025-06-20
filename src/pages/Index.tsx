@@ -11,6 +11,7 @@ import { CandidateImport } from '@/components/CandidateImport';
 import { Analytics } from '@/components/Analytics';
 import { Settings } from '@/components/Settings';
 import { InterviewGuideManager } from '@/components/InterviewGuideManager';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
@@ -41,35 +42,79 @@ const Index = () => {
   const renderActiveView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return (
+          <ErrorBoundary>
+            <Dashboard />
+          </ErrorBoundary>
+        );
       case 'roles':
-        return <RoleManager />;
+        return (
+          <ErrorBoundary>
+            <RoleManager />
+          </ErrorBoundary>
+        );
       case 'pipeline':
-        return <ApplicantPipeline />;
+        return (
+          <ErrorBoundary>
+            <ApplicantPipeline />
+          </ErrorBoundary>
+        );
       case 'interview-notes':
-        return <InterviewNotes />;
+        return (
+          <ErrorBoundary>
+            <InterviewNotes />
+          </ErrorBoundary>
+        );
       case 'interview-guides':
-        return <InterviewGuideManager />;
+        return (
+          <ErrorBoundary>
+            <InterviewGuideManager />
+          </ErrorBoundary>
+        );
       case 'import':
-        return <CandidateImport />;
+        return (
+          <ErrorBoundary>
+            <CandidateImport />
+          </ErrorBoundary>
+        );
       case 'crm':
-        return <CandidateCRM />;
+        return (
+          <ErrorBoundary>
+            <CandidateCRM />
+          </ErrorBoundary>
+        );
       case 'analytics':
-        return <Analytics />;
+        return (
+          <ErrorBoundary>
+            <Analytics />
+          </ErrorBoundary>
+        );
       case 'settings':
-        return <Settings />;
+        return (
+          <ErrorBoundary>
+            <Settings />
+          </ErrorBoundary>
+        );
       default:
-        return <Dashboard />;
+        return (
+          <ErrorBoundary>
+            <Dashboard />
+          </ErrorBoundary>
+        );
     }
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col pb-16' : 'flex'} w-full`}>
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <main className={`${isMobile ? 'flex-1 overflow-auto' : 'flex-1 overflow-hidden'}`}>
-        {renderActiveView()}
-      </main>
-    </div>
+    <ErrorBoundary>
+      <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col pb-16' : 'flex'} w-full`}>
+        <ErrorBoundary>
+          <Sidebar activeView={activeView} setActiveView={setActiveView} />
+        </ErrorBoundary>
+        <main className={`${isMobile ? 'flex-1 overflow-auto' : 'flex-1 overflow-hidden'}`}>
+          {renderActiveView()}
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 };
 

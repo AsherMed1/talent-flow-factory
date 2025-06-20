@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Calendar, TrendingUp, GitBranch } from 'lucide-react';
 import { useApplicationStats } from '@/hooks/useApplications';
+import { EnhancedLoading, PageLoadingSkeleton } from '@/components/ui/enhanced-loading';
 
 // Lazy load heavy dashboard sections
 const LazyRecentActivity = lazy(() => import('./dashboard/RecentActivity'));
@@ -21,7 +22,7 @@ const DashboardSkeleton = () => (
 );
 
 export const Dashboard = () => {
-  const { data: stats, isLoading: statsLoading } = useApplicationStats();
+  const { data: stats, isLoading: statsLoading, error: statsError } = useApplicationStats();
 
   const defaultStats = [
     { label: 'Active Applications', value: '0', icon: Users, color: 'text-blue-600' },
@@ -58,21 +59,23 @@ export const Dashboard = () => {
   ] : defaultStats;
 
   if (statsLoading) {
+    return <PageLoadingSkeleton title="Hiring Dashboard" />;
+  }
+
+  if (statsError) {
     return (
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Hiring Dashboard</h1>
-          <div className="text-sm text-gray-500">Loading...</div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-16 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card className="border-red-200">
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              <p className="font-medium">Failed to load dashboard statistics</p>
+              <p className="text-sm text-gray-500 mt-1">Please refresh the page or try again later</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -106,12 +109,12 @@ export const Dashboard = () => {
         })}
       </div>
 
-      {/* Lazy loaded sections */}
-      <Suspense fallback={<DashboardSkeleton />}>
+      {/* Lazy loaded sections with enhanced loading */}
+      <Suspense fallback={<EnhancedLoading message="Loading quick actions..." />}>
         <LazyQuickActions />
       </Suspense>
 
-      <Suspense fallback={<DashboardSkeleton />}>
+      <Suspense fallback={<EnhancedLoading message="Loading recent activity..." />}>
         <LazyRecentActivity />
       </Suspense>
     </div>
