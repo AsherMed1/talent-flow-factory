@@ -10,6 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { Calendar, Users, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
+
+type ApplicationStatus = Database['public']['Enums']['application_status'];
 
 interface ImportedCandidate {
   name: string;
@@ -133,8 +136,8 @@ export const GoHighLevelImport = () => {
           candidateRecord = newCandidate;
         }
 
-        // Create application record
-        const applicationStatus = candidate.interviewCompleted 
+        // Create application record with proper typing
+        const applicationStatus: ApplicationStatus = candidate.interviewCompleted 
           ? 'interview_completed' 
           : candidate.appointmentDate 
             ? 'interview_scheduled' 
