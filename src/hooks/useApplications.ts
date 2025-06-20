@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -135,44 +134,38 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Extract candidates data first
-        const candidatesData = app.candidates;
-        let validCandidates = null;
-        
-        if (candidatesData !== null && 
-            typeof candidatesData === 'object' && 
-            'name' in candidatesData &&
-            candidatesData.name &&
-            typeof candidatesData.name === 'string') {
+        // Handle candidates data
+        const getCandidatesData = () => {
+          const candidatesData = app.candidates;
+          if (!candidatesData || typeof candidatesData !== 'object') return null;
+          if (!('name' in candidatesData) || !candidatesData.name) return null;
+          if (typeof candidatesData.name !== 'string') return null;
           
-          validCandidates = {
+          return {
             name: candidatesData.name,
             email: candidatesData.email || '',
             phone: candidatesData.phone || null,
             candidate_tags: candidatesData.candidate_tags || []
           };
-        }
+        };
 
-        // Extract job_roles data first
-        const jobRolesData = app.job_roles;
-        let validJobRoles = null;
-        
-        if (jobRolesData !== null && 
-            typeof jobRolesData === 'object' && 
-            'name' in jobRolesData &&
-            jobRolesData.name &&
-            typeof jobRolesData.name === 'string') {
+        // Handle job_roles data
+        const getJobRolesData = () => {
+          const jobRolesData = app.job_roles;
+          if (!jobRolesData || typeof jobRolesData !== 'object') return null;
+          if (!('name' in jobRolesData) || !jobRolesData.name) return null;
+          if (typeof jobRolesData.name !== 'string') return null;
           
-          validJobRoles = {
+          return {
             name: jobRolesData.name,
             booking_link: jobRolesData.booking_link || null
           };
-        }
+        };
 
         return {
           ...app,
-          candidates: validCandidates,
-          job_roles: validJobRoles
+          candidates: getCandidatesData(),
+          job_roles: getJobRolesData()
         };
       }) || [];
       

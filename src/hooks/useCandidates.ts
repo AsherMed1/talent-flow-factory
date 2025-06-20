@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -71,24 +70,21 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Extract job_roles data first
-          const jobRolesData = app.job_roles;
-          let validJobRoles = null;
-          
-          if (jobRolesData !== null && 
-              typeof jobRolesData === 'object' && 
-              'name' in jobRolesData &&
-              jobRolesData.name &&
-              typeof jobRolesData.name === 'string') {
+          // Handle job_roles data
+          const getJobRolesData = () => {
+            const jobRolesData = app.job_roles;
+            if (!jobRolesData || typeof jobRolesData !== 'object') return null;
+            if (!('name' in jobRolesData) || !jobRolesData.name) return null;
+            if (typeof jobRolesData.name !== 'string') return null;
             
-            validJobRoles = {
+            return {
               name: jobRolesData.name
             };
-          }
+          };
 
           return {
             ...app,
-            job_roles: validJobRoles
+            job_roles: getJobRolesData()
           };
         }) || []
       })) || [];
