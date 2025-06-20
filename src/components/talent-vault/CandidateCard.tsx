@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Candidate } from '@/hooks/useCandidates';
 import { CandidateHeader } from './CandidateHeader';
 import { CandidateContactInfo } from './CandidateContactInfo';
@@ -8,6 +9,8 @@ import { CandidateRating } from './CandidateRating';
 import { CandidateActions } from './CandidateActions';
 import { PreScreeningAnalysis } from './PreScreeningAnalysis';
 import { CandidateScoring } from './CandidateScoring';
+import { CollaborationPanel } from '../collaboration/CollaborationPanel';
+import { Users, MessageSquare, Star, User } from 'lucide-react';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -31,43 +34,75 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Enhanced scoring section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <CandidateRating 
-              rating={latestApplication?.rating} 
-              appliedDate={latestApplication?.applied_date}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview" className="flex items-center gap-1">
+              <Star className="w-3 h-3" />
+              <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="scoring" className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              <span className="hidden sm:inline">Scoring</span>
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              <span className="hidden sm:inline">Team</span>
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-1">
+              <MessageSquare className="w-3 h-3" />
+              <span className="hidden sm:inline">Notes</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <CandidateRating 
+                  rating={latestApplication?.rating} 
+                  appliedDate={latestApplication?.applied_date}
+                />
+                
+                <CandidateContactInfo 
+                  email={candidate.email} 
+                  phone={candidate.phone} 
+                />
+                
+                <div className="flex flex-wrap gap-1">
+                  {tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <PreScreeningAnalysis 
+              responses={latestApplication?.pre_screening_responses || []} 
             />
             
-            <CandidateContactInfo 
-              email={candidate.email} 
-              phone={candidate.phone} 
-            />
-            
-            <div className="flex flex-wrap gap-1">
-              {tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
+            {latestApplication?.notes && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-700">{latestApplication.notes}</p>
+                <div className="text-xs text-gray-500 mt-2">
+                  Last contact: {new Date(latestApplication.applied_date).toLocaleDateString()}
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-          <CandidateScoring candidate={candidate} />
-        </div>
+          <TabsContent value="scoring">
+            <CandidateScoring candidate={candidate} />
+          </TabsContent>
 
-        <PreScreeningAnalysis 
-          responses={latestApplication?.pre_screening_responses || []} 
-        />
-        
-        {latestApplication?.notes && (
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-700">{latestApplication.notes}</p>
-            <div className="text-xs text-gray-500 mt-2">
-              Last contact: {new Date(latestApplication.applied_date).toLocaleDateString()}
-            </div>
-          </div>
-        )}
+          <TabsContent value="assignments">
+            <CollaborationPanel candidateId={candidate.id} />
+          </TabsContent>
+
+          <TabsContent value="notes">
+            <CollaborationPanel candidateId={candidate.id} />
+          </TabsContent>
+        </Tabs>
         
         <CandidateActions />
       </CardContent>

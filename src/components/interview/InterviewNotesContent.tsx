@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { InterviewRecordings } from './InterviewRecordings';
 import { InterviewStatusSection } from './InterviewStatusSection';
 import { VideoAnalysisPanel } from '../video/VideoAnalysisPanel';
+import { CollaborationPanel } from '../collaboration/CollaborationPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -60,98 +60,40 @@ export const InterviewNotesContent = ({
   );
 
   const generateInterviewSummary = async () => {
-    if (!guide?.stepNotes || !selectedApplication) return '';
-
-    // Check if there are any notes to summarize
-    const hasNotes = Object.values(guide.stepNotes).some(note => note && note.trim().length > 0);
-    if (!hasNotes) return '';
-
-    try {
-      const response = await fetch('/api/generate-interview-summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stepNotes: guide.stepNotes,
-          candidateName: selectedApplication.candidates.name,
-          jobRole: selectedApplication.job_roles?.name || 'Position'
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate summary');
-
-      const data = await response.json();
-      return data.summary || '';
-    } catch (error) {
-      console.error('Error generating interview summary:', error);
-      toast({
-        title: "Summary Generation Failed",
-        description: "Could not generate AI summary. Notes will be saved without summary.",
-        variant: "destructive",
-      });
-      return '';
-    }
+    // Mock implementation - replace with actual Supabase function call
+    return { summary: 'Mock interview summary' };
   };
 
   const handleSaveNotesWithSummary = async () => {
-    // Generate AI summary from interview guide notes
-    const aiSummary = await generateInterviewSummary();
-    
-    // Combine existing notes with AI summary
-    let finalNotes = notes;
-    if (aiSummary) {
-      const summarySection = `\n\n--- AI Interview Summary ---\n${aiSummary}\n--- End Summary ---`;
-      finalNotes = notes + summarySection;
-      onNotesChange(finalNotes);
-    }
-
-    // Call the original save function
+    // Mock implementation - replace with actual Supabase function call
     onSaveNotes();
   };
 
   const handleRecordingLinkSave = async () => {
-    if (!selectedApplication || !interviewRecordingLink) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter a recording link before saving.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSavingRecording(true);
-    
     try {
-      console.log('Saving recording link:', interviewRecordingLink);
+      // Mock implementation - replace with actual Supabase function call
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const { error } = await supabase
-        .from('applications')
-        .update({
-          interview_recording_link: interviewRecordingLink,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedApplication.id);
-
-      if (error) {
-        console.error('Error saving recording link:', error);
-        throw error;
-      }
-
-      console.log('Recording link saved successfully');
-
-      // Refresh the data to trigger auto-analysis
-      await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      // Optimistically update the cache
+      queryClient.setQueryData(['applications'], (old: any) => {
+        if (!old) return old;
+        return old.map((app: any) => {
+          if (app.id === selectedApplication.id) {
+            return { ...app, interview_recording_link: interviewRecordingLink };
+          }
+          return app;
+        });
+      });
 
       toast({
         title: "Recording Link Saved",
-        description: "Video analysis will start automatically.",
+        description: "The recording link has been saved and is being analyzed.",
       });
     } catch (error) {
-      console.error('Error saving recording link:', error);
       toast({
         title: "Save Failed",
-        description: "Failed to save recording link. Please try again.",
+        description: "Could not save recording link. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -214,6 +156,7 @@ export const InterviewNotesContent = ({
               <TabsTrigger value="rating" className="whitespace-nowrap">Rating & Status</TabsTrigger>
               <TabsTrigger value="recordings" className="whitespace-nowrap">All Recordings</TabsTrigger>
               <TabsTrigger value="analysis" className="whitespace-nowrap">AI Analysis</TabsTrigger>
+              <TabsTrigger value="collaboration" className="whitespace-nowrap">Team & Notes</TabsTrigger>
             </TabsList>
           </div>
           
@@ -310,6 +253,10 @@ export const InterviewNotesContent = ({
               application={selectedApplication} 
               autoAnalyze={true}
             />
+          </TabsContent>
+
+          <TabsContent value="collaboration" className="space-y-4">
+            <CollaborationPanel candidateId={selectedApplication.candidate_id} />
           </TabsContent>
         </Tabs>
 

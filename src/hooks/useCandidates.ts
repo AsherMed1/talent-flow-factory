@@ -14,6 +14,7 @@ export interface Candidate {
     rating: number | null;
     notes: string | null;
     applied_date: string;
+    voice_analysis_score: number | null;
     job_roles: {
       name: string;
     };
@@ -47,6 +48,7 @@ export const useCandidates = () => {
             rating,
             notes,
             applied_date,
+            voice_analysis_score,
             job_roles (name),
             pre_screening_responses (
               motivation_response,
