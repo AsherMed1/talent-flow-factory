@@ -1,4 +1,6 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { RoleManager } from '@/components/RoleManager';
@@ -14,6 +16,27 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 const Index = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  // Handle navigation from QuickActions buttons
+  useEffect(() => {
+    const handleSetActiveView = (event: CustomEvent) => {
+      setActiveView(event.detail);
+    };
+
+    window.addEventListener('setActiveView', handleSetActiveView as EventListener);
+    
+    return () => {
+      window.removeEventListener('setActiveView', handleSetActiveView as EventListener);
+    };
+  }, []);
+
+  // Handle navigation state from router
+  useEffect(() => {
+    if (location.state?.activeView) {
+      setActiveView(location.state.activeView);
+    }
+  }, [location.state]);
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -41,7 +64,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col pb-16' : 'flex'}`}>
+    <div className={`min-h-screen bg-gray-50 ${isMobile ? 'flex flex-col pb-16' : 'flex'} w-full`}>
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
       <main className={`${isMobile ? 'flex-1 overflow-auto' : 'flex-1 overflow-hidden'}`}>
         {renderActiveView()}
