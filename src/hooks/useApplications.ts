@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -133,12 +134,29 @@ export const useApplications = () => {
           formData.listeningComprehension || 
           formData.uploads
         );
-      }).map(app => ({
-        ...app,
-        // Ensure candidates and job_roles are properly handled with null checks
-        candidates: app.candidates && typeof app.candidates === 'object' && app.candidates !== null && 'name' in app.candidates ? app.candidates : null,
-        job_roles: app.job_roles && typeof app.job_roles === 'object' && app.job_roles !== null && 'name' in app.job_roles ? app.job_roles : null
-      })) || [];
+      }).map(app => {
+        // Handle candidates with proper type checking
+        const candidatesData = app.candidates;
+        const validCandidates = candidatesData && 
+          typeof candidatesData === 'object' && 
+          candidatesData !== null && 
+          !('error' in candidatesData) &&
+          'name' in candidatesData ? candidatesData : null;
+
+        // Handle job_roles with proper type checking  
+        const jobRolesData = app.job_roles;
+        const validJobRoles = jobRolesData && 
+          typeof jobRolesData === 'object' && 
+          jobRolesData !== null && 
+          !('error' in jobRolesData) &&
+          'name' in jobRolesData ? jobRolesData : null;
+
+        return {
+          ...app,
+          candidates: validCandidates,
+          job_roles: validJobRoles
+        };
+      }) || [];
       
       return filteredData as Application[];
     }

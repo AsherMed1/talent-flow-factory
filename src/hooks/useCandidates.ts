@@ -70,10 +70,20 @@ export const useCandidates = () => {
       // Transform data to handle potential foreign key errors
       const transformedData = data?.map(candidate => ({
         ...candidate,
-        applications: candidate.applications?.map(app => ({
-          ...app,
-          job_roles: app.job_roles && typeof app.job_roles === 'object' && app.job_roles !== null && 'name' in app.job_roles ? app.job_roles : null
-        })) || []
+        applications: candidate.applications?.map(app => {
+          // Handle job_roles with proper type checking
+          const jobRolesData = app.job_roles;
+          const validJobRoles = jobRolesData && 
+            typeof jobRolesData === 'object' && 
+            jobRolesData !== null && 
+            !('error' in jobRolesData) &&
+            'name' in jobRolesData ? jobRolesData : null;
+
+          return {
+            ...app,
+            job_roles: validJobRoles
+          };
+        }) || []
       })) || [];
       
       return transformedData as Candidate[];
