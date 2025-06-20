@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SafeApplication, DatabaseResult } from './types';
 import { DataTransformers } from './transformers';
@@ -25,6 +24,7 @@ export class ApplicationService {
         }
       }
 
+      // Fix the query by being more explicit about the relationships
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -57,7 +57,7 @@ export class ApplicationService {
           ghl_appointment_data,
           video_analysis_results,
           video_analysis_timestamp,
-          pre_screening_responses (
+          pre_screening_responses!applications_application_id_fkey (
             motivation_response,
             motivation_score,
             experience_response,
@@ -67,13 +67,13 @@ export class ApplicationService {
             communication_score,
             overall_prescreening_score
           ),
-          candidates (
+          candidates!applications_candidate_id_fkey (
             name, 
             email, 
             phone,
             candidate_tags (tag)
           ),
-          job_roles (name, booking_link)
+          job_roles!applications_job_role_id_fkey (name, booking_link)
         `)
         .not('form_data', 'is', null)
         .neq('form_data', '{}')
@@ -112,14 +112,11 @@ export class ApplicationService {
             return DataTransformers.transformApplication(app);
           } catch (transformError) {
             console.warn('Error transforming application:', app.id, transformError);
-            // Return a basic version of the application if transformation fails
-            return {
-              ...app,
-              candidate: app.candidates || { name: 'Unknown', email: '', phone: '', candidate_tags: [] },
-              job_role: app.job_roles || { name: 'Unknown Position', booking_link: null }
-            };
+            // Return a safe fallback instead of the problematic transformation
+            return null;
           }
-        });
+        })
+        .filter((app): app is SafeApplication => app !== null); // Type guard to remove nulls
 
       // Cache the result in service worker if available
       if ('serviceWorker' in navigator && 'caches' in window) {
