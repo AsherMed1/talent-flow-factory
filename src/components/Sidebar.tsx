@@ -1,6 +1,4 @@
-
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   BarChart, 
   Briefcase, 
@@ -12,33 +10,34 @@ import {
   TrendingUp, 
   Settings, 
   Menu, 
-  X,
-  Video
+  X 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
-export const Sidebar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface SidebarProps {
+  activeView: string;
+  setActiveView: (view: string) => void;
+}
+
+export const Sidebar = ({ activeView, setActiveView }: SidebarProps) => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const menuItems = [
-    { id: '/', label: 'Dashboard', icon: BarChart, path: '/' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
-    { id: 'video-library', label: 'Video Library', icon: Video, path: '/video-library' }
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart },
+    { id: 'roles', label: 'Job Roles', icon: Briefcase },
+    { id: 'pipeline', label: 'Candidate Pipeline', icon: Users },
+    { id: 'interview-notes', label: 'Interview Notes', icon: FileText },
+    { id: 'interview-guides', label: 'Interview Guides', icon: ClipboardList },
+    { id: 'import', label: 'Import Candidates', icon: Upload },
+    { id: 'crm', label: 'Talent Vault', icon: Database },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    if (isMobile) {
-      setIsMenuOpen(false);
-    }
   };
 
   return (
@@ -62,8 +61,13 @@ export const Sidebar = () => {
           <div key={item.id} className="px-2 py-1">
             <Button
               variant="ghost"
-              className={`w-full justify-start h-12 ${location.pathname === item.path ? 'bg-gray-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-              onClick={() => handleNavigation(item.path)}
+              className={`w-full justify-start h-12 ${activeView === item.id ? 'bg-gray-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+              onClick={() => {
+                setActiveView(item.id);
+                if (isMobile) {
+                  setIsMenuOpen(false);
+                }
+              }}
             >
               <item.icon className="w-4 h-4 mr-2" />
               {item.label}
