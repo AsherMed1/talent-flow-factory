@@ -13,10 +13,10 @@ export const SmtpConfiguration = () => {
     return saved ? JSON.parse(saved) : {
       host: '',
       port: '',
-      username: '',
+      username: 'Hiring@patientpro.com',
       password: '',
-      fromEmail: '',
-      fromName: ''
+      fromEmail: 'Hiring@patientpro.com',
+      fromName: 'PatientPro Hiring Team'
     };
   });
   
@@ -55,10 +55,10 @@ export const SmtpConfiguration = () => {
     setConfig({
       host: '',
       port: '',
-      username: '',
+      username: 'Hiring@patientpro.com',
       password: '',
-      fromEmail: '',
-      fromName: ''
+      fromEmail: 'Hiring@patientpro.com',
+      fromName: 'PatientPro Hiring Team'
     });
     
     toast({
@@ -110,6 +110,7 @@ export const SmtpConfiguration = () => {
             <li>For Gmail: Use smtp.gmail.com, port 587, and create an App Password</li>
             <li>For Outlook: Use smtp-mail.outlook.com, port 587</li>
             <li>For other providers: Check their SMTP documentation</li>
+            <li>Make sure to use the PatientPro hiring email address</li>
           </ul>
         </div>
 
@@ -140,7 +141,7 @@ export const SmtpConfiguration = () => {
           <Input
             id="username"
             type="email"
-            placeholder="your-email@gmail.com"
+            placeholder="Hiring@patientpro.com"
             value={config.username}
             onChange={(e) => setConfig(prev => ({ ...prev, username: e.target.value }))}
           />
@@ -174,7 +175,7 @@ export const SmtpConfiguration = () => {
             <Input
               id="fromEmail"
               type="email"
-              placeholder="your-email@gmail.com"
+              placeholder="Hiring@patientpro.com"
               value={config.fromEmail}
               onChange={(e) => setConfig(prev => ({ ...prev, fromEmail: e.target.value }))}
             />
@@ -184,7 +185,7 @@ export const SmtpConfiguration = () => {
             <Label htmlFor="fromName">From Name</Label>
             <Input
               id="fromName"
-              placeholder="Your Company"
+              placeholder="PatientPro Hiring Team"
               value={config.fromName}
               onChange={(e) => setConfig(prev => ({ ...prev, fromName: e.target.value }))}
             />

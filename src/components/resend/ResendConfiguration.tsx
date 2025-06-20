@@ -11,8 +11,8 @@ export const ResendConfiguration = () => {
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('resendConfig');
     return saved ? JSON.parse(saved) : {
-      fromEmail: '',
-      fromName: ''
+      fromEmail: 'Hiring@patientpro.com',
+      fromName: 'PatientPro Hiring Team'
     };
   });
   
@@ -48,8 +48,8 @@ export const ResendConfiguration = () => {
     localStorage.removeItem('resendConnected');
     setIsConnected(false);
     setConfig({
-      fromEmail: '',
-      fromName: ''
+      fromEmail: 'Hiring@patientpro.com',
+      fromName: 'PatientPro Hiring Team'
     });
     
     toast({
@@ -101,8 +101,8 @@ export const ResendConfiguration = () => {
           <h4 className="font-medium text-blue-900 mb-2">Resend Setup Instructions:</h4>
           <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
             <li>Make sure you have a Resend account and API key configured</li>
-            <li>Verify your sending domain in your Resend dashboard</li>
-            <li>Use an email address from your verified domain</li>
+            <li>Verify your sending domain (patientpro.com) in your Resend dashboard</li>
+            <li>Use the PatientPro hiring email address for professional communication</li>
           </ul>
         </div>
 
@@ -111,7 +111,7 @@ export const ResendConfiguration = () => {
           <Input
             id="fromEmail"
             type="email"
-            placeholder="noreply@yourdomain.com"
+            placeholder="Hiring@patientpro.com"
             value={config.fromEmail}
             onChange={(e) => setConfig(prev => ({ ...prev, fromEmail: e.target.value }))}
           />
@@ -121,7 +121,7 @@ export const ResendConfiguration = () => {
           <Label htmlFor="fromName">From Name (Optional)</Label>
           <Input
             id="fromName"
-            placeholder="Your Company Name"
+            placeholder="PatientPro Hiring Team"
             value={config.fromName}
             onChange={(e) => setConfig(prev => ({ ...prev, fromName: e.target.value }))}
           />
