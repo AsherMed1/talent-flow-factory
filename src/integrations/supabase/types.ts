@@ -136,6 +136,20 @@ export type Database = {
             referencedRelation: "job_roles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_applications_candidate"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_applications_job_role"
+            columns: ["job_role_id"]
+            isOneToOne: false
+            referencedRelation: "job_roles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_tags: {
@@ -160,6 +174,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "candidate_tags_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_candidate_tags_candidate"
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
@@ -301,6 +322,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_pre_screening_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pre_screening_responses_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
@@ -408,6 +436,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_video_analysis_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "video_analysis_details_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
@@ -454,6 +489,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_video_logs_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "video_analysis_logs_application_id_fkey"
             columns: ["application_id"]
