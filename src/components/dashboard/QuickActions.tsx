@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,8 +8,12 @@ const QuickActions = memo(() => {
 
   const handleCreateNewRole = () => {
     navigate('/', { state: { activeView: 'roles' } });
-    // Set active view to roles in the parent component
+    // Set active view to roles and trigger the create form to open
     window.dispatchEvent(new CustomEvent('setActiveView', { detail: 'roles' }));
+    // Small delay to ensure the roles page is loaded before opening the form
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('openCreateRoleForm'));
+    }, 100);
   };
 
   const handleAddCandidate = () => {

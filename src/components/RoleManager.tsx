@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useJobRoles } from '@/hooks/useJobRoles';
@@ -10,6 +9,19 @@ import { LoadingSkeleton } from './role-manager/LoadingSkeleton';
 export const RoleManager = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { data: roles, isLoading } = useJobRoles();
+
+  // Listen for the custom event to open the create form
+  useEffect(() => {
+    const handleOpenCreateForm = () => {
+      setShowCreateForm(true);
+    };
+
+    window.addEventListener('openCreateRoleForm', handleOpenCreateForm);
+    
+    return () => {
+      window.removeEventListener('openCreateRoleForm', handleOpenCreateForm);
+    };
+  }, []);
 
   const handleCreateSuccess = () => {
     setShowCreateForm(false);
