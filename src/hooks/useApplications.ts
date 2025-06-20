@@ -120,9 +120,9 @@ export const useApplications = () => {
       
       if (error) throw error;
       
-      // Additional filtering to ensure applications have proper form data structure and valid candidate
+      // Filter and transform data to handle potential foreign key errors
       const filteredData = data?.filter(app => {
-        if (!app.form_data || !app.candidates) return false;
+        if (!app.form_data) return false;
         
         // Check if form_data has the expected structure from your application form
         const formData = app.form_data as any;
@@ -134,7 +134,12 @@ export const useApplications = () => {
           formData.listeningComprehension || 
           formData.uploads
         );
-      }) || [];
+      }).map(app => ({
+        ...app,
+        // Ensure candidates and job_roles are properly handled
+        candidates: app.candidates && typeof app.candidates === 'object' && 'name' in app.candidates ? app.candidates : null,
+        job_roles: app.job_roles && typeof app.job_roles === 'object' && 'name' in app.job_roles ? app.job_roles : null
+      })) || [];
       
       return filteredData as Application[];
     }

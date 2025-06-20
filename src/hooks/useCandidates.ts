@@ -66,7 +66,17 @@ export const useCandidates = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Candidate[];
+      
+      // Transform data to handle potential foreign key errors
+      const transformedData = data?.map(candidate => ({
+        ...candidate,
+        applications: candidate.applications?.map(app => ({
+          ...app,
+          job_roles: app.job_roles && typeof app.job_roles === 'object' && 'name' in app.job_roles ? app.job_roles : null
+        })) || []
+      })) || [];
+      
+      return transformedData as Candidate[];
     }
   });
 };
