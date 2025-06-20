@@ -135,29 +135,33 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Handle candidates with proper type checking using type assertion
+        // Handle candidates with proper type checking using optional chaining and null checks
         let validCandidates = null;
         if (app.candidates && 
             typeof app.candidates === 'object' && 
             'name' in app.candidates && 
+            typeof app.candidates.name === 'string' &&
             !('error' in app.candidates)) {
-          validCandidates = app.candidates as {
-            name: string;
-            email: string;
-            phone: string | null;
-            candidate_tags: { tag: string; }[];
+          const candidates = app.candidates as any;
+          validCandidates = {
+            name: candidates.name,
+            email: candidates.email,
+            phone: candidates.phone,
+            candidate_tags: candidates.candidate_tags || []
           };
         }
 
-        // Handle job_roles with proper type checking using type assertion
+        // Handle job_roles with proper type checking using optional chaining and null checks
         let validJobRoles = null;
         if (app.job_roles && 
             typeof app.job_roles === 'object' && 
             'name' in app.job_roles && 
+            typeof app.job_roles.name === 'string' &&
             !('error' in app.job_roles)) {
-          validJobRoles = app.job_roles as {
-            name: string;
-            booking_link: string | null;
+          const jobRoles = app.job_roles as any;
+          validJobRoles = {
+            name: jobRoles.name,
+            booking_link: jobRoles.booking_link || null
           };
         }
 
