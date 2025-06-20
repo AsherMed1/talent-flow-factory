@@ -137,31 +137,31 @@ export const useApplications = () => {
       }).map(app => {
         // Handle candidates with proper type checking using optional chaining and null checks
         let validCandidates = null;
-        if (app.candidates && 
-            typeof app.candidates === 'object' && 
-            'name' in app.candidates && 
-            typeof app.candidates.name === 'string' &&
-            !('error' in app.candidates)) {
-          const candidates = app.candidates as any;
+        const candidatesData = app.candidates;
+        if (candidatesData && 
+            typeof candidatesData === 'object' && 
+            'name' in candidatesData && 
+            typeof candidatesData.name === 'string' &&
+            !('error' in candidatesData)) {
           validCandidates = {
-            name: candidates.name,
-            email: candidates.email,
-            phone: candidates.phone,
-            candidate_tags: candidates.candidate_tags || []
+            name: candidatesData.name,
+            email: candidatesData.email || '',
+            phone: candidatesData.phone || null,
+            candidate_tags: candidatesData.candidate_tags || []
           };
         }
 
         // Handle job_roles with proper type checking using optional chaining and null checks
         let validJobRoles = null;
-        if (app.job_roles && 
-            typeof app.job_roles === 'object' && 
-            'name' in app.job_roles && 
-            typeof app.job_roles.name === 'string' &&
-            !('error' in app.job_roles)) {
-          const jobRoles = app.job_roles as any;
+        const jobRolesData = app.job_roles;
+        if (jobRolesData && 
+            typeof jobRolesData === 'object' && 
+            'name' in jobRolesData && 
+            typeof jobRolesData.name === 'string' &&
+            !('error' in jobRolesData)) {
           validJobRoles = {
-            name: jobRoles.name,
-            booking_link: jobRoles.booking_link || null
+            name: jobRolesData.name,
+            booking_link: jobRolesData.booking_link || null
           };
         }
 
