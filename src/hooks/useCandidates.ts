@@ -70,15 +70,19 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Handle job_roles data
+          // Handle job_roles data with explicit type checking
           const getJobRolesData = () => {
             const jobRolesData = app.job_roles;
-            if (!jobRolesData || typeof jobRolesData !== 'object') return null;
-            if (!('name' in jobRolesData) || !jobRolesData.name) return null;
-            if (typeof jobRolesData.name !== 'string') return null;
+            // Use explicit null check and type assertion
+            if (jobRolesData === null || jobRolesData === undefined) return null;
+            if (typeof jobRolesData !== 'object') return null;
+            
+            // Type assertion after null check
+            const jobRoles = jobRolesData as any;
+            if (!jobRoles.name || typeof jobRoles.name !== 'string') return null;
             
             return {
-              name: jobRolesData.name
+              name: jobRoles.name
             };
           };
 

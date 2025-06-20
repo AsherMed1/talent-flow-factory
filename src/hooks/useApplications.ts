@@ -134,31 +134,39 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Handle candidates data
+        // Handle candidates data with explicit type checking
         const getCandidatesData = () => {
           const candidatesData = app.candidates;
-          if (!candidatesData || typeof candidatesData !== 'object') return null;
-          if (!('name' in candidatesData) || !candidatesData.name) return null;
-          if (typeof candidatesData.name !== 'string') return null;
+          // Use explicit null check and type assertion
+          if (candidatesData === null || candidatesData === undefined) return null;
+          if (typeof candidatesData !== 'object') return null;
+          
+          // Type assertion after null check
+          const candidates = candidatesData as any;
+          if (!candidates.name || typeof candidates.name !== 'string') return null;
           
           return {
-            name: candidatesData.name,
-            email: candidatesData.email || '',
-            phone: candidatesData.phone || null,
-            candidate_tags: candidatesData.candidate_tags || []
+            name: candidates.name,
+            email: candidates.email || '',
+            phone: candidates.phone || null,
+            candidate_tags: candidates.candidate_tags || []
           };
         };
 
-        // Handle job_roles data
+        // Handle job_roles data with explicit type checking
         const getJobRolesData = () => {
           const jobRolesData = app.job_roles;
-          if (!jobRolesData || typeof jobRolesData !== 'object') return null;
-          if (!('name' in jobRolesData) || !jobRolesData.name) return null;
-          if (typeof jobRolesData.name !== 'string') return null;
+          // Use explicit null check and type assertion
+          if (jobRolesData === null || jobRolesData === undefined) return null;
+          if (typeof jobRolesData !== 'object') return null;
+          
+          // Type assertion after null check
+          const jobRoles = jobRolesData as any;
+          if (!jobRoles.name || typeof jobRoles.name !== 'string') return null;
           
           return {
-            name: jobRolesData.name,
-            booking_link: jobRolesData.booking_link || null
+            name: jobRoles.name,
+            booking_link: jobRoles.booking_link || null
           };
         };
 
