@@ -71,18 +71,15 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Handle job_roles with proper type checking using optional chaining and null checks
+          // Handle job_roles with simpler null checking
           let validJobRoles = null;
-          const jobRolesData = app.job_roles;
-          if (jobRolesData && 
-              typeof jobRolesData === 'object' && 
-              'name' in jobRolesData && 
-              typeof jobRolesData.name === 'string' &&
-              !('error' in jobRolesData)) {
-            // Type assertion after null check
-            const safeJobRole = jobRolesData as NonNullable<typeof jobRolesData>;
+          if (app.job_roles && 
+              typeof app.job_roles === 'object' && 
+              'name' in app.job_roles && 
+              typeof app.job_roles.name === 'string' &&
+              !('error' in app.job_roles)) {
             validJobRoles = {
-              name: safeJobRole.name
+              name: app.job_roles.name
             };
           }
 

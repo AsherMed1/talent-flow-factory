@@ -135,37 +135,31 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Handle candidates with proper type checking using optional chaining and null checks
+        // Handle candidates with simpler null checking
         let validCandidates = null;
-        const candidatesData = app.candidates;
-        if (candidatesData && 
-            typeof candidatesData === 'object' && 
-            'name' in candidatesData && 
-            typeof candidatesData.name === 'string' &&
-            !('error' in candidatesData)) {
-          // Type assertion after null check
-          const safeCandidate = candidatesData as NonNullable<typeof candidatesData>;
+        if (app.candidates && 
+            typeof app.candidates === 'object' && 
+            'name' in app.candidates && 
+            typeof app.candidates.name === 'string' &&
+            !('error' in app.candidates)) {
           validCandidates = {
-            name: safeCandidate.name,
-            email: safeCandidate.email || '',
-            phone: safeCandidate.phone || null,
-            candidate_tags: safeCandidate.candidate_tags || []
+            name: app.candidates.name,
+            email: app.candidates.email || '',
+            phone: app.candidates.phone || null,
+            candidate_tags: app.candidates.candidate_tags || []
           };
         }
 
-        // Handle job_roles with proper type checking using optional chaining and null checks
+        // Handle job_roles with simpler null checking
         let validJobRoles = null;
-        const jobRolesData = app.job_roles;
-        if (jobRolesData && 
-            typeof jobRolesData === 'object' && 
-            'name' in jobRolesData && 
-            typeof jobRolesData.name === 'string' &&
-            !('error' in jobRolesData)) {
-          // Type assertion after null check
-          const safeJobRole = jobRolesData as NonNullable<typeof jobRolesData>;
+        if (app.job_roles && 
+            typeof app.job_roles === 'object' && 
+            'name' in app.job_roles && 
+            typeof app.job_roles.name === 'string' &&
+            !('error' in app.job_roles)) {
           validJobRoles = {
-            name: safeJobRole.name,
-            booking_link: safeJobRole.booking_link || null
+            name: app.job_roles.name,
+            booking_link: app.job_roles.booking_link || null
           };
         }
 
