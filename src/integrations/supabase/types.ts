@@ -652,6 +652,28 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_applications_paginated_v2: {
+        Args: {
+          p_offset?: number
+          p_limit?: number
+          p_status?: string
+          p_job_role_id?: string
+          p_search_term?: string
+        }
+        Returns: {
+          id: string
+          candidate_id: string
+          job_role_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          rating: number
+          applied_date: string
+          candidate_name: string
+          candidate_email: string
+          job_role_name: string
+          voice_analysis_score: number
+          total_count: number
+        }[]
+      }
       get_pipeline_stages_for_role: {
         Args: { role_id: string }
         Returns: Json

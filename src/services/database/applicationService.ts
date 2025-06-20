@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SafeApplication, DatabaseResult } from './types';
 import { DataTransformers } from './transformers';
@@ -24,105 +25,19 @@ export class ApplicationService {
         }
       }
 
-      // Fix the query by being more explicit about the relationships
-      const { data, error } = await supabase
-        .from('applications')
-        .select(`
-          id,
-          candidate_id,
-          job_role_id,
-          status,
-          rating,
-          notes,
-          has_resume,
-          has_voice_recording,
-          has_video,
-          interview_date,
-          interview_recording_link,
-          offer_sent_date,
-          applied_date,
-          updated_at,
-          voice_analysis_score,
-          voice_analysis_feedback,
-          voice_transcription,
-          voice_analysis_completed_at,
-          voice_clarity_score,
-          voice_pacing_score,
-          voice_tone_score,
-          voice_energy_score,
-          voice_confidence_score,
-          form_data,
-          zoom_recording_url,
-          zoom_recording_files,
-          ghl_appointment_data,
-          video_analysis_results,
-          video_analysis_timestamp,
-          pre_screening_responses!applications_application_id_fkey (
-            motivation_response,
-            motivation_score,
-            experience_response,
-            experience_score,
-            availability_response,
-            availability_score,
-            communication_score,
-            overall_prescreening_score
-          ),
-          candidates!applications_candidate_id_fkey (
-            name, 
-            email, 
-            phone,
-            candidate_tags (tag)
-          ),
-          job_roles!applications_job_role_id_fkey (name, booking_link)
-        `)
-        .not('form_data', 'is', null)
-        .neq('form_data', '{}')
-        .not('candidate_id', 'is', null)
-        .order('applied_date', { ascending: false });
-
-      if (error) {
-        console.error('Database error in ApplicationService.getAll:', error);
-        return { 
-          data: null, 
-          error: new Error(`Failed to fetch applications: ${error.message}`) 
-        };
+      // Use the optimized paginated function for better performance
+      const result = await OptimizedApplicationService.getPaginatedOptimized(0, 1000);
+      if (result.error) {
+        throw result.error;
       }
 
-      // Filter and transform data safely with enhanced error handling
-      const validApplications = (data || [])
-        .filter(app => {
-          try {
-            if (!app.form_data) return false;
-            const formData = app.form_data as any;
-            return (
-              formData.basicInfo || 
-              formData.availability || 
-              formData.preScreening ||
-              formData.voiceRecordings || 
-              formData.listeningComprehension || 
-              formData.uploads
-            );
-          } catch (filterError) {
-            console.warn('Error filtering application:', app.id, filterError);
-            return false;
-          }
-        })
-        .map(app => {
-          try {
-            return DataTransformers.transformApplication(app);
-          } catch (transformError) {
-            console.warn('Error transforming application:', app.id, transformError);
-            // Return a safe fallback instead of the problematic transformation
-            return null;
-          }
-        })
-        .filter((app): app is SafeApplication => app !== null); // Type guard to remove nulls
+      const applications = result.data?.applications || [];
 
       // Cache the result in service worker if available
       if ('serviceWorker' in navigator && 'caches' in window) {
         try {
           const cache = await caches.open('api-v1');
-          await cache.put('/api/applications', new Response(JSON.stringify(validApplications), {
+          await cache.put('/api/applications', new Response(JSON.stringify(applications), {
             headers: { 'Content-Type': 'application/json' }
           }));
         } catch (cacheError) {
@@ -130,7 +45,7 @@ export class ApplicationService {
         }
       }
 
-      return { data: validApplications, error: null };
+      return { data: applications, error: null };
 
     } catch (err) {
       console.error('Unexpected error in ApplicationService.getAll:', err);
@@ -185,6 +100,95 @@ export class ApplicationService {
       return {
         data: null,
         error: error instanceof Error ? error : new Error('Failed to fetch application statistics')
+      };
+    }
+  }
+
+  // New method using the enhanced database function with search
+  static async getPaginatedWithSearch(
+    offset: number, 
+    limit: number, 
+    status?: string, 
+    jobRoleId?: string, 
+    searchTerm?: string
+  ): Promise<DatabaseResult<{ applications: SafeApplication[], totalCount: number }>> {
+    try {
+      const { data, error } = await supabase.rpc('get_applications_paginated_v2', {
+        p_offset: offset,
+        p_limit: limit,
+        p_status: status || null,
+        p_job_role_id: jobRoleId || null,
+        p_search_term: searchTerm || null
+      });
+
+      if (error) {
+        return { data: null, error: new Error(error.message) };
+      }
+
+      if (!data || data.length === 0) {
+        return { data: { applications: [], totalCount: 0 }, error: null };
+      }
+
+      // Transform the flat results into SafeApplication objects
+      const applications: SafeApplication[] = data.map((item: any) => ({
+        id: item.id,
+        candidate_id: item.candidate_id,
+        job_role_id: item.job_role_id,
+        status: item.status,
+        rating: item.rating,
+        applied_date: item.applied_date,
+        voice_analysis_score: item.voice_analysis_score,
+        // Simplified structure from the optimized query
+        candidate: {
+          name: item.candidate_name || 'Unknown',
+          email: item.candidate_email || '',
+          phone: null,
+          candidate_tags: []
+        },
+        job_role: {
+          name: item.job_role_name || 'Unknown Position',
+          booking_link: null
+        },
+        // Default values for fields not in the optimized query
+        notes: null,
+        has_resume: false,
+        has_voice_recording: item.voice_analysis_score ? true : false,
+        has_video: false,
+        interview_date: null,
+        interview_recording_link: null,
+        offer_sent_date: null,
+        updated_at: null,
+        voice_analysis_feedback: null,
+        voice_transcription: null,
+        voice_analysis_completed_at: null,
+        voice_clarity_score: null,
+        voice_pacing_score: null,
+        voice_tone_score: null,
+        voice_energy_score: null,
+        voice_confidence_score: null,
+        form_data: {},
+        zoom_recording_url: null,
+        zoom_recording_files: null,
+        ghl_appointment_data: null,
+        video_analysis_results: null,
+        video_analysis_timestamp: null,
+        pre_screening_responses: []
+      }));
+
+      const totalCount = data.length > 0 ? Number(data[0].total_count) : 0;
+
+      return { 
+        data: { 
+          applications, 
+          totalCount 
+        }, 
+        error: null 
+      };
+
+    } catch (err) {
+      return { 
+        data: null, 
+        error: err instanceof Error ? err : new Error('Unknown error occurred') 
       };
     }
   }

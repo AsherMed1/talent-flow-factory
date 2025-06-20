@@ -1,18 +1,19 @@
+
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
-import { OptimizedApplicationRow } from '@/components/OptimizedApplicationRow';
-import { OptimizedMobileApplicationCard } from '@/components/OptimizedMobileApplicationCard';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useState, useCallback, useMemo } from 'react';
 import { SmartFilters, SmartFilterCriteria } from './SmartFilters';
 import { useSmartFilters } from './useSmartFilters';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Users, Brain } from 'lucide-react';
 import { SkeletonCard, SkeletonRow } from '@/components/ui/skeleton-card';
 import { useRealtimeApplications } from '@/hooks/useRealtimeApplications';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { KanbanStageHeader } from './KanbanStageHeader';
+import { KanbanStageContent } from './KanbanStageContent';
+import { KanbanMobileStage } from './KanbanMobileStage';
+import { PipelineStatistics } from './PipelineStatistics';
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -152,122 +153,26 @@ export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProp
       />
 
       {/* Statistics Dashboard */}
-      {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" />
-                Total Candidates
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statistics.total}</div>
-              <p className="text-xs text-gray-600">All applicants</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Brain className="w-4 h-4 text-purple-600" />
-                Analyzed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statistics.analyzed}</div>
-              <p className="text-xs text-gray-600">Voice analysis complete</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                High Scoring
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statistics.highScoring}</div>
-              <p className="text-xs text-gray-600">8+ overall score</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-orange-600" />
-                Filtered Results
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statistics.filtered}</div>
-              <p className="text-xs text-gray-600">Match your criteria</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {statistics && <PipelineStatistics statistics={statistics} />}
 
       {/* Pipeline Stages */}
       {isMobile ? (
         <div className="space-y-4 pb-20">
           {stageComponents.map(({ stage, stageIndex, stageApplications }) => (
-            <div key={stageIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              {/* Enhanced Mobile Stage Header */}
-              <div className={`p-4 ${stage.color} border-b border-gray-200`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-base">
-                    {stage.displayName}
-                  </h3>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-                    <span className="text-sm font-medium text-gray-800">
-                      {stageApplications.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Enhanced Mobile Applications */}
-              <div 
-                className="p-3"
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, stage.name)}
-              >
-                {stageApplications.length > 0 ? (
-                  <div className="space-y-3">
-                    {stageApplications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="transform transition-all duration-200 hover:scale-[1.02] active:scale-95"
-                        draggable
-                        onDragStart={() => handleDragStart(application)}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <OptimizedMobileApplicationCard 
-                          application={application} 
-                          stageIndex={stageIndex}
-                          onSwipeLeft={() => handleSwipeLeft(application)}
-                          onSwipeRight={() => handleSwipeRight(application)}
-                          onStatusChanged={handleStatusUpdate}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-gray-500">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium">No applications</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {dragState.isDragging ? 'Drop here to move application' : 'Applications will appear here when available'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <KanbanMobileStage
+              key={stageIndex}
+              stage={stage}
+              applications={stageApplications}
+              stageIndex={stageIndex}
+              isDragging={dragState.isDragging}
+              onStatusUpdate={handleStatusUpdate}
+              onSwipeLeft={handleSwipeLeft}
+              onSwipeRight={handleSwipeRight}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            />
           ))}
         </div>
       ) : (
@@ -281,66 +186,23 @@ export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProp
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.name)}
             >
-              <div className={`p-4 ${stage.color} border-b border-gray-200`}>
-                <h3 className="font-semibold text-gray-900">
-                  {stage.displayName} ({stageApplications.length})
-                  {dragState.isDragging && dragState.draggedFromStage !== stage.name && (
-                    <span className="ml-2 text-blue-600 text-sm">Drop to move here</span>
-                  )}
-                </h3>
-              </div>
+              <KanbanStageHeader
+                stage={stage}
+                applicationCount={stageApplications.length}
+                isDragging={dragState.isDragging}
+                draggedFromStage={dragState.draggedFromStage}
+              />
               
-              {stageApplications.length > 0 && (
-                <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  <div className="col-span-3">Candidate</div>
-                  <div className="col-span-2">Applied</div>
-                  <div className="col-span-3">Files & Audio</div>
-                  <div className="col-span-2">Rating</div>
-                  <div className="col-span-2">Actions</div>
-                </div>
-              )}
-              
-              <div>
-                {stageApplications.length > 0 ? (
-                  stageApplications.map((application) => (
-                    <div
-                      key={application.id}
-                      draggable
-                      onDragStart={() => handleDragStart(application)}
-                      onDragEnd={handleDragEnd}
-                      className={`cursor-move transition-all duration-200 ${
-                        dragState.draggedApplication?.id === application.id ? 'opacity-50' : ''
-                      }`}
-                    >
-                      <OptimizedApplicationRow 
-                        application={application} 
-                        stageIndex={stageIndex}
-                        onStatusChanged={handleStatusUpdate}
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <div className={`p-8 text-center text-gray-500 transition-all duration-200 ${
-                    dragState.isDragging ? 'bg-blue-50 border-2 border-dashed border-blue-300' : ''
-                  }`}>
-                    {dragState.isDragging && dragState.draggedFromStage !== stage.name ? (
-                      <div>
-                        <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
-                          <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <p className="text-sm font-medium text-blue-600">Drop application here</p>
-                        <p className="text-xs text-blue-400 mt-1">Move to {stage.displayName}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        No applications match your filters in this stage
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <KanbanStageContent
+                applications={stageApplications}
+                stage={stage}
+                isDragging={dragState.isDragging}
+                draggedFromStage={dragState.draggedFromStage}
+                draggedApplication={dragState.draggedApplication}
+                onStatusUpdate={handleStatusUpdate}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              />
             </div>
           ))}
         </div>
