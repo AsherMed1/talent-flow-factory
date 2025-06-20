@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,99 @@ import { useCSVEmailService } from './CSVEmailService';
 interface CSVImportProcessorProps {
   onImportComplete?: (candidates: any[], jobRole?: any) => void;
 }
+
+// Enhanced field mapping function
+const autoMapFields = (headers: string[]) => {
+  const mapping = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    jobRole: ''
+  };
+
+  headers.forEach(header => {
+    const lowerHeader = header.toLowerCase().trim();
+    
+    // Enhanced first name detection
+    if (!mapping.firstName && (
+      lowerHeader.includes('first') ||
+      lowerHeader.includes('fname') ||
+      lowerHeader.includes('firstname') ||
+      lowerHeader === 'name' ||
+      lowerHeader.includes('given')
+    )) {
+      mapping.firstName = header;
+    }
+    
+    // Enhanced last name detection
+    if (!mapping.lastName && (
+      lowerHeader.includes('last') ||
+      lowerHeader.includes('lname') ||
+      lowerHeader.includes('lastname') ||
+      lowerHeader.includes('surname') ||
+      lowerHeader.includes('family')
+    )) {
+      mapping.lastName = header;
+    }
+    
+    // Enhanced email detection
+    if (!mapping.email && (
+      lowerHeader.includes('email') ||
+      lowerHeader.includes('e-mail') ||
+      lowerHeader.includes('mail')
+    )) {
+      mapping.email = header;
+    }
+    
+    // Enhanced phone detection
+    if (!mapping.phone && (
+      lowerHeader.includes('phone') ||
+      lowerHeader.includes('mobile') ||
+      lowerHeader.includes('cell') ||
+      lowerHeader.includes('tel') ||
+      lowerHeader.includes('number')
+    )) {
+      mapping.phone = header;
+    }
+    
+    // Enhanced job role detection
+    if (!mapping.jobRole && (
+      lowerHeader.includes('job') ||
+      lowerHeader.includes('role') ||
+      lowerHeader.includes('position') ||
+      lowerHeader.includes('title') ||
+      lowerHeader.includes('work') ||
+      lowerHeader.includes('occupation')
+    )) {
+      mapping.jobRole = header;
+    }
+  });
+
+  return mapping;
+};
+
+// Enhanced CSV parsing function
+const parseCSVData = (text: string) => {
+  const lines = text.split('\n').filter(line => line.trim());
+  if (lines.length === 0) return { headers: [], data: [] };
+  
+  // Parse headers - handle quotes and commas properly
+  const headerLine = lines[0];
+  const headers = headerLine.split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+  
+  // Parse data rows
+  const data = lines.slice(1).map(line => {
+    const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+    const row: any = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || '';
+    });
+    return row;
+  });
+
+  return { headers, data };
+};
 
 export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps) => {
   const [csvData, setCsvData] = useState<any[]>([]);
@@ -47,41 +139,26 @@ export const CSVImportProcessor = ({ onImportComplete }: CSVImportProcessorProps
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      console.log('Raw CSV text:', text.substring(0, 200) + '...');
       
-      const data = lines.slice(1)
-        .filter(line => line.trim())
-        .map(line => {
-          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-          const row: any = {};
-          headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-          });
-          return row;
-        });
+      const { headers, data } = parseCSVData(text);
+      console.log('Parsed headers:', headers);
+      console.log('Parsed data (first row):', data[0]);
 
       setCsvData(data);
       
-      // Auto-map fields if possible
-      const autoMapping = { ...fieldMapping };
-      headers.forEach(header => {
-        const lowerHeader = header.toLowerCase();
-        if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
-          autoMapping.firstName = header;
-        } else if (lowerHeader.includes('last') && lowerHeader.includes('name')) {
-          autoMapping.lastName = header;
-        } else if (lowerHeader.includes('email')) {
-          autoMapping.email = header;
-        } else if (lowerHeader.includes('phone')) {
-          autoMapping.phone = header;
-        } else if (lowerHeader.includes('job') || lowerHeader.includes('role') || lowerHeader.includes('position')) {
-          autoMapping.jobRole = header;
-        }
-      });
+      // Auto-map fields using enhanced detection
+      const autoMapping = autoMapFields(headers);
+      console.log('Auto-mapped fields:', autoMapping);
       
       setFieldMapping(autoMapping);
       setPreviewData(data.slice(0, 5));
+
+      // Show success message
+      toast({
+        title: "CSV Parsed Successfully",
+        description: `Found ${headers.length} columns and ${data.length} rows. Auto-mapped ${Object.values(autoMapping).filter(v => v).length} fields.`,
+      });
     };
     
     reader.readAsText(file);
