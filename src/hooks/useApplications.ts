@@ -135,7 +135,7 @@ export const useApplications = () => {
           formData.uploads
         );
       }).map(app => {
-        // Handle candidates with proper null checking
+        // Handle candidates with proper null checking and type narrowing
         let validCandidates = null;
         const candidatesData = app.candidates;
         if (candidatesData !== null && 
@@ -143,6 +143,7 @@ export const useApplications = () => {
             'name' in candidatesData && 
             typeof candidatesData.name === 'string' &&
             !('error' in candidatesData)) {
+          // candidatesData is now properly typed and non-null
           validCandidates = {
             name: candidatesData.name,
             email: candidatesData.email || '',
@@ -151,7 +152,7 @@ export const useApplications = () => {
           };
         }
 
-        // Handle job_roles with proper null checking
+        // Handle job_roles with proper null checking and type narrowing
         let validJobRoles = null;
         const jobRolesData = app.job_roles;
         if (jobRolesData !== null && 
@@ -159,6 +160,7 @@ export const useApplications = () => {
             'name' in jobRolesData && 
             typeof jobRolesData.name === 'string' &&
             !('error' in jobRolesData)) {
+          // jobRolesData is now properly typed and non-null
           validJobRoles = {
             name: jobRolesData.name,
             booking_link: jobRolesData.booking_link || null

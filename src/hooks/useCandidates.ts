@@ -71,7 +71,7 @@ export const useCandidates = () => {
       const transformedData = data?.map(candidate => ({
         ...candidate,
         applications: candidate.applications?.map(app => {
-          // Handle job_roles with proper null checking
+          // Handle job_roles with proper null checking and type narrowing
           let validJobRoles = null;
           const jobRolesData = app.job_roles;
           if (jobRolesData !== null && 
@@ -79,6 +79,7 @@ export const useCandidates = () => {
               'name' in jobRolesData && 
               typeof jobRolesData.name === 'string' &&
               !('error' in jobRolesData)) {
+            // jobRolesData is now properly typed and non-null
             validJobRoles = {
               name: jobRolesData.name
             };
