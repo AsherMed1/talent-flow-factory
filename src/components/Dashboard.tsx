@@ -31,10 +31,30 @@ export const Dashboard = () => {
   ];
 
   const statsData = stats ? [
-    { label: 'Active Applications', value: stats.activeApplications.toString(), icon: Users, color: 'text-blue-600' },
-    { label: 'Interviews This Week', value: stats.interviewsThisWeek.toString(), icon: Calendar, color: 'text-purple-600' },
-    { label: 'Hired This Month', value: stats.hiredThisMonth.toString(), icon: UserCheck, color: 'text-green-600' },
-    { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendingUp, color: 'text-orange-600' },
+    { 
+      label: 'Active Applications', 
+      value: (stats.activeApplications || stats.active_applications || 0).toString(), 
+      icon: Users, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Interviews This Week', 
+      value: (stats.interviewsThisWeek || stats.interviews_this_week || 0).toString(), 
+      icon: Calendar, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Hired This Month', 
+      value: (stats.hiredThisMonth || stats.hired_this_month || 0).toString(), 
+      icon: UserCheck, 
+      color: 'text-green-600' 
+    },
+    { 
+      label: 'Conversion Rate', 
+      value: `${stats.conversionRate || stats.conversion_rate || 0}%`, 
+      icon: TrendingUp, 
+      color: 'text-orange-600' 
+    },
   ] : defaultStats;
 
   if (statsLoading) {
