@@ -7,6 +7,7 @@ import { CandidateContactInfo } from './CandidateContactInfo';
 import { CandidateRating } from './CandidateRating';
 import { CandidateActions } from './CandidateActions';
 import { PreScreeningAnalysis } from './PreScreeningAnalysis';
+import { CandidateScoring } from './CandidateScoring';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -19,7 +20,7 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
   const tags = candidate.candidate_tags.map(tag => tag.tag);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-lg transition-shadow relative">
       <CardHeader className="pb-3">
         <CandidateHeader
           candidate={candidate}
@@ -30,22 +31,29 @@ export const CandidateCard = ({ candidate, onDelete, deletingCandidateId }: Cand
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <CandidateRating 
-          rating={latestApplication?.rating} 
-          appliedDate={latestApplication?.applied_date}
-        />
-        
-        <CandidateContactInfo 
-          email={candidate.email} 
-          phone={candidate.phone} 
-        />
-        
-        <div className="flex flex-wrap gap-1">
-          {tags.map((tag, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
+        {/* Enhanced scoring section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <CandidateRating 
+              rating={latestApplication?.rating} 
+              appliedDate={latestApplication?.applied_date}
+            />
+            
+            <CandidateContactInfo 
+              email={candidate.email} 
+              phone={candidate.phone} 
+            />
+            
+            <div className="flex flex-wrap gap-1">
+              {tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <CandidateScoring candidate={candidate} />
         </div>
 
         <PreScreeningAnalysis 
