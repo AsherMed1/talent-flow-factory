@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,7 @@ export const VideoPreviewModal = ({
     if (videoUrl) {
       const link = document.createElement('a');
       link.href = videoUrl;
-      link.download = `${application.candidates.name}_${videoType.replace('-', '_')}`;
+      link.download = `${application.candidate.name}_${videoType.replace('-', '_')}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -88,7 +87,7 @@ export const VideoPreviewModal = ({
     }
   };
 
-  const renderVideoPlayer = () => {
+  const renderContent = () => {
     if (!videoUrl || videoError) {
       return (
         <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
@@ -146,7 +145,7 @@ export const VideoPreviewModal = ({
         <DialogHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
             <DialogTitle className="flex items-center gap-2">
-              {getVideoTitle()} - {application.candidates.name}
+              {getVideoTitle()} - {application.candidate.name}
             </DialogTitle>
             {videoType === 'demo-reel' && (
               <Badge className="bg-purple-100 text-purple-800 border-purple-200">
@@ -187,7 +186,7 @@ export const VideoPreviewModal = ({
         </DialogHeader>
         
         <div className="mt-4">
-          {renderVideoPlayer()}
+          {renderContent()}
           
           {/* Additional info for video editors */}
           {videoType === 'demo-reel' && portfolioUrl && (
@@ -210,14 +209,14 @@ export const VideoPreviewModal = ({
           {/* Video metadata */}
           <div className="mt-4 text-sm text-gray-500 grid grid-cols-2 gap-4">
             <div>
-              <span className="font-medium">Candidate:</span> {application.candidates.name}
+              <span className="font-medium">Candidate:</span> {application.candidate.name}
             </div>
             <div>
               <span className="font-medium">Applied:</span> {new Date(application.applied_date).toLocaleDateString()}
             </div>
-            {application.job_roles?.name && (
+            {application.job_role?.name && (
               <div>
-                <span className="font-medium">Role:</span> {application.job_roles.name}
+                <span className="font-medium">Role:</span> {application.job_role.name}
               </div>
             )}
             <div>

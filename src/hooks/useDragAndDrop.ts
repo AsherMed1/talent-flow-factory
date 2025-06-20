@@ -51,7 +51,7 @@ export const useDragAndDrop = (onStatusUpdate: (applicationId: string, newStatus
     
     toast({
       title: "Application Moved",
-      description: `${dragState.draggedApplication.candidates.name} moved to ${targetStage.replace('_', ' ')}`,
+      description: `${dragState.draggedApplication.candidate.name} moved to ${targetStage.replace('_', ' ')}`,
     });
 
     handleDragEnd();

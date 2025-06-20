@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,15 +49,15 @@ export const InterviewVideoLibrary = () => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesSearch = 
-          app.candidates.name.toLowerCase().includes(searchLower) ||
-          app.candidates.email.toLowerCase().includes(searchLower) ||
-          (app.job_roles?.name || '').toLowerCase().includes(searchLower);
+          app.candidate.name.toLowerCase().includes(searchLower) ||
+          app.candidate.email.toLowerCase().includes(searchLower) ||
+          (app.job_role?.name && app.job_role.name.toLowerCase().includes(searchLower));
         
         if (!matchesSearch) return false;
       }
 
       // Job role filter
-      if (filters.jobRole !== 'all' && app.job_roles?.name !== filters.jobRole) {
+      if (filters.jobRole !== 'all' && app.job_role?.name !== filters.jobRole) {
         return false;
       }
 
@@ -104,7 +103,7 @@ export const InterviewVideoLibrary = () => {
 
   // Get unique values for filter dropdowns
   const uniqueJobRoles = useMemo(() => {
-    const roles = new Set(interviewApplications.map(app => app.job_roles?.name).filter(Boolean));
+    const roles = new Set(interviewApplications.map(app => app.job_role?.name).filter(Boolean));
     return Array.from(roles);
   }, [interviewApplications]);
 
@@ -294,11 +293,11 @@ export const InterviewVideoLibrary = () => {
                 <div key={application.id} className="space-y-3">
                   <LoomVideoPreview
                     loomUrl={recordingUrl || ''}
-                    title={`${application.candidates.name} - ${application.job_roles?.name || 'Interview'}`}
+                    title={`${application.candidate.name} - ${application.job_role?.name || 'Interview'}`}
                   />
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium truncate">{application.candidates.name}</h4>
+                      <h4 className="font-medium truncate">{application.candidate.name}</h4>
                       <Badge className={getStatusColor(application.status)}>
                         {application.status.replace('_', ' ')}
                       </Badge>
@@ -306,7 +305,7 @@ export const InterviewVideoLibrary = () => {
                     <div className="text-sm text-gray-600 space-y-1">
                       <div className="flex items-center gap-2">
                         <Briefcase className="w-4 h-4" />
-                        <span>{application.job_roles?.name || 'Unknown Role'}</span>
+                        <span>{application.job_role?.name || 'Unknown Role'}</span>
                       </div>
                       {application.interview_date && (
                         <div className="flex items-center gap-2">
@@ -327,13 +326,13 @@ export const InterviewVideoLibrary = () => {
                       <div className="w-32 h-20 flex-shrink-0">
                         <LoomVideoPreview
                           loomUrl={recordingUrl || ''}
-                          title={application.candidates.name}
+                          title={application.candidate.name}
                           className="h-full"
                         />
                       </div>
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{application.candidates.name}</h4>
+                          <h4 className="font-medium">{application.candidate.name}</h4>
                           <Badge className={getStatusColor(application.status)}>
                             {application.status.replace('_', ' ')}
                           </Badge>
@@ -341,7 +340,7 @@ export const InterviewVideoLibrary = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <Briefcase className="w-4 h-4" />
-                            <span>{application.job_roles?.name || 'Unknown Role'}</span>
+                            <span>{application.job_role?.name || 'Unknown Role'}</span>
                           </div>
                           {application.interview_date && (
                             <div className="flex items-center gap-2">

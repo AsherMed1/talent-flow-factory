@@ -58,7 +58,7 @@ export const VoiceAnalysisSection = ({ application, showDetailedAnalysis, onTogg
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Detailed Voice Analysis - {application.candidates.name}</DialogTitle>
+                <DialogTitle>Detailed Voice Analysis - {application.candidate.name}</DialogTitle>
               </DialogHeader>
               <VoiceAnalysisDisplay
                 voiceAnalysisScore={application.voice_analysis_score}

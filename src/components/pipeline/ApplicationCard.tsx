@@ -74,13 +74,13 @@ export const ApplicationCard = ({
           <div className="flex items-center gap-4 flex-1">
             <Avatar className="h-12 w-12">
               <AvatarFallback>
-                {application.candidates.name.split(' ').map(n => n[0]).join('')}
+                {application.candidate.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-lg">{application.candidates.name}</h3>
+                <h3 className="font-semibold text-lg">{application.candidate.name}</h3>
                 <Badge className={getStatusColor(application.status)}>
                   {application.status.replace('_', ' ')}
                 </Badge>
@@ -89,12 +89,12 @@ export const ApplicationCard = ({
               <div className="text-sm text-gray-600 space-y-1">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  <span>{application.candidates.email}</span>
+                  <span>{application.candidate.email}</span>
                 </div>
-                {application.candidates.phone && (
+                {application.candidate.phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    <span>{application.candidates.phone}</span>
+                    <span>{application.candidate.phone}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
@@ -163,9 +163,9 @@ export const ApplicationCard = ({
         />
 
         {/* Tags */}
-        {application.candidates.candidate_tags && application.candidates.candidate_tags.length > 0 && (
+        {application.candidate.candidate_tags && application.candidate.candidate_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t">
-            {application.candidates.candidate_tags.map((tagObj, index) => (
+            {application.candidate.candidate_tags.map((tagObj, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 {tagObj.tag}
               </Badge>

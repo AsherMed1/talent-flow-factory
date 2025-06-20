@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CardTitle } from '@/components/ui/card';
@@ -63,8 +62,8 @@ export const CandidateHeader = ({
           <div className="text-xs text-gray-500 truncate">
             ID: {candidate.id.slice(0, 8)}
           </div>
-          {latestApplication?.job_roles?.name && (
-            <p className="text-sm text-gray-600 truncate">{latestApplication.job_roles.name}</p>
+          {latestApplication?.job_role?.name && (
+            <p className="text-sm text-gray-600 truncate">{latestApplication.job_role.name}</p>
           )}
         </div>
       </div>

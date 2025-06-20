@@ -43,9 +43,9 @@ export const useStatusUpdateHandler = () => {
       }
 
       // Prepare candidate info for emails
-      const candidateName = candidateData.candidates.name;
-      const candidateEmail = candidateData.candidates.email;
-      const jobRole = candidateData.job_roles?.name || 'General';
+      const candidateName = candidateData.candidate.name;
+      const candidateEmail = candidateData.candidate.email;
+      const jobRole = candidateData.job_role?.name || 'General';
       const firstName = candidateData.form_data?.basicInfo?.firstName || candidateName.split(' ')[0];
       const lastName = candidateData.form_data?.basicInfo?.lastName || candidateName.split(' ').slice(1).join(' ');
       const bookingLink = jobRoleData?.booking_link;
@@ -123,8 +123,8 @@ export const useStatusUpdateHandler = () => {
             previousStatus: candidateData.status,
             newStatus: newStatus,
           },
-          candidate: candidateData.candidates,
-          jobRole: candidateData.job_roles,
+          candidate: candidateData.candidate,
+          jobRole: candidateData.job_role,
           timestamp: new Date().toISOString(),
         };
 
@@ -148,7 +148,7 @@ export const useStatusUpdateHandler = () => {
 
       toast({
         title: "Status Updated",
-        description: `${candidateData.candidates.name} moved to ${newStatus.replace('_', ' ')}`,
+        description: `${candidateData.candidate.name} moved to ${newStatus.replace('_', ' ')}`,
       });
       
     } catch (error) {

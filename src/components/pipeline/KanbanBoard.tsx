@@ -1,4 +1,3 @@
-
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
 import { ApplicationRow } from './ApplicationRow';
@@ -85,11 +84,11 @@ export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProp
   };
 
   const handleSwipeLeft = (application: Application) => {
-    console.log('Swipe left - reject/move back:', application.candidates.name);
+    console.log('Swipe left - reject/move back:', application.candidate.name);
   };
 
   const handleSwipeRight = (application: Application) => {
-    console.log('Swipe right - approve/move forward:', application.candidates.name);
+    console.log('Swipe right - approve/move forward:', application.candidate.name);
   };
 
   if (isLoading) {
