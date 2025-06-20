@@ -329,11 +329,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_pre_screening_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
+          },
+          {
             foreignKeyName: "pre_screening_responses_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_screening_responses_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
           },
         ]
       }
@@ -443,11 +457,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_video_analysis_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
+          },
+          {
             foreignKeyName: "video_analysis_details_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_analysis_details_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
           },
         ]
       }
@@ -497,11 +525,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_video_logs_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
+          },
+          {
             foreignKeyName: "video_analysis_logs_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_analysis_logs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mv_application_summary"
+            referencedColumns: ["application_id"]
           },
         ]
       }
@@ -570,12 +612,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_application_summary: {
+        Row: {
+          application_id: string | null
+          applied_date: string | null
+          candidate_email: string | null
+          candidate_name: string | null
+          has_video: string | null
+          has_voice: string | null
+          interview_date: string | null
+          job_role_name: string | null
+          overall_prescreening_score: number | null
+          rating: number | null
+          status: Database["public"]["Enums"]["application_status"] | null
+          voice_analysis_score: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_application_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_applications_paginated: {
+        Args: {
+          p_offset?: number
+          p_limit?: number
+          p_status?: string
+          p_job_role_id?: string
+        }
+        Returns: {
+          id: string
+          candidate_id: string
+          job_role_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          rating: number
+          applied_date: string
+          total_count: number
+        }[]
+      }
       get_pipeline_stages_for_role: {
         Args: { role_id: string }
         Returns: Json
+      }
+      refresh_application_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
