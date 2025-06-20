@@ -136,23 +136,23 @@ export const useApplications = () => {
         );
       }).map(app => {
         // Handle candidates with proper type checking - check for null first
-        const candidatesData = app.candidates;
         let validCandidates = null;
-        if (candidatesData && 
-            typeof candidatesData === 'object' && 
-            !('error' in candidatesData) &&
-            'name' in candidatesData) {
-          validCandidates = candidatesData;
+        if (app.candidates !== null && 
+            app.candidates !== undefined &&
+            typeof app.candidates === 'object' && 
+            !('error' in app.candidates) &&
+            'name' in app.candidates) {
+          validCandidates = app.candidates;
         }
 
         // Handle job_roles with proper type checking - check for null first
-        const jobRolesData = app.job_roles;
         let validJobRoles = null;
-        if (jobRolesData && 
-            typeof jobRolesData === 'object' && 
-            !('error' in jobRolesData) &&
-            'name' in jobRolesData) {
-          validJobRoles = jobRolesData;
+        if (app.job_roles !== null && 
+            app.job_roles !== undefined &&
+            typeof app.job_roles === 'object' && 
+            !('error' in app.job_roles) &&
+            'name' in app.job_roles) {
+          validJobRoles = app.job_roles;
         }
 
         return {
