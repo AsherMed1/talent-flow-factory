@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SafeApplication, DatabaseResult } from './types';
 import { DataTransformers } from './transformers';
+import { OptimizedApplicationService } from './optimizedApplicationService';
 
 export class ApplicationService {
   // Enhanced getAll with service worker support
