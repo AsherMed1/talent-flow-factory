@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApplicationService } from '@/services/database/applicationService';
 
 export const useOptimizedApplications = (page: number = 1, limit: number = 20) => {
@@ -23,7 +23,7 @@ export const useOptimizedApplications = (page: number = 1, limit: number = 20) =
 
 // Prefetch next page for better UX
 export const usePrefetchNextPage = (currentPage: number, limit: number = 20) => {
-  const queryClient = useQuery.getQueryClient();
+  const queryClient = useQueryClient();
   
   return () => {
     queryClient.prefetchQuery({

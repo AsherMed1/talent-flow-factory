@@ -20,6 +20,9 @@ export const useApplications = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 1, // Reduced from 2 to 1 for faster failure
+    // Background refetch for fresh data
+    refetchInterval: 10 * 60 * 1000, // 10 minutes
+    refetchIntervalInBackground: true,
   });
 };
 
@@ -38,5 +41,8 @@ export const useApplicationStats = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 1,
+    // Background refetch for stats
+    refetchInterval: 15 * 60 * 1000, // 15 minutes
+    refetchIntervalInBackground: true,
   });
 };
