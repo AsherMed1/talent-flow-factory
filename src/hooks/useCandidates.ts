@@ -72,7 +72,7 @@ export const useCandidates = () => {
         ...candidate,
         applications: candidate.applications?.map(app => ({
           ...app,
-          job_roles: app.job_roles && typeof app.job_roles === 'object' && 'name' in app.job_roles ? app.job_roles : null
+          job_roles: app.job_roles && typeof app.job_roles === 'object' && app.job_roles !== null && 'name' in app.job_roles ? app.job_roles : null
         })) || []
       })) || [];
       

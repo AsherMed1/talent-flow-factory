@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -136,9 +135,9 @@ export const useApplications = () => {
         );
       }).map(app => ({
         ...app,
-        // Ensure candidates and job_roles are properly handled
-        candidates: app.candidates && typeof app.candidates === 'object' && 'name' in app.candidates ? app.candidates : null,
-        job_roles: app.job_roles && typeof app.job_roles === 'object' && 'name' in app.job_roles ? app.job_roles : null
+        // Ensure candidates and job_roles are properly handled with null checks
+        candidates: app.candidates && typeof app.candidates === 'object' && app.candidates !== null && 'name' in app.candidates ? app.candidates : null,
+        job_roles: app.job_roles && typeof app.job_roles === 'object' && app.job_roles !== null && 'name' in app.job_roles ? app.job_roles : null
       })) || [];
       
       return filteredData as Application[];
