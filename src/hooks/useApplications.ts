@@ -52,7 +52,7 @@ export interface Application {
     candidate_tags: {
       tag: string;
     }[];
-  };
+  } | null;
   job_roles: {
     name: string;
     booking_link: string | null;
@@ -105,7 +105,7 @@ export const useApplications = () => {
             communication_score,
             overall_prescreening_score
           ),
-          candidates!inner (
+          candidates (
             name, 
             email, 
             phone,
@@ -120,7 +120,7 @@ export const useApplications = () => {
       
       if (error) throw error;
       
-      // Additional filtering to ensure applications have proper form data structure
+      // Additional filtering to ensure applications have proper form data structure and valid candidate
       const filteredData = data?.filter(app => {
         if (!app.form_data || !app.candidates) return false;
         
