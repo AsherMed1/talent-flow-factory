@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -5,73 +6,7 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-// Comprehensive React setup for Radix UI Toast components
-if (typeof window !== 'undefined') {
-  const setupReactForRadixToast = () => {
-    const contexts = [window as any, globalThis as any];
-    
-    // Also check for global and self contexts
-    if (typeof global !== 'undefined') {
-      contexts.push(global as any);
-    }
-    if (typeof self !== 'undefined') {
-      contexts.push(self as any);
-    }
-    
-    contexts.forEach(context => {
-      if (context && !context.React) {
-        context.React = React;
-        // Make all React hooks and utilities available
-        Object.assign(context, {
-          React,
-          useState: React.useState,
-          useEffect: React.useEffect,
-          useContext: React.useContext,
-          useCallback: React.useCallback,
-          useMemo: React.useMemo,
-          useRef: React.useRef,
-          useReducer: React.useReducer,
-          useLayoutEffect: React.useLayoutEffect,
-          createElement: React.createElement,
-          Component: React.Component,
-          Fragment: React.Fragment,
-          forwardRef: React.forwardRef,
-          createContext: React.createContext
-        });
-      }
-    });
-  };
-  
-  // Execute setup immediately
-  setupReactForRadixToast();
-}
-
-// Enhanced SafeToastProvider with comprehensive error handling
-const SafeToastProvider = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof ToastPrimitives.Provider>) => {
-  // Multiple layers of safety checks
-  if (!React || !React.useState || !React.useContext || !React.useEffect) {
-    console.error('React hooks not available in ToastProvider, falling back to children only');
-    return <>{children}</>;
-  }
-
-  // Verify Radix UI has access to React
-  if (typeof window !== 'undefined') {
-    const windowReact = (window as any).React;
-    if (!windowReact || !windowReact.useState) {
-      console.error('React not properly available in window context for Radix UI Toast');
-      return <>{children}</>;
-    }
-  }
-
-  try {
-    return <ToastPrimitives.Provider {...props}>{children}</ToastPrimitives.Provider>;
-  } catch (error) {
-    console.error('ToastProvider initialization error:', error);
-    return <>{children}</>;
-  }
-};
-
-const ToastProvider = SafeToastProvider;
+const ToastProvider = ToastPrimitives.Provider
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
