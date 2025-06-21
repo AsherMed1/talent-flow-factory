@@ -1,4 +1,5 @@
 
+
 // CRITICAL: Import and setup React FIRST before anything else
 import React from 'react';
 
@@ -62,26 +63,33 @@ console.log('🔧 React Global Setup Verification:', {
   }
 });
 
-// Force a small delay to ensure everything is properly set up
-await new Promise(resolve => setTimeout(resolve, 10));
-
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { registerSW } from './utils/serviceWorker';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+// Initialize the app with a small delay to ensure React is fully set up
+const initializeApp = async () => {
+  // Small delay to ensure everything is properly set up
+  await new Promise(resolve => setTimeout(resolve, 10));
+  
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
 
-// Register service worker for caching and offline functionality
-registerSW({
-  onSuccess: () => {
-    console.log('Service worker registered successfully');
-  },
-  onUpdate: () => {
-    console.log('New content available, please refresh');
-  }
-});
+  // Register service worker for caching and offline functionality
+  registerSW({
+    onSuccess: () => {
+      console.log('Service worker registered successfully');
+    },
+    onUpdate: () => {
+      console.log('New content available, please refresh');
+    }
+  });
+};
+
+// Initialize the app
+initializeApp().catch(console.error);
+
