@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -106,7 +107,7 @@ export const useCreateJobRole = () => {
     return {
       mutate: () => {},
       mutateAsync: async () => ({ id: 'fallback', name: 'Fallback Role' }),
-      isLoading: false,
+      isPending: false,
       error: null
     };
   }
@@ -163,7 +164,7 @@ export const useUpdateJobRole = () => {
     return {
       mutate: () => {},
       mutateAsync: async () => ({ id: 'fallback', name: 'Fallback Role' }),
-      isLoading: false,
+      isPending: false,
       error: null
     };
   }
