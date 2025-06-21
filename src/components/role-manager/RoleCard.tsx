@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +16,8 @@ interface RoleCardProps {
 }
 
 export const RoleCard = ({ role }: RoleCardProps) => {
-  const [editingRole, setEditingRole] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState({ 
+  const [editingRole, setEditingRole] = React.useState<string | null>(null);
+  const [editRole, setEditRole] = React.useState({ 
     name: '', 
     description: '', 
     booking_link: '',

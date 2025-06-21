@@ -1,8 +1,8 @@
 
+import React from 'react';
 import { Application } from '@/hooks/useApplications';
 import { stages, ApplicationStatus } from './PipelineStages';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useState, useCallback, useMemo } from 'react';
 import { SmartFilters, SmartFilterCriteria } from './SmartFilters';
 import { useSmartFilters } from './useSmartFilters';
 import { SkeletonCard, SkeletonRow } from '@/components/ui/skeleton-card';
@@ -23,8 +23,8 @@ interface KanbanBoardProps {
 export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProps) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const [processingApplications, setProcessingApplications] = useState<Set<string>>(new Set());
-  const [smartFilters, setSmartFilters] = useState<SmartFilterCriteria>({
+  const [processingApplications, setProcessingApplications] = React.useState<Set<string>>(new Set());
+  const [smartFilters, setSmartFilters] = React.useState<SmartFilterCriteria>({
     minOverallScore: 6,
     minEnglishFluency: 7,
     minMotivation: 6,
@@ -39,7 +39,7 @@ export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProp
 
   const { filteredApplications, statistics } = useSmartFilters(applications, smartFilters);
 
-  const handleStatusUpdate = useCallback(async (applicationId: string, newStatus: ApplicationStatus) => {
+  const handleStatusUpdate = React.useCallback(async (applicationId: string, newStatus: ApplicationStatus) => {
     setProcessingApplications(prev => new Set(prev).add(applicationId));
     
     try {
@@ -74,22 +74,22 @@ export const KanbanBoard = ({ applications, isLoading = false }: KanbanBoardProp
 
   const { dragState, handleDragStart, handleDragEnd, handleDragOver, handleDrop } = useDragAndDrop(handleStatusUpdate);
 
-  const getApplicationsByStage = useCallback((stageName: ApplicationStatus) => {
+  const getApplicationsByStage = React.useCallback((stageName: ApplicationStatus) => {
     return filteredApplications?.filter(app => 
       app.status === stageName && !processingApplications.has(app.id)
     ) || [];
   }, [filteredApplications, processingApplications]);
 
-  const handleSwipeLeft = useCallback((application: Application) => {
+  const handleSwipeLeft = React.useCallback((application: Application) => {
     console.log('Swipe left - reject/move back:', application.candidate.name);
   }, []);
 
-  const handleSwipeRight = useCallback((application: Application) => {
+  const handleSwipeRight = React.useCallback((application: Application) => {
     console.log('Swipe right - approve/move forward:', application.candidate.name);
   }, []);
 
   // Memoize stage rendering to prevent unnecessary re-renders
-  const stageComponents = useMemo(() => {
+  const stageComponents = React.useMemo(() => {
     return stages.map((stage, stageIndex) => {
       const stageApplications = getApplicationsByStage(stage.name);
       return { stage, stageIndex, stageApplications };

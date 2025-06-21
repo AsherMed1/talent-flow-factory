@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
@@ -14,7 +15,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
-  // Use React.useState instead of destructured useState to avoid null reference issues
   const [activeView, setActiveView] = React.useState('dashboard');
   const isMobile = useIsMobile();
   const location = useLocation();
