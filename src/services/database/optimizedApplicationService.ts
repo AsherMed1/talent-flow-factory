@@ -4,7 +4,7 @@ import { SafeApplication, DatabaseResult } from './types';
 import { DataTransformers } from './transformers';
 
 export class OptimizedApplicationService {
-  // Use the new optimized database function for paginated results
+  // Get optimized paginated results with proper relationship specification
   static async getPaginatedOptimized(
     offset: number, 
     limit: number, 
@@ -12,14 +12,17 @@ export class OptimizedApplicationService {
     jobRoleId?: string
   ): Promise<DatabaseResult<{ applications: SafeApplication[], totalCount: number }>> {
     try {
-      const { data, error } = await supabase.rpc('get_applications_paginated', {
+      // Use the optimized database function instead of direct query to avoid relationship issues
+      const { data, error } = await supabase.rpc('get_applications_paginated_v2', {
         p_offset: offset,
         p_limit: limit,
         p_status: status || null,
-        p_job_role_id: jobRoleId || null
+        p_job_role_id: jobRoleId || null,
+        p_search_term: null
       });
 
       if (error) {
+        console.error('Error in getPaginatedOptimized:', error);
         return { data: null, error: new Error(error.message) };
       }
 
@@ -27,8 +30,9 @@ export class OptimizedApplicationService {
         return { data: { applications: [], totalCount: 0 }, error: null };
       }
 
-      // Get full application data for the paginated results
+      // Now get the full application data for the IDs we found
       const applicationIds = data.map((item: any) => item.id);
+      
       const { data: fullApplications, error: fullError } = await supabase
         .from('applications')
         .select(`
@@ -61,7 +65,7 @@ export class OptimizedApplicationService {
           ghl_appointment_data,
           video_analysis_results,
           video_analysis_timestamp,
-          pre_screening_responses (
+          pre_screening_responses!pre_screening_responses_application_id_fkey(
             motivation_response,
             motivation_score,
             experience_response,
@@ -71,35 +75,39 @@ export class OptimizedApplicationService {
             communication_score,
             overall_prescreening_score
           ),
-          candidates (
-            name, 
-            email, 
+          candidates(
+            name,
+            email,
             phone,
-            candidate_tags (tag)
+            candidate_tags(tag)
           ),
-          job_roles (name, booking_link)
+          job_roles(
+            name,
+            booking_link
+          )
         `)
         .in('id', applicationIds)
         .order('applied_date', { ascending: false });
 
       if (fullError) {
+        console.error('Error fetching full application data:', fullError);
         return { data: null, error: new Error(fullError.message) };
       }
 
-      const transformedApplications = (fullApplications || [])
-        .map(app => DataTransformers.transformApplication(app));
-
+      // Transform to SafeApplication format
+      const applications: SafeApplication[] = (fullApplications || []).map(DataTransformers.toSafeApplication);
       const totalCount = data.length > 0 ? Number(data[0].total_count) : 0;
 
       return { 
         data: { 
-          applications: transformedApplications, 
+          applications, 
           totalCount 
         }, 
         error: null 
       };
 
     } catch (err) {
+      console.error('Unexpected error in getPaginatedOptimized:', err);
       return { 
         data: null, 
         error: err instanceof Error ? err : new Error('Unknown error occurred') 
@@ -107,18 +115,20 @@ export class OptimizedApplicationService {
     }
   }
 
-  // Use the optimized stats function
+  // Get optimized stats
   static async getOptimizedStats(): Promise<DatabaseResult<any>> {
     try {
       const { data, error } = await supabase.rpc('get_application_stats');
-      
+
       if (error) {
+        console.error('Error in getOptimizedStats:', error);
         return { data: null, error: new Error(error.message) };
       }
 
       return { data, error: null };
 
     } catch (err) {
+      console.error('Unexpected error in getOptimizedStats:', err);
       return { 
         data: null, 
         error: err instanceof Error ? err : new Error('Unknown error occurred') 
@@ -126,17 +136,16 @@ export class OptimizedApplicationService {
     }
   }
 
-  // Use materialized view for summary data
-  static async getSummaryData(
-    offset: number = 0, 
-    limit: number = 50
-  ): Promise<DatabaseResult<any[]>> {
+  // Get summary data for quick overview
+  static async getSummaryData(offset: number, limit: number): Promise<DatabaseResult<any[]>> {
     try {
-      const { data, error } = await supabase
-        .from('mv_application_summary')
-        .select('*')
-        .order('applied_date', { ascending: false })
-        .range(offset, offset + limit - 1);
+      const { data, error } = await supabase.rpc('get_applications_paginated_v2', {
+        p_offset: offset,
+        p_limit: limit,
+        p_status: null,
+        p_job_role_id: null,
+        p_search_term: null
+      });
 
       if (error) {
         return { data: null, error: new Error(error.message) };
@@ -152,22 +161,12 @@ export class OptimizedApplicationService {
     }
   }
 
-  // Refresh materialized view (call periodically)
-  static async refreshSummaryView(): Promise<DatabaseResult<void>> {
+  // Refresh materialized view (if implemented later)
+  static async refreshSummaryView(): Promise<void> {
     try {
-      const { error } = await supabase.rpc('refresh_application_summary');
-      
-      if (error) {
-        return { data: null, error: new Error(error.message) };
-      }
-
-      return { data: undefined, error: null };
-
-    } catch (err) {
-      return { 
-        data: null, 
-        error: err instanceof Error ? err : new Error('Unknown error occurred') 
-      };
+      await supabase.rpc('refresh_application_summary');
+    } catch (error) {
+      console.log('Materialized view refresh not available:', error);
     }
   }
 }
