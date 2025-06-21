@@ -123,6 +123,36 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Safe Toast Components - only render when React is confirmed available
+const SafeToasters = () => {
+  // Immediate availability check
+  const isReactAvailable = React && React.useState && React.useEffect && React.useContext;
+  
+  if (!isReactAvailable) {
+    console.warn('SafeToasters: React hooks not available, skipping toast components');
+    return null;
+  }
+
+  // Additional safety check for global React
+  const globalReactCheck = !!(window as any)?.React && !!(window as any)?.useState && !!(window as any)?.useContext;
+  if (!globalReactCheck) {
+    console.warn('SafeToasters: Global React not available, skipping toast components');
+    return null;
+  }
+
+  try {
+    return (
+      <>
+        <Toaster />
+        <Sonner />
+      </>
+    );
+  } catch (error) {
+    console.error('SafeToasters error:', error);
+    return null;
+  }
+};
+
 const App = () => {
   // Additional safety check at App level
   if (!React || !React.useState || !React.useEffect) {
@@ -147,8 +177,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="min-h-screen w-full">
-          <Toaster />
-          <Sonner />
+          <SafeToasters />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
