@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -6,11 +5,46 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-// Defensive React hooks assignment - fallback to window/globalThis if React is null
-const safeUseState = React.useState || (window as any)?.useState || (globalThis as any)?.useState;
-const safeUseEffect = React.useEffect || (window as any)?.useEffect || (globalThis as any)?.useEffect;
+// Ensure React is available for Radix UI Toast components
+if (typeof window !== 'undefined') {
+  const setupReactForRadixToast = () => {
+    const contexts = [window as any, globalThis as any];
+    
+    contexts.forEach(context => {
+      if (context && !context.React) {
+        context.React = React;
+        context.useState = React.useState;
+        context.useEffect = React.useEffect;
+        context.useContext = React.useContext;
+        context.useCallback = React.useCallback;
+        context.useMemo = React.useMemo;
+        context.useRef = React.useRef;
+        context.createContext = React.createContext;
+        context.forwardRef = React.forwardRef;
+      }
+    });
+  };
+  
+  setupReactForRadixToast();
+}
 
-const ToastProvider = ToastPrimitives.Provider
+// Safe ToastProvider with fallback
+const SafeToastProvider = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof ToastPrimitives.Provider>) => {
+  // Additional safety check
+  if (!React.useState || !React.useContext) {
+    console.error('React hooks not available in ToastProvider');
+    return <>{children}</>;
+  }
+
+  try {
+    return <ToastPrimitives.Provider {...props}>{children}</ToastPrimitives.Provider>;
+  } catch (error) {
+    console.error('ToastProvider error:', error);
+    return <>{children}</>;
+  }
+};
+
+const ToastProvider = SafeToastProvider;
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
