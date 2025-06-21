@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -170,18 +169,8 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  // Enhanced safety check with multiple fallback strategies
-  const isReactAvailable = React && 
-    typeof React.useState === 'function' && 
-    typeof React.useEffect === 'function';
-  
-  // Check global React availability as well
-  const isGlobalReactAvailable = (
-    (typeof window !== 'undefined' && window.React && window.useState) ||
-    (typeof globalThis !== 'undefined' && globalThis.React && globalThis.useState)
-  );
-
-  if (!isReactAvailable && !isGlobalReactAvailable) {
+  // Check if React hooks are available
+  if (!React || typeof React.useState !== 'function') {
     console.warn('React hooks not available in useToast, using memory-based fallback');
     return {
       toasts: memoryState.toasts,
