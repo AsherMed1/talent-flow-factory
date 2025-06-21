@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
@@ -12,37 +13,6 @@ import { Settings } from '@/components/Settings';
 import { InterviewGuideManager } from '@/components/InterviewGuideManager';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
-
-// Ensure React is available globally for this component and its children
-if (typeof window !== 'undefined') {
-  const contexts = [window as any, globalThis as any];
-  
-  if (typeof global !== 'undefined') {
-    contexts.push(global as any);
-  }
-  
-  contexts.forEach(context => {
-    if (context && (!context.React || !context.useState)) {
-      context.React = React;
-      Object.assign(context, {
-        React,
-        useState: React.useState,
-        useEffect: React.useEffect,
-        useContext: React.useContext,
-        useCallback: React.useCallback,
-        useMemo: React.useMemo,
-        useRef: React.useRef,
-        useReducer: React.useReducer,
-        useLayoutEffect: React.useLayoutEffect,
-        createElement: React.createElement,
-        Component: React.Component,
-        Fragment: React.Fragment,
-        forwardRef: React.forwardRef,
-        createContext: React.createContext
-      });
-    }
-  });
-}
 
 const Index = () => {
   // Enhanced safety check for React hooks availability
