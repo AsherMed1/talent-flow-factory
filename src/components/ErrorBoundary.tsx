@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
+// Ensure React hooks are available
+const useReactState = React.useState;
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -20,14 +23,26 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    console.error('ErrorBoundary: Derived state from error:', error);
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Check if this is a React hooks issue
+    if (error.message.includes('Cannot read properties of null')) {
+      console.error('React hooks availability issue detected:', {
+        windowReact: typeof (window as any)?.React,
+        globalThisReact: typeof (globalThis as any)?.React,
+        useState: typeof (window as any)?.useState,
+        useContext: typeof (window as any)?.useContext
+      });
+    }
   }
 
   private handleRetry = () => {
+    console.log('ErrorBoundary: Retrying...');
     this.setState({ hasError: false, error: undefined });
   };
 
@@ -54,6 +69,12 @@ export class ErrorBoundary extends Component<Props, State> {
                 <summary className="cursor-pointer">Error details</summary>
                 <pre className="mt-2 p-2 bg-gray-50 rounded overflow-auto">
                   {this.state.error.toString()}
+                  {this.state.error.stack && (
+                    <>
+                      {'\n\nStack trace:\n'}
+                      {this.state.error.stack}
+                    </>
+                  )}
                 </pre>
               </details>
             )}

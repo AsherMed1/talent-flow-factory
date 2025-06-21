@@ -6,9 +6,9 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-// Ensure React hooks are available
-const useReactState = React.useState;
-const useReactEffect = React.useEffect;
+// Defensive React hooks assignment - fallback to window/globalThis if React is null
+const safeUseState = React.useState || (window as any)?.useState || (globalThis as any)?.useState;
+const safeUseEffect = React.useEffect || (window as any)?.useEffect || (globalThis as any)?.useEffect;
 
 const ToastProvider = ToastPrimitives.Provider
 
