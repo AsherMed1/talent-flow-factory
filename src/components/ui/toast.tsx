@@ -6,7 +6,38 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const ToastProvider = ToastPrimitives.Provider
+// Safety check for React availability
+const checkReactAvailability = () => {
+  const checks = {
+    React: !!React,
+    useState: !!React?.useState,
+    useContext: !!React?.useContext,
+    windowReact: !!(window as any)?.React,
+    windowUseState: !!(window as any)?.useState
+  };
+  
+  console.log('Toast - React availability check:', checks);
+  return checks.React && checks.useState && checks.useContext;
+};
+
+const ToastProvider = ({ children, ...props }: React.ComponentProps<typeof ToastPrimitives.Provider>) => {
+  // Immediate safety check
+  if (!checkReactAvailability()) {
+    console.error('ToastProvider: React hooks not available, rendering children without toast context');
+    return <>{children}</>;
+  }
+
+  try {
+    return (
+      <ToastPrimitives.Provider {...props}>
+        {children}
+      </ToastPrimitives.Provider>
+    );
+  } catch (error) {
+    console.error('ToastProvider error:', error);
+    return <>{children}</>;
+  }
+};
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
