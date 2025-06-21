@@ -13,9 +13,40 @@ import { InterviewGuideManager } from '@/components/InterviewGuideManager';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+// Ensure React is available globally for this component and its children
+if (typeof window !== 'undefined') {
+  const contexts = [window as any, globalThis as any];
+  
+  if (typeof global !== 'undefined') {
+    contexts.push(global as any);
+  }
+  
+  contexts.forEach(context => {
+    if (context && (!context.React || !context.useState)) {
+      context.React = React;
+      Object.assign(context, {
+        React,
+        useState: React.useState,
+        useEffect: React.useEffect,
+        useContext: React.useContext,
+        useCallback: React.useCallback,
+        useMemo: React.useMemo,
+        useRef: React.useRef,
+        useReducer: React.useReducer,
+        useLayoutEffect: React.useLayoutEffect,
+        createElement: React.createElement,
+        Component: React.Component,
+        Fragment: React.Fragment,
+        forwardRef: React.forwardRef,
+        createContext: React.createContext
+      });
+    }
+  });
+}
+
 const Index = () => {
-  // Safety check for React hooks availability
-  if (!React || typeof React.useState !== 'function') {
+  // Enhanced safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function' || typeof React.useEffect !== 'function') {
     console.error('React hooks not available in Index component');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
