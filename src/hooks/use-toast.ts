@@ -1,9 +1,14 @@
+
 import * as React from "react"
 
 import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+
+// Ensure React hooks are available
+const useReactState = React.useState;
+const useReactEffect = React.useEffect;
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -169,9 +174,9 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+  const [state, setState] = useReactState<State>(memoryState)
 
-  React.useEffect(() => {
+  useReactEffect(() => {
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)

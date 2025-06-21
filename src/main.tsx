@@ -1,17 +1,27 @@
 
 import React from 'react';
 
-// Ensure React is available globally IMMEDIATELY, before any other imports
+// CRITICAL: Ensure React is available globally BEFORE anything else
 (window as any).React = React;
 if (typeof globalThis !== 'undefined') {
   (globalThis as any).React = React;
 }
 
+// Also ensure individual hooks are available
+(window as any).useState = React.useState;
+(window as any).useContext = React.useContext;
+(window as any).useEffect = React.useEffect;
+
 // Add debugging to confirm React is available
 console.log('React global setup:', {
   windowReact: !!(window as any).React,
   globalThisReact: !!(globalThis as any).React,
-  reactVersion: React.version
+  reactVersion: React.version,
+  hooksAvailable: {
+    useState: typeof (window as any).useState,
+    useContext: typeof (window as any).useContext,
+    useEffect: typeof (window as any).useEffect
+  }
 });
 
 import ReactDOM from 'react-dom/client';

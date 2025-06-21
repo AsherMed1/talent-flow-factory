@@ -1,10 +1,16 @@
-import { useTheme } from "next-themes"
+
+import React from "react"
 import { Toaster as Sonner, toast } from "sonner"
+
+// Ensure React is available for this component
+const useReactContext = React.useContext;
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  // Provide a fallback theme instead of relying on next-themes
+  // This avoids the useContext error from next-themes
+  const theme = "system";
 
   return (
     <Sonner
