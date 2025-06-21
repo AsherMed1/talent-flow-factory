@@ -5,8 +5,13 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from './utils/serviceWorker';
 
-// Ensure React is available globally for components BEFORE rendering
+// Ensure React is available globally for components BEFORE any imports or rendering
 (window as any).React = React;
+
+// Add React to global scope for Radix UI components
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
