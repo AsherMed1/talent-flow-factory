@@ -1,5 +1,77 @@
 
-import React, { Suspense } from "react";
+// CRITICAL: React must be available IMMEDIATELY and SYNCHRONOUSLY
+import * as React from 'react';
+
+// IMMEDIATE React setup - must happen before ANY other imports
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+  Object.assign(window, {
+    React,
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+    memo: React.memo,
+    useImperativeHandle: React.useImperativeHandle,
+    useDeferredValue: React.useDeferredValue,
+    useTransition: React.useTransition,
+    useId: React.useId,
+    useSyncExternalStore: React.useSyncExternalStore
+  });
+}
+
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+  Object.assign(globalThis, {
+    React,
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+    memo: React.memo,
+    useImperativeHandle: React.useImperativeHandle,
+    useDeferredValue: React.useDeferredValue,
+    useTransition: React.useTransition,
+    useId: React.useId,
+    useSyncExternalStore: React.useSyncExternalStore
+  });
+}
+
+// Force immediate verification
+console.log('App.tsx - CRITICAL React verification:', {
+  React: !!React,
+  useState: !!React?.useState,
+  useEffect: !!React?.useEffect,
+  windowReact: !!(window as any)?.React,
+  windowUseState: !!(window as any)?.useState,
+  globalReact: !!(globalThis as any)?.React
+});
+
+// CRITICAL: Verify React is available before proceeding
+if (!React || !React.useState || !React.useEffect) {
+  console.error('App.tsx - CRITICAL: React is not properly initialized');
+  throw new Error('React initialization failed in App.tsx - cannot proceed');
+}
+
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -47,31 +119,82 @@ const LoadingFallback = () => (
   </div>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+// Safe wrapper component that ensures React is available before rendering TooltipProvider
+const SafeTooltipProvider = ({ children }: { children: React.ReactNode }) => {
+  // Final safety check before rendering TooltipProvider
+  const reactAvailable = React && React.useState && React.useEffect && React.useContext;
+  
+  console.log('SafeTooltipProvider - React availability:', {
+    React: !!React,
+    useState: !!React?.useState,
+    useEffect: !!React?.useEffect,
+    useContext: !!React?.useContext,
+    reactAvailable
+  });
+  
+  if (!reactAvailable) {
+    console.error('SafeTooltipProvider: React hooks not available, rendering without TooltipProvider');
+    return <>{children}</>;
+  }
+  
+  try {
+    return (
       <TooltipProvider delayDuration={300}>
-        <div className="min-h-screen w-full">
-          <Toaster />
-          <Sonner />
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/jobs" element={<LazyPublicJobBoard />} />
-              <Route path="/apply/:roleId" element={<LazyApplyPage />} />
-              <Route path="/apply" element={<LazyApplyPage />} />
-              <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
-              <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
-              <Route path="/thank-you" element={<LazyThankYouPage />} />
-              <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<LazyNotFound />} />
-            </Routes>
-          </Suspense>
-        </div>
+        {children}
       </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+    );
+  } catch (error) {
+    console.error('SafeTooltipProvider error:', error);
+    return <>{children}</>;
+  }
+};
+
+const App = () => {
+  // Additional safety check at App level
+  if (!React || !React.useState || !React.useEffect) {
+    console.error('App component: React not available');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center text-red-600">
+          <p className="font-medium">Application Error</p>
+          <p className="text-sm mt-1">React is not properly initialized. Please refresh the page.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <SafeTooltipProvider>
+          <div className="min-h-screen w-full">
+            <Toaster />
+            <Sonner />
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/jobs" element={<LazyPublicJobBoard />} />
+                <Route path="/apply/:roleId" element={<LazyApplyPage />} />
+                <Route path="/apply" element={<LazyApplyPage />} />
+                <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
+                <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
+                <Route path="/thank-you" element={<LazyThankYouPage />} />
+                <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<LazyNotFound />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </SafeTooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
