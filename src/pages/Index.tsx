@@ -15,24 +15,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
-  // Enhanced safety check for React hooks availability
-  if (!React || typeof React.useState !== 'function' || typeof React.useEffect !== 'function') {
-    console.error('React hooks not available in Index component');
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-red-600">Loading Error</h1>
-          <p className="text-gray-600 mt-2">React is not properly initialized. Please refresh the page.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  console.log('Index component - React available:', !!React);
+  console.log('Index component - useState available:', !!React?.useState);
 
   const [activeView, setActiveView] = React.useState('dashboard');
   const isMobile = useIsMobile();

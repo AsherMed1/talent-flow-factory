@@ -1,33 +1,52 @@
 
-// Import React first
+// Make React available globally BEFORE any imports
 import * as React from 'react';
 
-// Ensure React is available globally BEFORE any other imports
-// This is critical for Radix UI and other third-party components
-(window as any).React = React;
-(globalThis as any).React = React;
+// Ensure React is available in multiple ways for maximum compatibility
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+  Object.assign(window as any, {
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+  });
+}
 
-// Make all React hooks available globally
-const reactHooks = {
-  useState: React.useState,
-  useEffect: React.useEffect,
-  useContext: React.useContext,
-  useReducer: React.useReducer,
-  useCallback: React.useCallback,
-  useMemo: React.useMemo,
-  useRef: React.useRef,
-  useLayoutEffect: React.useLayoutEffect,
-  createElement: React.createElement,
-  Component: React.Component,
-  Fragment: React.Fragment,
-  forwardRef: React.forwardRef,
-  createContext: React.createContext,
-};
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+  Object.assign(globalThis as any, {
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+  });
+}
 
-// Set on window
-Object.assign(window as any, reactHooks);
-// Set on globalThis
-Object.assign(globalThis as any, reactHooks);
+console.log('main.tsx - React setup complete:', {
+  React: !!React,
+  useState: !!React.useState,
+  windowReact: !!(window as any).React,
+  globalReact: !!(globalThis as any).React
+});
 
 // Now import everything else
 import ReactDOM from 'react-dom/client';

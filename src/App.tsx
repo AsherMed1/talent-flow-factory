@@ -5,8 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index"; // Direct import instead of lazy loading
 import {
-  LazyIndex,
   LazyApplyPage,
   LazyVideoEditorApplicationPage,
   LazyAppointmentSetterApplicationPage,
@@ -48,7 +48,7 @@ const App = () => (
           <Sonner />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
-              <Route path="/" element={<LazyIndex />} />
+              <Route path="/" element={<Index />} />
               <Route path="/jobs" element={<LazyPublicJobBoard />} />
               <Route path="/apply/:roleId" element={<LazyApplyPage />} />
               <Route path="/apply" element={<LazyApplyPage />} />
