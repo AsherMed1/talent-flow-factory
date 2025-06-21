@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import { SafeSwitch } from '@/components/ui/safe-switch';
 import { Label } from '@/components/ui/label';
 import { Plus, Copy, Edit, Eye } from 'lucide-react';
 import { JobRole, useUpdateJobRole } from '@/hooks/useJobRoles';
@@ -142,7 +142,7 @@ export const RoleCard = ({ role }: RoleCardProps) => {
           {!isEditing && (
             <div className="flex items-center gap-3">
               <div className="flex items-center space-x-2">
-                <Switch
+                <SafeSwitch
                   id={`status-${role.id}`}
                   checked={role.status === 'active'}
                   onCheckedChange={handleStatusToggle}
