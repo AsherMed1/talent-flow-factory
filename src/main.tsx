@@ -38,12 +38,23 @@ if (typeof global !== 'undefined') {
   Object.assign(global, hooks);
 }
 
+// Force React into the module system as well
+try {
+  // @ts-ignore
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports.React = React;
+  }
+} catch (e) {
+  // Ignore if module is not available
+}
+
 // Verify setup
 console.log('React setup verification:', {
   React: typeof React,
   windowReact: typeof (window as any)?.React,
   globalReact: typeof (globalThis as any)?.React,
   useState: typeof (window as any)?.useState,
+  useContext: typeof (window as any)?.useContext,
   reactVersion: React.version
 });
 

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Application } from '@/hooks/useApplications';
 import { ApplicationStatus } from '@/components/pipeline/PipelineStages';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ interface DragState {
 }
 
 export const useDragAndDrop = (onStatusUpdate: (applicationId: string, newStatus: ApplicationStatus) => void) => {
-  const [dragState, setDragState] = useState<DragState>({
+  const [dragState, setDragState] = React.useState<DragState>({
     draggedApplication: null,
     draggedFromStage: null,
     isDragging: false,
