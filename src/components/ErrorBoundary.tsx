@@ -12,22 +12,24 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  retryCount: number;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
+    retryCount: 0
   };
 
   public static getDerivedStateFromError(error: Error): State {
     console.error('ErrorBoundary: Derived state from error:', error);
-    return { hasError: true, error };
+    return { hasError: true, error, retryCount: 0 };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
-    // Check if this is a React hooks issue
+    // Check for React hooks issues specifically
     if (error.message.includes('Cannot read properties of null') || 
         error.message.includes('useState') || 
         error.message.includes('useContext')) {
@@ -38,12 +40,23 @@ export class ErrorBoundary extends Component<Props, State> {
         windowUseContext: typeof (window as any)?.useContext,
         errorStack: error.stack
       });
+      
+      // Force page reload on React hooks issues
+      if (this.state.retryCount < 2) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
     }
   }
 
   private handleRetry = () => {
     console.log('ErrorBoundary: Retrying...');
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ 
+      hasError: false, 
+      error: undefined,
+      retryCount: this.state.retryCount + 1
+    });
   };
 
   public render() {

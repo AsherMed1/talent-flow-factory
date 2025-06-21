@@ -8,9 +8,25 @@ import { KanbanBoard } from './pipeline/KanbanBoard';
 import { SearchAndFilters } from './pipeline/SearchAndFilters';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+// Safety check function
+const checkReactAvailability = () => {
+  const checks = {
+    React: !!React,
+    useState: !!React?.useState,
+    windowReact: !!(window as any)?.React,
+    windowUseState: !!(window as any)?.useState,
+    globalReact: !!(globalThis as any)?.React,
+    globalUseState: !!(globalThis as any)?.useState
+  };
+  
+  console.log('ApplicantPipeline - React availability:', checks);
+  
+  return checks.React && checks.useState;
+};
+
 export const ApplicantPipeline = () => {
-  // Safety check for React hooks availability
-  if (!React || typeof React.useState !== 'function') {
+  // Immediate safety check
+  if (!checkReactAvailability()) {
     console.error('React hooks not available in ApplicantPipeline');
     return (
       <div className="p-6 space-y-6">
