@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +8,7 @@ export const useRealtimeApplications = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  useEffect(() => {
+  React.useEffect(() => {
     console.log('🔄 Setting up real-time application updates...');
     
     const channel = supabase

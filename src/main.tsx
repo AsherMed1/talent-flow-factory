@@ -2,60 +2,64 @@
 // CRITICAL: Import and setup React FIRST before anything else
 import React from 'react';
 
-// Immediately set React globally with comprehensive coverage
-if (typeof window !== 'undefined') {
-  (window as any).React = React;
-  Object.assign(window, React);
-}
-if (typeof globalThis !== 'undefined') {
-  (globalThis as any).React = React;
-  Object.assign(globalThis, React);
-}
-if (typeof global !== 'undefined') {
-  (global as any).React = React;
-  Object.assign(global, React);
-}
-
-// Also ensure hooks are directly available
-const hooks = {
-  useState: React.useState,
-  useEffect: React.useEffect,
-  useContext: React.useContext,
-  useCallback: React.useCallback,
-  useMemo: React.useMemo,
-  useRef: React.useRef,
-  useReducer: React.useReducer,
-  useLayoutEffect: React.useLayoutEffect,
+// Make React available globally IMMEDIATELY and comprehensively
+const makeReactGlobal = () => {
+  const contexts = [window, globalThis];
+  
+  if (typeof global !== 'undefined') {
+    contexts.push(global);
+  }
+  
+  contexts.forEach(context => {
+    if (context) {
+      context.React = React;
+      // Make all React hooks directly available
+      Object.assign(context, {
+        React,
+        useState: React.useState,
+        useEffect: React.useEffect,
+        useContext: React.useContext,
+        useCallback: React.useCallback,
+        useMemo: React.useMemo,
+        useRef: React.useRef,
+        useReducer: React.useReducer,
+        useLayoutEffect: React.useLayoutEffect,
+        createElement: React.createElement,
+        Component: React.Component,
+        Fragment: React.Fragment
+      });
+    }
+  });
 };
 
-if (typeof window !== 'undefined') {
-  Object.assign(window, hooks);
-}
-if (typeof globalThis !== 'undefined') {
-  Object.assign(globalThis, hooks);
-}
-if (typeof global !== 'undefined') {
-  Object.assign(global, hooks);
-}
+// Execute immediately
+makeReactGlobal();
 
-// Force React into the module system as well
+// Also try to inject into module system
 try {
   // @ts-ignore
-  if (typeof module !== 'undefined' && module.exports) {
+  if (typeof module !== 'undefined') {
+    module.exports = module.exports || {};
     module.exports.React = React;
+    module.exports.default = React;
   }
 } catch (e) {
-  // Ignore if module is not available
+  // Ignore module errors
 }
 
-// Verify setup
-console.log('React setup verification:', {
+// Verify setup with more comprehensive logging
+console.log('🔧 React Global Setup Verification:', {
   React: typeof React,
   windowReact: typeof (window as any)?.React,
-  globalReact: typeof (globalThis as any)?.React,
-  useState: typeof (window as any)?.useState,
-  useContext: typeof (window as any)?.useContext,
-  reactVersion: React.version
+  globalThisReact: typeof (globalThis as any)?.React,
+  windowUseState: typeof (window as any)?.useState,
+  windowUseContext: typeof (window as any)?.useContext,
+  reactVersion: React.version,
+  reactHooks: {
+    useState: typeof React.useState,
+    useEffect: typeof React.useEffect,
+    useContext: typeof React.useContext,
+  }
 });
 
 import ReactDOM from 'react-dom/client';
