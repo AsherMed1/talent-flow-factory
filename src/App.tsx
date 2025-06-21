@@ -55,6 +55,11 @@ if (typeof globalThis !== 'undefined') {
   });
 }
 
+// CRITICAL: Force module-level React availability for bundled libraries
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports.React = React;
+}
+
 // Force immediate verification
 console.log('App.tsx - CRITICAL React verification:', {
   React: !!React,
@@ -74,7 +79,6 @@ if (!React || !React.useState || !React.useEffect) {
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index"; // Direct import instead of lazy loading
@@ -119,36 +123,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Safe wrapper component that ensures React is available before rendering TooltipProvider
-const SafeTooltipProvider = ({ children }: { children: React.ReactNode }) => {
-  // Final safety check before rendering TooltipProvider
-  const reactAvailable = React && React.useState && React.useEffect && React.useContext;
-  
-  console.log('SafeTooltipProvider - React availability:', {
-    React: !!React,
-    useState: !!React?.useState,
-    useEffect: !!React?.useEffect,
-    useContext: !!React?.useContext,
-    reactAvailable
-  });
-  
-  if (!reactAvailable) {
-    console.error('SafeTooltipProvider: React hooks not available, rendering without TooltipProvider');
-    return <>{children}</>;
-  }
-  
-  try {
-    return (
-      <TooltipProvider delayDuration={300}>
-        {children}
-      </TooltipProvider>
-    );
-  } catch (error) {
-    console.error('SafeTooltipProvider error:', error);
-    return <>{children}</>;
-  }
-};
-
 const App = () => {
   // Additional safety check at App level
   if (!React || !React.useState || !React.useEffect) {
@@ -172,26 +146,24 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <SafeTooltipProvider>
-          <div className="min-h-screen w-full">
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/jobs" element={<LazyPublicJobBoard />} />
-                <Route path="/apply/:roleId" element={<LazyApplyPage />} />
-                <Route path="/apply" element={<LazyApplyPage />} />
-                <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
-                <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
-                <Route path="/thank-you" element={<LazyThankYouPage />} />
-                <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<LazyNotFound />} />
-              </Routes>
-            </Suspense>
-          </div>
-        </SafeTooltipProvider>
+        <div className="min-h-screen w-full">
+          <Toaster />
+          <Sonner />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/jobs" element={<LazyPublicJobBoard />} />
+              <Route path="/apply/:roleId" element={<LazyApplyPage />} />
+              <Route path="/apply" element={<LazyApplyPage />} />
+              <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
+              <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
+              <Route path="/thank-you" element={<LazyThankYouPage />} />
+              <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<LazyNotFound />} />
+            </Routes>
+          </Suspense>
+        </div>
       </BrowserRouter>
     </QueryClientProvider>
   );
