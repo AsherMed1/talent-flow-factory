@@ -9,6 +9,27 @@ import { SearchAndFilters } from './pipeline/SearchAndFilters';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const ApplicantPipeline = () => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.error('React hooks not available in ApplicantPipeline');
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Hiring Pipeline</h1>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Unable to load pipeline. React hooks are not available.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { data: applications, isLoading, dataUpdatedAt } = useApplications();
   const [filteredApplications, setFilteredApplications] = useState(applications || []);
   const isMobile = useIsMobile();

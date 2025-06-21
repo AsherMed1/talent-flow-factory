@@ -5,6 +5,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { PipelineStage } from './useJobRoles';
 
 export const usePipelineStages = (roleId?: string) => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available in usePipelineStages, returning fallback');
+    return {
+      data: [
+        {"name": "applied", "displayName": "Applied", "color": "bg-gray-100"},
+        {"name": "reviewed", "displayName": "Reviewed", "color": "bg-blue-100"},
+        {"name": "interview_scheduled", "displayName": "Interview Scheduled", "color": "bg-yellow-100"},
+        {"name": "interview_completed", "displayName": "Interview Completed", "color": "bg-purple-100"},
+        {"name": "offer_sent", "displayName": "Offer Sent", "color": "bg-green-100"},
+        {"name": "hired", "displayName": "Hired", "color": "bg-emerald-100"}
+      ] as PipelineStage[],
+      isLoading: false,
+      error: null
+    };
+  }
+
   return useQuery({
     queryKey: ['pipeline-stages', roleId],
     queryFn: async () => {

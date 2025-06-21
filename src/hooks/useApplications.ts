@@ -7,6 +7,17 @@ import { ApplicationService } from '@/services/database/applicationService';
 export type { SafePreScreeningResponse as PreScreeningResponse, SafeApplication as Application } from '@/services/database/types';
 
 export const useApplications = () => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available in useApplications, returning fallback');
+    return {
+      data: [],
+      isLoading: false,
+      error: null,
+      dataUpdatedAt: Date.now()
+    };
+  }
+
   return useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
@@ -43,6 +54,16 @@ export const useApplications = () => {
 };
 
 export const useApplicationStats = () => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available in useApplicationStats, returning fallback');
+    return {
+      data: null,
+      isLoading: false,
+      error: null
+    };
+  }
+
   return useQuery({
     queryKey: ['application-stats'],
     queryFn: async () => {
@@ -76,6 +97,16 @@ export const usePaginatedApplications = (
   jobRoleId?: string, 
   searchTerm?: string
 ) => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available in usePaginatedApplications, returning fallback');
+    return {
+      data: { applications: [], totalCount: 0 },
+      isLoading: false,
+      error: null
+    };
+  }
+
   return useQuery({
     queryKey: ['applications', 'paginated', page, limit, status, jobRoleId, searchTerm],
     queryFn: async () => {

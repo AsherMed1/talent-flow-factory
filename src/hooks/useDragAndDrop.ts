@@ -11,6 +11,24 @@ interface DragState {
 }
 
 export const useDragAndDrop = (onStatusUpdate: (applicationId: string, newStatus: ApplicationStatus) => void) => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available in useDragAndDrop, returning fallback');
+    const fallbackState = {
+      draggedApplication: null,
+      draggedFromStage: null,
+      isDragging: false,
+    };
+    
+    return {
+      dragState: fallbackState,
+      handleDragStart: () => {},
+      handleDragEnd: () => {},
+      handleDragOver: () => {},
+      handleDrop: () => {},
+    };
+  }
+
   const [dragState, setDragState] = React.useState<DragState>({
     draggedApplication: null,
     draggedFromStage: null,
