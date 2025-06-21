@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -169,7 +170,16 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  // Use React hooks directly - they should be available now
+  // Add safety check for React hooks
+  if (!React || !React.useState || !React.useEffect) {
+    console.warn('React hooks not available in useToast, using fallback');
+    return {
+      toasts: memoryState.toasts,
+      toast,
+      dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    };
+  }
+
   const [state, setState] = React.useState<State>(memoryState)
 
   React.useEffect(() => {

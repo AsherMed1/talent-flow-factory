@@ -5,8 +5,8 @@ import { Toaster as Sonner, toast } from "sonner"
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Provide a fallback theme instead of relying on next-themes
-  // This avoids the useContext error from next-themes
+  // Remove next-themes dependency completely to avoid useContext issues
+  // Use a simple system theme detection instead
   const theme = "system";
 
   return (
