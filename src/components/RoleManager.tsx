@@ -10,32 +10,25 @@ import { LoadingSkeleton } from './role-manager/LoadingSkeleton';
 export const RoleManager = () => {
   console.log('RoleManager component rendering...');
   
-  const [showCreateForm, setShowCreateForm] = React.useState(false);
-  
-  // Add error boundary for the useJobRoles hook
-  let rolesQuery;
-  try {
-    console.log('Calling useJobRoles hook...');
-    rolesQuery = useJobRoles();
-    console.log('useJobRoles hook result:', rolesQuery);
-  } catch (error) {
-    console.error('Error calling useJobRoles hook:', error);
+  // Ensure React is available before using hooks
+  if (!React || !React.useState) {
+    console.error('React is not available in RoleManager');
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-red-800 font-semibold">Error Loading Roles</h2>
+          <h2 className="text-red-800 font-semibold">React Not Available</h2>
           <p className="text-red-600 mt-2">
-            There was an error loading the job roles. Please check the console for details.
+            React hooks are not available. Please refresh the page.
           </p>
-          <pre className="text-xs text-red-500 mt-2 overflow-auto">
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </pre>
         </div>
       </div>
     );
   }
-
-  const { data: roles, isLoading, error } = rolesQuery;
+  
+  const [showCreateForm, setShowCreateForm] = React.useState(false);
+  
+  // Use the hook directly without try-catch
+  const { data: roles, isLoading, error } = useJobRoles();
 
   // Listen for the custom event to open the create form
   React.useEffect(() => {

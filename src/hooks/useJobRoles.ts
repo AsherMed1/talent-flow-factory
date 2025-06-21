@@ -1,15 +1,12 @@
-
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// Debug React availability
-console.log('useJobRoles - React availability check:', {
-  React: typeof React,
-  useState: typeof React.useState,
-  useQuery: typeof useQuery,
-  windowReact: typeof (window as any)?.React
-});
+// Ensure React is available
+if (!React || !React.useState) {
+  console.error('React is not available in useJobRoles');
+  throw new Error('React hooks are not available. Please check React setup.');
+}
 
 export interface PipelineStage {
   name: string;
@@ -35,9 +32,10 @@ export interface JobRole {
 }
 
 export const useJobRoles = () => {
-  console.log('useJobRoles hook called - checking React hooks:', {
-    useQuery: typeof useQuery,
-    React: typeof React
+  console.log('useJobRoles hook called - React availability:', {
+    React: typeof React,
+    useState: typeof React?.useState,
+    useQuery: typeof useQuery
   });
 
   return useQuery({
