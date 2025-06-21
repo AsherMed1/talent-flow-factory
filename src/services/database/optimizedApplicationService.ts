@@ -35,7 +35,7 @@ export class OptimizedApplicationService {
       ghl_appointment_data: data.ghl_appointment_data,
       video_analysis_results: data.video_analysis_results,
       video_analysis_timestamp: data.video_analysis_timestamp,
-      pre_screening_responses: data.pre_screening_responses ? {
+      pre_screening_responses: data.pre_screening_responses ? [{
         motivation_response: data.pre_screening_responses.motivation_response,
         motivation_score: data.pre_screening_responses.motivation_score,
         experience_response: data.pre_screening_responses.experience_response,
@@ -44,17 +44,25 @@ export class OptimizedApplicationService {
         availability_score: data.pre_screening_responses.availability_score,
         communication_score: data.pre_screening_responses.communication_score,
         overall_prescreening_score: data.pre_screening_responses.overall_prescreening_score
-      } : null,
-      candidates: data.candidates ? {
+      }] : [],
+      candidate: data.candidates ? {
         name: data.candidates.name,
         email: data.candidates.email,
         phone: data.candidates.phone,
         candidate_tags: data.candidates.candidate_tags || []
-      } : null,
-      job_roles: data.job_roles ? {
+      } : {
+        name: '',
+        email: '',
+        phone: null,
+        candidate_tags: []
+      },
+      job_role: data.job_roles ? {
         name: data.job_roles.name,
         booking_link: data.job_roles.booking_link
-      } : null
+      } : {
+        name: '',
+        booking_link: null
+      }
     };
   }
 
