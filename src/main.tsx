@@ -43,7 +43,7 @@ import ReactDOM from 'react-dom/client';
       Object.assign(module.exports, React);
     }
     
-    // @ts-ignore - Setup for CommonJS and AMD module systems
+    // @ts-ignore - Setup for CommonJS
     if (typeof require !== 'undefined') {
       if (require.cache) {
         const reactModule = {
@@ -56,9 +56,9 @@ import ReactDOM from 'react-dom/client';
       }
     }
     
-    // @ts-ignore - Setup for AMD
-    if (typeof define !== 'undefined' && define.amd) {
-      define('react', [], function() { return React; });
+    // @ts-ignore - Setup for AMD with proper type checking
+    if (typeof window !== 'undefined' && (window as any).define && (window as any).define.amd) {
+      (window as any).define('react', [], function() { return React; });
     }
   } catch (e) {
     console.warn('Module system setup warning:', e);
