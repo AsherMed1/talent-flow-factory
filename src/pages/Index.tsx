@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
@@ -15,12 +14,13 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
-  const [activeView, setActiveView] = useState('dashboard');
+  // Use React.useState instead of destructured useState to avoid null reference issues
+  const [activeView, setActiveView] = React.useState('dashboard');
   const isMobile = useIsMobile();
   const location = useLocation();
 
   // Handle navigation from QuickActions buttons
-  useEffect(() => {
+  React.useEffect(() => {
     const handleSetActiveView = (event: CustomEvent) => {
       setActiveView(event.detail);
     };
@@ -33,7 +33,7 @@ const Index = () => {
   }, []);
 
   // Handle navigation state from router
-  useEffect(() => {
+  React.useEffect(() => {
     if (location.state?.activeView) {
       setActiveView(location.state.activeView);
     }
