@@ -1,4 +1,5 @@
 
+
 // CRITICAL: Import and setup React FIRST before anything else
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -48,11 +49,10 @@ import ReactDOM from 'react-dom/client';
     // Comprehensive require() cache setup for CommonJS
     if (typeof require !== 'undefined') {
       if (require.cache) {
-        const reactModule = {
-          exports: { ...React, default: React, React },
+        const reactModuleExports = {
+          ...React,
           default: React,
-          React,
-          ...React
+          React
         };
         
         // Cover all possible React import paths
@@ -66,7 +66,8 @@ import ReactDOM from 'react-dom/client';
         
         reactPaths.forEach(path => {
           try {
-            require.cache[path] = { exports: reactModule };
+            // Simple exports object without NodeModule properties
+            require.cache[path] = { exports: reactModuleExports } as any;
           } catch (e) {
             // Ignore individual path failures
           }
@@ -104,7 +105,7 @@ console.log('🔧 COMPREHENSIVE React Global Setup Verification:', {
   globalContexts: {
     windowReact: typeof (window as any)?.React,
     globalThisReact: typeof (globalThis as any)?.React,
-    globalReact: typeof (global as any)?.React
+    globalReact: typeof global !== 'undefined' ? typeof (global as any)?.React : 'not available'
   },
   hooks: {
     windowUseState: typeof (window as any)?.useState,
@@ -152,3 +153,4 @@ registerSW({
     console.log('New content available, please refresh');
   }
 });
+
