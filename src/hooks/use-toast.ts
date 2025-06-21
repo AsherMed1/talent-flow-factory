@@ -1,14 +1,9 @@
-
 import * as React from "react"
 
 import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
-
-// Defensive React hooks assignment - fallback to window/globalThis if React is null
-const safeUseState = React.useState || (window as any)?.useState || (globalThis as any)?.useState;
-const safeUseEffect = React.useEffect || (window as any)?.useEffect || (globalThis as any)?.useEffect;
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -174,10 +169,10 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  // Use the safe hook with fallback
-  const [state, setState] = safeUseState<State>(memoryState)
+  // Use React hooks directly - they should be available now
+  const [state, setState] = React.useState<State>(memoryState)
 
-  safeUseEffect(() => {
+  React.useEffect(() => {
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)
