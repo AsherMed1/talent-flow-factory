@@ -2,12 +2,10 @@
 // CRITICAL: React must be available IMMEDIATELY and SYNCHRONOUSLY
 import * as React from 'react';
 
-// Immediate, synchronous React setup - MUST happen before any other imports
-const setupReactGlobally = () => {
-  console.log('Setting up React globally...');
-  
-  // Define all React exports we need to make available
-  const reactExports = {
+// IMMEDIATE React setup - must happen before ANY other imports
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+  Object.assign(window, {
     React,
     useState: React.useState,
     useEffect: React.useEffect,
@@ -28,38 +26,49 @@ const setupReactGlobally = () => {
     useTransition: React.useTransition,
     useId: React.useId,
     useSyncExternalStore: React.useSyncExternalStore
-  };
-
-  // Set up on window (browser)
-  if (typeof window !== 'undefined') {
-    Object.assign(window, reactExports);
-    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ || {};
-  }
-
-  // Set up on globalThis (universal)
-  if (typeof globalThis !== 'undefined') {
-    Object.assign(globalThis, reactExports);
-  }
-
-  // Set up on global (Node.js compatibility)
-  if (typeof global !== 'undefined') {
-    Object.assign(global, reactExports);
-  }
-  
-  console.log('React setup complete:', {
-    React: !!React,
-    useState: !!React.useState,
-    windowReact: !!(window as any)?.React,
-    globalReact: !!(globalThis as any)?.React
   });
-};
+}
 
-// Execute setup IMMEDIATELY
-setupReactGlobally();
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+  Object.assign(globalThis, {
+    React,
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+    memo: React.memo,
+    useImperativeHandle: React.useImperativeHandle,
+    useDeferredValue: React.useDeferredValue,
+    useTransition: React.useTransition,
+    useId: React.useId,
+    useSyncExternalStore: React.useSyncExternalStore
+  });
+}
 
-// Verify React is available
-if (!React || !React.useState) {
-  throw new Error('CRITICAL: React hooks are not available after setup');
+// Force immediate verification
+console.log('CRITICAL React verification:', {
+  React: !!React,
+  useState: !!React?.useState,
+  useEffect: !!React?.useEffect,
+  windowReact: !!(window as any)?.React,
+  windowUseState: !!(window as any)?.useState,
+  globalReact: !!(globalThis as any)?.React
+});
+
+// CRITICAL: Verify React is available before proceeding
+if (!React || !React.useState || !React.useEffect) {
+  console.error('CRITICAL: React is not properly initialized');
+  throw new Error('React initialization failed - cannot proceed');
 }
 
 // Now import everything else
@@ -69,17 +78,13 @@ import './index.css';
 import { registerSW } from './utils/serviceWorker';
 
 // Final verification before rendering
-console.log('Final React verification before render:', {
+console.log('Final verification before App render:', {
   React: !!React,
   useState: !!React?.useState,
   useEffect: !!React?.useEffect,
   windowReact: !!(window as any)?.React,
   windowUseState: !!(window as any)?.useState
 });
-
-if (!React?.useState || !React?.useEffect) {
-  throw new Error('React hooks verification failed - cannot proceed with render');
-}
 
 // Initialize the app
 const rootElement = document.getElementById('root');
