@@ -32,16 +32,18 @@ export class ErrorBoundary extends Component<Props, State> {
     // Check for React hooks issues specifically
     if (error.message.includes('Cannot read properties of null') || 
         error.message.includes('useState') || 
-        error.message.includes('useContext')) {
-      console.error('React hooks availability issue detected:', {
+        error.message.includes('useContext') ||
+        error.message.includes('useQuery')) {
+      console.error('React context/hooks availability issue detected:', {
         windowReact: typeof (window as any)?.React,
         globalThisReact: typeof (globalThis as any)?.React,
         windowUseState: typeof (window as any)?.useState,
         windowUseContext: typeof (window as any)?.useContext,
+        queryClientAvailable: !!(window as any).__REACT_QUERY_CLIENT__,
         errorStack: error.stack
       });
       
-      // Force page reload on React hooks issues
+      // Force page reload on React hooks/context issues
       if (this.state.retryCount < 2) {
         setTimeout(() => {
           window.location.reload();
@@ -75,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-gray-600">
-              An unexpected error occurred. Please try refreshing the page or contact support if the problem persists.
+              An unexpected error occurred. This might be due to a missing React context or provider.
             </p>
             {this.state.error && (
               <details className="text-xs text-gray-500">

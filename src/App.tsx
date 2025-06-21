@@ -29,6 +29,14 @@ const queryClient = new QueryClient({
   },
 });
 
+// Make query client globally available for context checks
+if (typeof window !== 'undefined') {
+  (window as any).__REACT_QUERY_CLIENT__ = queryClient;
+}
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).__REACT_QUERY_CLIENT__ = queryClient;
+}
+
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">

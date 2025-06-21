@@ -21,8 +21,40 @@ const DashboardSkeleton = () => (
   </div>
 );
 
+// Context safety check function
+const checkQueryContext = () => {
+  try {
+    // Check if we're inside a QueryClient context
+    const hasQueryContext = !!(window as any).__REACT_QUERY_CLIENT__ || 
+                           !!(globalThis as any).__REACT_QUERY_CLIENT__;
+    console.log('Query context check:', { hasQueryContext });
+    return hasQueryContext;
+  } catch (error) {
+    console.warn('Query context check failed:', error);
+    return false;
+  }
+};
+
 export const Dashboard = () => {
-  const { data: stats, isLoading: statsLoading, error: statsError } = useApplicationStats();
+  // Safety check for query context before using hooks
+  const hasValidContext = checkQueryContext();
+  
+  // Conditional hook usage with safety checks
+  let stats = null;
+  let statsLoading = false;
+  let statsError = null;
+  
+  try {
+    if (hasValidContext) {
+      const result = useApplicationStats();
+      stats = result.data;
+      statsLoading = result.isLoading;
+      statsError = result.error;
+    }
+  } catch (error) {
+    console.error('useApplicationStats failed:', error);
+    statsError = error;
+  }
 
   const defaultStats = [
     { label: 'Active Applications', value: '0', icon: Users, color: 'text-blue-600' },
@@ -57,6 +89,31 @@ export const Dashboard = () => {
       color: 'text-orange-600' 
     },
   ] : defaultStats;
+
+  // Show context error if no valid context
+  if (!hasValidContext) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Hiring Dashboard</h1>
+        </div>
+        <Card className="border-yellow-200">
+          <CardContent className="p-6">
+            <div className="text-center text-yellow-600">
+              <p className="font-medium">Dashboard temporarily unavailable</p>
+              <p className="text-sm text-gray-500 mt-1">Query context is not available. Please refresh the page.</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (statsLoading) {
     return <PageLoadingSkeleton title="Hiring Dashboard" />;
