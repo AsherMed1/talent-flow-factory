@@ -4,15 +4,46 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-// Ensure React and hooks are available for Radix UI
-if (typeof window !== 'undefined' && !(window as any).React) {
-  (window as any).React = React;
-  (window as any).useState = React.useState;
-  (window as any).useEffect = React.useEffect;
-  (window as any).useContext = React.useContext;
+// Ensure React and hooks are available for Radix UI - more comprehensive approach
+if (typeof window !== 'undefined') {
+  const setupReactForRadix = () => {
+    const contexts = [window as any, globalThis as any];
+    
+    contexts.forEach(context => {
+      if (context && !context.React) {
+        context.React = React;
+        context.useState = React.useState;
+        context.useEffect = React.useEffect;
+        context.useContext = React.useContext;
+        context.useCallback = React.useCallback;
+        context.useMemo = React.useMemo;
+        context.useRef = React.useRef;
+        context.createContext = React.createContext;
+        context.forwardRef = React.forwardRef;
+      }
+    });
+  };
+  
+  setupReactForRadix();
 }
 
-const TooltipProvider = TooltipPrimitive.Provider
+// Safe TooltipProvider with fallback
+const SafeTooltipProvider = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>) => {
+  // Additional safety check
+  if (!React.useState || !React.useContext) {
+    console.error('React hooks not available in TooltipProvider');
+    return <>{children}</>;
+  }
+
+  try {
+    return <TooltipPrimitive.Provider {...props}>{children}</TooltipPrimitive.Provider>;
+  } catch (error) {
+    console.error('TooltipProvider error:', error);
+    return <>{children}</>;
+  }
+};
+
+const TooltipProvider = SafeTooltipProvider;
 
 const Tooltip = TooltipPrimitive.Root
 
