@@ -1,5 +1,6 @@
 
 import { Suspense } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,30 @@ import {
   LazyGmailCallbackPage,
   LazyNotFound
 } from "./components/LazyComponents";
+
+// Ensure React hooks are globally available for all components
+if (typeof window !== 'undefined') {
+  const contexts = [window as any, globalThis as any];
+  
+  contexts.forEach(context => {
+    if (context && (!context.React || !context.useEffect)) {
+      context.React = React;
+      context.useState = React.useState;
+      context.useEffect = React.useEffect;
+      context.useContext = React.useContext;
+      context.useCallback = React.useCallback;
+      context.useMemo = React.useMemo;
+      context.useRef = React.useRef;
+      context.useReducer = React.useReducer;
+      context.useLayoutEffect = React.useLayoutEffect;
+      context.createElement = React.createElement;
+      context.Component = React.Component;
+      context.Fragment = React.Fragment;
+      context.forwardRef = React.forwardRef;
+      context.createContext = React.createContext;
+    }
+  });
+}
 
 // Optimized QueryClient configuration for better caching
 const queryClient = new QueryClient({
