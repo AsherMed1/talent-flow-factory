@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { SafeApplication, DatabaseResult } from './types';
-import { OptimizedApplicationService } from './optimizedApplicationService';
+import { ApplicationTransformers } from './applicationTransformers';
+import { ApplicationQueries } from './applicationQueries';
 
 export class ApplicationService {
   // Enhanced getAll with better error handling and service worker support
@@ -24,13 +25,16 @@ export class ApplicationService {
         }
       }
 
-      // Use the optimized service which now uses proper joins
-      const result = await OptimizedApplicationService.getAll();
+      // Use ApplicationQueries directly instead of OptimizedApplicationService
+      const result = await ApplicationQueries.getAllApplications();
+      
       if (result.error) {
-        throw result.error;
+        return { data: null, error: result.error };
       }
 
-      const applications = result.data || [];
+      const applications: SafeApplication[] = (result.data || []).map(
+        ApplicationTransformers.transformToSafeApplication
+      );
 
       // Cache the result in service worker if available
       if ('serviceWorker' in navigator && 'caches' in window) {
@@ -77,10 +81,42 @@ export class ApplicationService {
     }
   }
 
-  // Use optimized database function for pagination with error handling
+  // Use ApplicationQueries directly for pagination
   static async getPaginated(offset: number, limit: number): Promise<DatabaseResult<{ applications: SafeApplication[], totalCount: number }>> {
     try {
-      return await OptimizedApplicationService.getPaginatedOptimized(offset, limit);
+      const paginatedResult = await ApplicationQueries.getPaginatedData(offset, limit);
+      
+      if (paginatedResult.error) {
+        return { data: null, error: paginatedResult.error };
+      }
+
+      const data = paginatedResult.data;
+      if (!data || data.length === 0) {
+        return { data: { applications: [], totalCount: 0 }, error: null };
+      }
+
+      // Get the full application data for the IDs we found
+      const applicationIds = data.map((item: any) => item.id);
+      
+      const fullApplicationsResult = await ApplicationQueries.getFullApplicationData(applicationIds);
+      
+      if (fullApplicationsResult.error) {
+        return { data: null, error: fullApplicationsResult.error };
+      }
+
+      // Transform to SafeApplication format using our transformer
+      const applications: SafeApplication[] = (fullApplicationsResult.data || []).map(
+        ApplicationTransformers.transformToSafeApplication
+      );
+      const totalCount = data.length > 0 ? Number(data[0].total_count) : 0;
+
+      return { 
+        data: { 
+          applications, 
+          totalCount 
+        }, 
+        error: null 
+      };
     } catch (error) {
       console.error('Error in getPaginated:', error);
       return {
@@ -90,10 +126,10 @@ export class ApplicationService {
     }
   }
 
-  // Use optimized stats function with error handling
+  // Use ApplicationQueries directly for stats
   static async getStats(): Promise<DatabaseResult<any>> {
     try {
-      return await OptimizedApplicationService.getOptimizedStats();
+      return await ApplicationQueries.getStats();
     } catch (error) {
       console.error('Error in getStats:', error);
       return {
