@@ -62,6 +62,9 @@ console.log('🔧 React Global Setup Verification:', {
   }
 });
 
+// Force a small delay to ensure everything is properly set up
+await new Promise(resolve => setTimeout(resolve, 10));
+
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';

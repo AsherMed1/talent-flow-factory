@@ -4,9 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-// Ensure React hooks are available
-const useReactState = React.useState;
-
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -31,12 +28,15 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
     // Check if this is a React hooks issue
-    if (error.message.includes('Cannot read properties of null')) {
+    if (error.message.includes('Cannot read properties of null') || 
+        error.message.includes('useState') || 
+        error.message.includes('useContext')) {
       console.error('React hooks availability issue detected:', {
         windowReact: typeof (window as any)?.React,
         globalThisReact: typeof (globalThis as any)?.React,
-        useState: typeof (window as any)?.useState,
-        useContext: typeof (window as any)?.useContext
+        windowUseState: typeof (window as any)?.useState,
+        windowUseContext: typeof (window as any)?.useContext,
+        errorStack: error.stack
       });
     }
   }

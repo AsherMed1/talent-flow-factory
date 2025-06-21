@@ -3,6 +3,14 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Debug React availability
+console.log('useJobRoles - React availability check:', {
+  React: typeof React,
+  useState: typeof React.useState,
+  useQuery: typeof useQuery,
+  windowReact: typeof (window as any)?.React
+});
+
 export interface PipelineStage {
   name: string;
   displayName: string;
@@ -27,15 +35,26 @@ export interface JobRole {
 }
 
 export const useJobRoles = () => {
+  console.log('useJobRoles hook called - checking React hooks:', {
+    useQuery: typeof useQuery,
+    React: typeof React
+  });
+
   return useQuery({
     queryKey: ['job-roles'],
     queryFn: async () => {
+      console.log('useJobRoles queryFn executing...');
       const { data, error } = await supabase
         .from('job_roles')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('useJobRoles query error:', error);
+        throw error;
+      }
+      
+      console.log('useJobRoles query success, data:', data);
       
       // Transform the data to ensure pipeline_stages is properly typed
       return data.map(role => ({
