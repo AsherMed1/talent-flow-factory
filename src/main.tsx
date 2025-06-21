@@ -1,61 +1,55 @@
 
-import React from 'react';
+import * as React from 'react';
 
-// CRITICAL: Set up React globally before ANY other imports
-// This is essential for third-party libraries to find React hooks
-const setupReact = () => {
+// Ensure React is available globally IMMEDIATELY and SYNCHRONOUSLY
+const globalReactSetup = () => {
+  // Get all possible global contexts
   const contexts = [window, globalThis];
+  if (typeof global !== 'undefined') contexts.push(global);
+  if (typeof self !== 'undefined') contexts.push(self);
   
-  // Add additional contexts that might exist
-  if (typeof global !== 'undefined') contexts.push(global as any);
-  if (typeof self !== 'undefined') contexts.push(self as any);
-  
+  // Set React on all contexts synchronously
   contexts.forEach(context => {
     if (context && typeof context === 'object') {
-      // Set React as the main export
+      // Set the main React export
       context.React = React;
       
-      // Set all React hooks and utilities individually
-      Object.assign(context, {
-        React,
-        useState: React.useState,
-        useEffect: React.useEffect,
-        useContext: React.useContext,
-        useCallback: React.useCallback,
-        useMemo: React.useMemo,
-        useRef: React.useRef,
-        useReducer: React.useReducer,
-        useLayoutEffect: React.useLayoutEffect,
-        createElement: React.createElement,
-        Component: React.Component,
-        Fragment: React.Fragment,
-        forwardRef: React.forwardRef,
-        createContext: React.createContext,
-        cloneElement: React.cloneElement,
-        isValidElement: React.isValidElement
-      });
+      // Set all individual hooks and utilities
+      context.useState = React.useState;
+      context.useEffect = React.useEffect;
+      context.useContext = React.useContext;
+      context.useReducer = React.useReducer;
+      context.useCallback = React.useCallback;
+      context.useMemo = React.useMemo;
+      context.useRef = React.useRef;
+      context.useLayoutEffect = React.useLayoutEffect;
+      context.createElement = React.createElement;
+      context.Component = React.Component;
+      context.Fragment = React.Fragment;
+      context.forwardRef = React.forwardRef;
+      context.createContext = React.createContext;
+      context.cloneElement = React.cloneElement;
+      context.isValidElement = React.isValidElement;
     }
   });
 };
 
-// Execute React setup immediately
-setupReact();
+// Execute setup immediately and synchronously
+globalReactSetup();
+
+// Verify setup worked
+console.log('React Global Setup Check:', {
+  windowReact: typeof window?.React,
+  windowUseState: typeof window?.useState,
+  globalThisReact: typeof globalThis?.React,
+  globalThisUseState: typeof globalThis?.useState
+});
 
 // Now import everything else
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { registerSW } from './utils/serviceWorker';
-
-// Debug logging
-console.log('React Setup Verification:', {
-  windowReact: typeof (window as any)?.React,
-  windowUseState: typeof (window as any)?.useState,
-  globalReact: typeof (globalThis as any)?.React,
-  globalUseState: typeof (globalThis as any)?.useState,
-  ReactDirect: typeof React,
-  ReactUseState: typeof React.useState
-});
 
 // Initialize the app
 const rootElement = document.getElementById('root');
