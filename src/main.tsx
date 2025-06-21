@@ -1,58 +1,66 @@
 
-// Ensure React is available IMMEDIATELY and SYNCHRONOUSLY
+// CRITICAL: React must be available IMMEDIATELY and SYNCHRONOUSLY
 import * as React from 'react';
 
-// Set up React globally before ANY other imports
-const setupReact = () => {
-  // Set on window for browser compatibility
+// Immediate, synchronous React setup - MUST happen before any other imports
+const setupReactGlobally = () => {
+  console.log('Setting up React globally...');
+  
+  // Define all React exports we need to make available
+  const reactExports = {
+    React,
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useContext: React.useContext,
+    useReducer: React.useReducer,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    useLayoutEffect: React.useLayoutEffect,
+    createElement: React.createElement,
+    Component: React.Component,
+    Fragment: React.Fragment,
+    forwardRef: React.forwardRef,
+    createContext: React.createContext,
+    memo: React.memo,
+    useImperativeHandle: React.useImperativeHandle,
+    useDeferredValue: React.useDeferredValue,
+    useTransition: React.useTransition,
+    useId: React.useId,
+    useSyncExternalStore: React.useSyncExternalStore
+  };
+
+  // Set up on window (browser)
   if (typeof window !== 'undefined') {
-    (window as any).React = React;
-    (window as any).useState = React.useState;
-    (window as any).useEffect = React.useEffect;
-    (window as any).useContext = React.useContext;
-    (window as any).useReducer = React.useReducer;
-    (window as any).useCallback = React.useCallback;
-    (window as any).useMemo = React.useMemo;
-    (window as any).useRef = React.useRef;
-    (window as any).useLayoutEffect = React.useLayoutEffect;
-    (window as any).createElement = React.createElement;
-    (window as any).Component = React.Component;
-    (window as any).Fragment = React.Fragment;
-    (window as any).forwardRef = React.forwardRef;
-    (window as any).createContext = React.createContext;
+    Object.assign(window, reactExports);
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ || {};
   }
 
-  // Set on globalThis for Node.js compatibility
+  // Set up on globalThis (universal)
   if (typeof globalThis !== 'undefined') {
-    (globalThis as any).React = React;
-    (globalThis as any).useState = React.useState;
-    (globalThis as any).useEffect = React.useEffect;
-    (globalThis as any).useContext = React.useContext;
-    (globalThis as any).useReducer = React.useReducer;
-    (globalThis as any).useCallback = React.useCallback;
-    (globalThis as any).useMemo = React.useMemo;
-    (globalThis as any).useRef = React.useRef;
-    (globalThis as any).useLayoutEffect = React.useLayoutEffect;
-    (globalThis as any).createElement = React.createElement;
-    (globalThis as any).Component = React.Component;
-    (globalThis as any).Fragment = React.Fragment;
-    (globalThis as any).forwardRef = React.forwardRef;
-    (globalThis as any).createContext = React.createContext;
+    Object.assign(globalThis, reactExports);
   }
+
+  // Set up on global (Node.js compatibility)
+  if (typeof global !== 'undefined') {
+    Object.assign(global, reactExports);
+  }
+  
+  console.log('React setup complete:', {
+    React: !!React,
+    useState: !!React.useState,
+    windowReact: !!(window as any)?.React,
+    globalReact: !!(globalThis as any)?.React
+  });
 };
 
-// Execute setup immediately
-setupReact();
+// Execute setup IMMEDIATELY
+setupReactGlobally();
 
 // Verify React is available
-console.log('main.tsx - React setup verification:', {
-  React: !!React,
-  useState: !!React.useState,
-  windowReact: !!(window as any)?.React,
-  windowUseState: !!(window as any)?.useState,
-  globalReact: !!(globalThis as any)?.React,
-  globalUseState: !!(globalThis as any)?.useState
-});
+if (!React || !React.useState) {
+  throw new Error('CRITICAL: React hooks are not available after setup');
+}
 
 // Now import everything else
 import ReactDOM from 'react-dom/client';
@@ -60,9 +68,17 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from './utils/serviceWorker';
 
-// Additional safety check before rendering
-if (!React || !React.useState) {
-  throw new Error('React hooks are not available. This is a critical error.');
+// Final verification before rendering
+console.log('Final React verification before render:', {
+  React: !!React,
+  useState: !!React?.useState,
+  useEffect: !!React?.useEffect,
+  windowReact: !!(window as any)?.React,
+  windowUseState: !!(window as any)?.useState
+});
+
+if (!React?.useState || !React?.useEffect) {
+  throw new Error('React hooks verification failed - cannot proceed with render');
 }
 
 // Initialize the app
@@ -73,7 +89,7 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 
-// Render with additional error boundary
+// Render with error boundary
 root.render(
   <React.StrictMode>
     <App />
