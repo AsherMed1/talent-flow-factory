@@ -5,6 +5,11 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from './utils/serviceWorker';
 
+// Ensure React is available globally for components
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

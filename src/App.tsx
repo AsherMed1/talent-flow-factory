@@ -41,26 +41,28 @@ const LoadingFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<LazyIndex />} />
-            <Route path="/jobs" element={<LazyPublicJobBoard />} />
-            <Route path="/apply/:roleId" element={<LazyApplyPage />} />
-            <Route path="/apply" element={<LazyApplyPage />} />
-            <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
-            <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
-            <Route path="/thank-you" element={<LazyThankYouPage />} />
-            <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<LazyNotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
+    <BrowserRouter>
+      <TooltipProvider delayDuration={300}>
+        <div className="min-h-screen w-full">
+          <Toaster />
+          <Sonner />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/" element={<LazyIndex />} />
+              <Route path="/jobs" element={<LazyPublicJobBoard />} />
+              <Route path="/apply/:roleId" element={<LazyApplyPage />} />
+              <Route path="/apply" element={<LazyApplyPage />} />
+              <Route path="/apply/video-editor" element={<LazyVideoEditorApplicationPage />} />
+              <Route path="/apply/appointment-setter" element={<LazyAppointmentSetterApplicationPage />} />
+              <Route path="/thank-you" element={<LazyThankYouPage />} />
+              <Route path="/auth/gmail/callback" element={<LazyGmailCallbackPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<LazyNotFound />} />
+            </Routes>
+          </Suspense>
+        </div>
+      </TooltipProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
