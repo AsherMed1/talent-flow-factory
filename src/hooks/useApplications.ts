@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { ApplicationService } from '@/services/database/applicationService';
 
@@ -9,19 +8,34 @@ export const useApplications = () => {
   return useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
+      console.log('🔍 Fetching applications...');
       const result = await ApplicationService.getAll();
+      
       if (result.error) {
+        console.error('❌ Error fetching applications:', result.error);
         throw result.error;
       }
-      return result.data || [];
+      
+      const applications = result.data || [];
+      console.log(`✅ Fetched ${applications.length} applications`);
+      console.log('Recent applications (first 3):', applications.slice(0, 3).map(app => ({
+        id: app.id,
+        candidateName: app.candidate?.name,
+        status: app.status,
+        appliedDate: app.applied_date,
+        hasFormData: !!app.form_data && Object.keys(app.form_data).length > 0,
+        hasCandidateId: !!app.candidate_id
+      })));
+      
+      return applications;
     },
-    staleTime: 2 * 60 * 1000, // Reduced to 2 minutes for better responsiveness
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    staleTime: 30 * 1000, // Reduced to 30 seconds for better responsiveness
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: true, // Enable refetch on window focus
+    refetchOnMount: true, // Always refetch on component mount
     retry: 1,
-    // Background refetch for fresh data
-    refetchInterval: 5 * 60 * 1000, // 5 minutes - more frequent updates
+    // More frequent background refetch
+    refetchInterval: 2 * 60 * 1000, // 2 minutes instead of 5
     refetchIntervalInBackground: true,
   });
 };
@@ -30,19 +44,24 @@ export const useApplicationStats = () => {
   return useQuery({
     queryKey: ['application-stats'],
     queryFn: async () => {
+      console.log('📊 Fetching application stats...');
       const result = await ApplicationService.getStats();
+      
       if (result.error) {
+        console.error('❌ Error fetching application stats:', result.error);
         throw result.error;
       }
+      
+      console.log('✅ Application stats fetched:', result.data);
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - stats change less frequently
-    gcTime: 15 * 60 * 1000, // 15 minutes cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
     retry: 1,
     // Background refetch for stats
-    refetchInterval: 10 * 60 * 1000, // 10 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
     refetchIntervalInBackground: true,
   });
 };

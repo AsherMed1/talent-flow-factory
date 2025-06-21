@@ -1,22 +1,34 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useApplications } from '@/hooks/useApplications';
+import { useRealtimeApplications } from '@/hooks/useRealtimeApplications';
 import { PipelineOverview } from './pipeline/PipelineOverview';
 import { KanbanBoard } from './pipeline/KanbanBoard';
 import { SearchAndFilters } from './pipeline/SearchAndFilters';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const ApplicantPipeline = () => {
-  const { data: applications, isLoading } = useApplications();
+  const { data: applications, isLoading, dataUpdatedAt } = useApplications();
   const [filteredApplications, setFilteredApplications] = useState(applications || []);
   const isMobile = useIsMobile();
 
+  // Enable real-time updates for the pipeline
+  useRealtimeApplications();
+
   // Update filtered applications when data changes
   React.useEffect(() => {
+    console.log('🏢 Pipeline data updated at:', new Date(dataUpdatedAt));
+    console.log('🏢 Applications in pipeline:', {
+      total: applications?.length || 0,
+      filtered: filteredApplications.length,
+      dataUpdatedAt: new Date(dataUpdatedAt).toLocaleTimeString()
+    });
+    
     if (applications) {
       setFilteredApplications(applications);
     }
-  }, [applications]);
+  }, [applications, dataUpdatedAt]);
 
   if (isLoading) {
     return (
