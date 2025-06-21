@@ -4,8 +4,13 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-// Ensure React hooks are available
-const useReactState = React.useState;
+// Ensure React and hooks are available for Radix UI
+if (typeof window !== 'undefined' && !(window as any).React) {
+  (window as any).React = React;
+  (window as any).useState = React.useState;
+  (window as any).useEffect = React.useEffect;
+  (window as any).useContext = React.useContext;
+}
 
 const TooltipProvider = TooltipPrimitive.Provider
 

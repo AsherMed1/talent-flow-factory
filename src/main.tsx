@@ -1,56 +1,50 @@
 
-// CRITICAL: Ensure React is available globally BEFORE any other imports
+// CRITICAL: Import and setup React FIRST before anything else
 import React from 'react';
 
-// Set up React globally with more comprehensive approach
-(function setupReactGlobally() {
-  // Ensure React is available on window
-  if (typeof window !== 'undefined') {
-    (window as any).React = React;
-    (window as any).useState = React.useState;
-    (window as any).useContext = React.useContext;
-    (window as any).useEffect = React.useEffect;
-    (window as any).useCallback = React.useCallback;
-    (window as any).useMemo = React.useMemo;
-    (window as any).useRef = React.useRef;
-    (window as any).useReducer = React.useReducer;
-  }
+// Immediately set React globally with comprehensive coverage
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+  Object.assign(window, React);
+}
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).React = React;
+  Object.assign(globalThis, React);
+}
+if (typeof global !== 'undefined') {
+  (global as any).React = React;
+  Object.assign(global, React);
+}
 
-  // Ensure React is available on globalThis
-  if (typeof globalThis !== 'undefined') {
-    (globalThis as any).React = React;
-    (globalThis as any).useState = React.useState;
-    (globalThis as any).useContext = React.useContext;
-    (globalThis as any).useEffect = React.useEffect;
-    (globalThis as any).useCallback = React.useCallback;
-    (globalThis as any).useMemo = React.useMemo;
-    (globalThis as any).useRef = React.useRef;
-    (globalThis as any).useReducer = React.useReducer;
-  }
+// Also ensure hooks are directly available
+const hooks = {
+  useState: React.useState,
+  useEffect: React.useEffect,
+  useContext: React.useContext,
+  useCallback: React.useCallback,
+  useMemo: React.useMemo,
+  useRef: React.useRef,
+  useReducer: React.useReducer,
+  useLayoutEffect: React.useLayoutEffect,
+};
 
-  // Ensure React is available globally (fallback)
-  if (typeof global !== 'undefined') {
-    (global as any).React = React;
-    (global as any).useState = React.useState;
-    (global as any).useContext = React.useContext;
-    (global as any).useEffect = React.useEffect;
-    (global as any).useCallback = React.useCallback;
-    (global as any).useMemo = React.useMemo;
-    (global as any).useRef = React.useRef;
-    (global as any).useReducer = React.useReducer;
-  }
-})();
+if (typeof window !== 'undefined') {
+  Object.assign(window, hooks);
+}
+if (typeof globalThis !== 'undefined') {
+  Object.assign(globalThis, hooks);
+}
+if (typeof global !== 'undefined') {
+  Object.assign(global, hooks);
+}
 
-// Verify React is properly set up
-console.log('React global setup verification:', {
+// Verify setup
+console.log('React setup verification:', {
+  React: typeof React,
   windowReact: typeof (window as any)?.React,
-  globalThisReact: typeof (globalThis as any)?.React,
-  reactVersion: React.version,
-  hooksAvailable: {
-    useState: typeof (window as any)?.useState,
-    useContext: typeof (window as any)?.useContext,
-    useEffect: typeof (window as any)?.useEffect
-  }
+  globalReact: typeof (globalThis as any)?.React,
+  useState: typeof (window as any)?.useState,
+  reactVersion: React.version
 });
 
 import ReactDOM from 'react-dom/client';
