@@ -4,6 +4,30 @@ import { ApplicationTransformers } from './applicationTransformers';
 import { ApplicationQueries } from './applicationQueries';
 
 export class OptimizedApplicationService {
+  // Get all applications using the new query method
+  static async getAll(): Promise<DatabaseResult<SafeApplication[]>> {
+    try {
+      const result = await ApplicationQueries.getAllApplications();
+      
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
+      const applications: SafeApplication[] = (result.data || []).map(
+        ApplicationTransformers.transformToSafeApplication
+      );
+
+      return { data: applications, error: null };
+
+    } catch (err) {
+      console.error('Unexpected error in getAll:', err);
+      return { 
+        data: null, 
+        error: err instanceof Error ? err : new Error('Unknown error occurred') 
+      };
+    }
+  }
+
   // Get optimized paginated results with proper relationship specification
   static async getPaginatedOptimized(
     offset: number, 

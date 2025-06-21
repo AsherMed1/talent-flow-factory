@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { SafeApplication, DatabaseResult } from './types';
-import { DataTransformers } from './transformers';
 import { OptimizedApplicationService } from './optimizedApplicationService';
 
 export class ApplicationService {
@@ -25,13 +24,13 @@ export class ApplicationService {
         }
       }
 
-      // Use the optimized paginated function for better performance
-      const result = await OptimizedApplicationService.getPaginatedOptimized(0, 1000);
+      // Use the optimized service which now uses proper joins
+      const result = await OptimizedApplicationService.getAll();
       if (result.error) {
         throw result.error;
       }
 
-      const applications = result.data?.applications || [];
+      const applications = result.data || [];
 
       // Cache the result in service worker if available
       if ('serviceWorker' in navigator && 'caches' in window) {
