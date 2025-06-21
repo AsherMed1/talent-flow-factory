@@ -3,14 +3,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-// Make React available globally and in module system IMMEDIATELY and SYNCHRONOUSLY
-(function setupReactGlobally() {
+// COMPREHENSIVE: Make React available globally and in ALL module systems IMMEDIATELY and SYNCHRONOUSLY
+(function setupReactGloballyAndInModuleSystems() {
   const contexts = [window, globalThis];
   
   if (typeof global !== 'undefined') {
     contexts.push(global);
   }
   
+  // Make React available in all global contexts
   contexts.forEach(context => {
     if (context) {
       context.React = React;
@@ -34,55 +35,94 @@ import ReactDOM from 'react-dom/client';
     }
   });
   
-  // CRITICAL: Make React available in module system for require() calls
+  // CRITICAL: Make React available in ALL possible module system paths
   try {
-    // @ts-ignore
+    // CommonJS module system
     if (typeof module !== 'undefined' && module.exports) {
+      module.exports = React;
       module.exports.React = React;
       module.exports.default = React;
       Object.assign(module.exports, React);
     }
     
-    // @ts-ignore - Setup for CommonJS
+    // Comprehensive require() cache setup for CommonJS
     if (typeof require !== 'undefined') {
       if (require.cache) {
         const reactModule = {
-          exports: { ...React, default: React },
+          exports: { ...React, default: React, React },
           default: React,
+          React,
           ...React
         };
-        // @ts-ignore
-        require.cache['react'] = { exports: reactModule };
+        
+        // Cover all possible React import paths
+        const reactPaths = [
+          'react',
+          '/node_modules/react',
+          '/node_modules/react/index.js',
+          './node_modules/react',
+          '../node_modules/react'
+        ];
+        
+        reactPaths.forEach(path => {
+          try {
+            require.cache[path] = { exports: reactModule };
+          } catch (e) {
+            // Ignore individual path failures
+          }
+        });
       }
     }
     
-    // @ts-ignore - Setup for AMD with proper type checking
+    // AMD system (define.js, RequireJS)
     if (typeof window !== 'undefined' && (window as any).define && (window as any).define.amd) {
       (window as any).define('react', [], function() { return React; });
+      (window as any).define('React', [], function() { return React; });
     }
+    
+    // SystemJS
+    if (typeof window !== 'undefined' && (window as any).System) {
+      (window as any).System.set('react', React);
+      (window as any).System.set('React', React);
+    }
+    
+    // ES6 Module system - make React available for dynamic imports
+    if (typeof window !== 'undefined') {
+      (window as any).__REACT_MODULE__ = React;
+      (window as any).reactModule = React;
+    }
+    
   } catch (e) {
-    console.warn('Module system setup warning:', e);
+    console.warn('Some module system setup failed, but continuing:', e);
   }
 })();
 
-// Verify React is properly set up with comprehensive logging
-console.log('🔧 React Global Setup Verification:', {
+// Additional verification and comprehensive logging
+console.log('🔧 COMPREHENSIVE React Global Setup Verification:', {
   React: typeof React,
   ReactVersion: React.version,
-  windowReact: typeof (window as any)?.React,
-  globalThisReact: typeof (globalThis as any)?.React,
-  windowUseState: typeof (window as any)?.useState,
-  windowUseContext: typeof (window as any)?.useContext,
-  windowUseEffect: typeof (window as any)?.useEffect,
-  reactHooks: {
-    useState: typeof React.useState,
-    useEffect: typeof React.useEffect,
-    useContext: typeof React.useContext,
-    useCallback: typeof React.useCallback,
-    useMemo: typeof React.useMemo,
-    useRef: typeof React.useRef,
-    createContext: typeof React.createContext,
-    forwardRef: typeof React.forwardRef
+  globalContexts: {
+    windowReact: typeof (window as any)?.React,
+    globalThisReact: typeof (globalThis as any)?.React,
+    globalReact: typeof (global as any)?.React
+  },
+  hooks: {
+    windowUseState: typeof (window as any)?.useState,
+    windowUseContext: typeof (window as any)?.useContext,
+    windowUseEffect: typeof (window as any)?.useEffect,
+    reactUseState: typeof React.useState,
+    reactUseEffect: typeof React.useEffect,
+    reactUseContext: typeof React.useContext,
+    reactUseCallback: typeof React.useCallback,
+    reactUseMemo: typeof React.useMemo,
+    reactUseRef: typeof React.useRef,
+    reactCreateContext: typeof React.createContext,
+    reactForwardRef: typeof React.forwardRef
+  },
+  moduleSystem: {
+    moduleExports: typeof module !== 'undefined' ? typeof module.exports : 'undefined',
+    requireCache: typeof require !== 'undefined' ? typeof require.cache : 'undefined',
+    amdDefine: typeof window !== 'undefined' ? typeof (window as any).define : 'undefined'
   }
 });
 
