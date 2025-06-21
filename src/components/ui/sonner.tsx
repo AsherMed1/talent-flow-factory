@@ -2,9 +2,6 @@
 import React from "react"
 import { Toaster as Sonner, toast } from "sonner"
 
-// Ensure React is available for this component
-const useReactContext = React.useContext;
-
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
