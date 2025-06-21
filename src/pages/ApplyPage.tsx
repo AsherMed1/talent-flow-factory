@@ -1,9 +1,29 @@
 
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ApplicationForm } from '@/components/ApplicationForm';
 import { useJobRoles } from '@/hooks/useJobRoles';
 
 export const ApplyPage = () => {
+  // Safety check for React hooks availability
+  if (!React || typeof React.useState !== 'function' || typeof React.useContext !== 'function') {
+    console.error('React hooks not available in ApplyPage');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading Error</h1>
+          <p className="text-gray-600">React is not properly initialized. Please refresh the page.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { roleId } = useParams();
   const { data: roles, isLoading } = useJobRoles();
   
