@@ -50,8 +50,10 @@ export const ApplicantPipeline = () => {
   const [filteredApplications, setFilteredApplications] = useState(applications || []);
   const isMobile = useIsMobile();
 
+  console.log("Before useRealtimeApplications");
   // Enable real-time updates for the pipeline
   useRealtimeApplications();
+  console.log("After useRealtimeApplications");
 
   // Update filtered applications when data changes
   React.useEffect(() => {
