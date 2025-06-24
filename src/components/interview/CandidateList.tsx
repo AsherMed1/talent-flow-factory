@@ -27,8 +27,8 @@ export const CandidateList = ({
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredCandidates = candidates.filter(app => 
-    app.candidates.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    app.candidates.email.toLowerCase().includes(searchTerm.toLowerCase())
+    app.candidates?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+    app.candidates?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -56,12 +56,12 @@ export const CandidateList = ({
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
                   <AvatarFallback>
-                    {application.candidates.name.split(' ').map((n: string) => n[0]).join('')}
+                    {application.candidates?.name?.split(' ')?.map((n: string) => n[0])?.join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">
-                    {application.candidates.name}
+                    {application.candidates?.name}
                   </div>
                   <div className="text-xs text-gray-500 truncate">
                     {application.job_roles?.name}
