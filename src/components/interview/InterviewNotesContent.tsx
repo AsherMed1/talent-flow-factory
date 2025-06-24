@@ -117,7 +117,7 @@ export const InterviewNotesContent = ({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div>
-            <div className="text-xl">{selectedApplication.candidates.name}</div>
+            <div className="text-xl">{selectedApplication.candidates?.name}</div>
             <div className="text-sm text-gray-500 font-normal">
               {selectedApplication.candidates.email} • {selectedApplication.job_roles?.name}
             </div>
